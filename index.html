@@ -1,0 +1,24 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dealoverzicht</title><meta name="theme-color" content="#0f1115">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Deals">
+<link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="theme.css"></head><body>
+<header class="top"><div class="brand"><span class="logo">D</span><div><h1>Dealoverzicht</h1><small id="datum"></small></div></div>
+<nav class="tabs" id="tabs"></nav></header>
+<main><section class="kpis" id="kpis"></section>
+<div id="fban"></div><details class="filters"><summary>Filters en sorteren</summary><div class="frow">
+<label>Merk<select id="f-merk"></select></label>
+<label>Status (Mijn pipeline)<select id="f-st"></select></label>
+<div class="fvk"><span class="flab">Verkoper</span><div id="f-vk"></div></div>
+<div class="fvk"><span class="flab">Segment en waarde</span><div id="f-x"></div></div>
+<label>Prijs vanaf<input id="f-pmin" type="number" inputmode="numeric"></label>
+<label>Prijs tot<input id="f-pmax" type="number" inputmode="numeric"></label>
+<label>Bouwjaar vanaf<input id="f-jmin" type="number" inputmode="numeric"></label>
+<label>Bouwjaar tot<input id="f-jmax" type="number" inputmode="numeric"></label>
+<label>Max. km<input id="f-km" type="number" inputmode="numeric"></label></div>
+<div class="frow"><div class="seg" id="sort"></div><label class="tog"><input type="checkbox" id="f-alleen"> Alleen auto's minstens 10% onder de mediaanprijs</label><button id="reset" class="ghost">Reset</button></div></details>
+<section id="cards" class="cards"></section>
+<details class="bronnen"><summary>Bronnen en beperkingen</summary><ul id="bronnen"></ul></details></main>
+<div id="toast" class="toast"></div>
+<script src="klant.js"></script><script src="config.js"></script><script src="api.js"></script><script src="werk.js"></script><script src="app.js"></script><script src="msel.js"></script><script src="excl.js"></script><script src="blokA.js"></script><script src="blokB.js"></script><script src="blokC.js"></script><script src="blokD.js"></script><script src="volglijst.js"></script></body></html>
