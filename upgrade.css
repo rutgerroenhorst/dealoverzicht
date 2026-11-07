@@ -1,0 +1,45 @@
+/* Dealer-dashboard: rustiger, vaste kolommen, telefoon-vriendelijk. Statuskleuren: deal groen, bijna oranje, te duur rood. */
+:root[data-thema=licht]{--bg:#f5f6f8;--card:#fff;--ink:#14161a;--mute:#5d6470;--line:#e3e6eb;--chip:#eef0f3;--acc:#2563eb;--ok:#16a34a;--okbg:#e8f7ee;--warn:#c2410c;--warnbg:#fff1e6;--bad:#dc2626;--badbg:#fdecec;color-scheme:light}
+:root[data-thema=donker]{--bg:#0f1115;--card:#171a21;--ink:#eef0f4;--mute:#9aa3b2;--line:#262b35;--chip:#222732;--acc:#60a5fa;--ok:#4ade80;--okbg:#12301f;--warn:#fb923c;--warnbg:#33200f;--bad:#f87171;--badbg:#3a1515;color-scheme:dark}
+body{font-feature-settings:"tnum" 1;letter-spacing:-.005em}
+h2.t{font-weight:600;letter-spacing:-.01em}
+.tabs{position:relative;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;max-width:100%;border-radius:12px}.tabs::-webkit-scrollbar{display:none}.tabs button{white-space:nowrap;border-radius:9px;padding:7px 12px}
+#thema{border:1px solid var(--line);background:var(--card);color:var(--mute);border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+.kc{border-left:4px solid transparent;padding-left:10px}.kc.st-deal{border-left-color:var(--ok)}.kc.st-bijna{border-left-color:var(--warn)}.kc.st-duur{border-left-color:var(--bad)}
+.waarom{font-size:13.5px;color:var(--ink);background:var(--chip);border-radius:8px;padding:6px 9px;margin:6px 0}
+.vandaag .vk{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 14px}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+.vb{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}.vb h3{font-size:15px;margin:0 0 8px;font-weight:600}.cnt{color:var(--mute);font-weight:500}
+.vl{list-style:none;margin:0;padding:0}
+.vr{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:8px 0;border-top:1px solid var(--line);align-items:center}
+.vr:first-child{border-top:0}
+.vr-deal{grid-template-columns:52px 1fr auto auto;gap:8px 10px;cursor:pointer;border-radius:10px;margin:0 -6px;padding:8px 6px;transition:background .12s}
+.vr-deal:hover,.vr-deal:focus{background:var(--chip,#f3f3f3);outline:none}
+.vr-deal:focus-visible{box-shadow:0 0 0 2px var(--accent,#3b2a63)}
+.vr-ph{width:52px;height:40px;border-radius:8px;overflow:hidden;background:var(--chip,#eee);flex:none;display:flex;align-items:center;justify-content:center}
+.vr-ph img{width:100%;height:100%;object-fit:cover;display:block}
+.vr-ph-x{font-size:10px;color:var(--mute);text-align:center;padding:2px;line-height:1.2}
+.vr-m{min-width:0}
+.vr-t{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.vr-t a,.vr-titel{color:var(--ink);text-decoration:none}
+.vr-s{color:var(--mute);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vr-chev{color:var(--mute);font-size:1.35em;font-weight:600;padding:0 2px}
+.vr-a{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-end}
+.vr-bekijk{pointer-events:none}
+@media(max-width:520px){
+ .vr-deal{grid-template-columns:48px 1fr auto;grid-template-rows:auto auto}
+ .vr-a{grid-column:2/-1;justify-content:flex-start}
+ .vr-chev{grid-column:3;grid-row:1}
+ .vr-bekijk{display:none}
+}
+
+.sdot2{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}.sdot2.st-deal{background:var(--ok)}.sdot2.st-bijna{background:var(--warn)}.sdot2.st-duur{background:var(--bad)}
+.vfoot{margin-top:12px}
+.stappen ol{display:flex;gap:6px;list-style:none;padding:0;margin:12px 0;counter-reset:s}.stappen li{flex:1;display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:13px;color:var(--mute)}
+.stappen li span{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--chip);font-weight:700;flex:none}.stappen li.on{border-color:var(--acc);color:var(--ink)}.stappen li.ok span{background:var(--ok);color:#fff}
+.stappen .snel{align-items:flex-end}
+.dossier .thumbs{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}.dossier .th{width:84px;height:84px;border-radius:8px;background:var(--chip) center/cover;display:grid;place-items:center;color:var(--mute);font-size:12px;text-decoration:none}
+.leren .bar{height:6px;background:var(--chip);border-radius:4px;margin:8px 0;overflow:hidden}.leren .bar i{display:block;height:100%;background:var(--acc)}
+@media (max-width:640px){.vgrid{grid-template-columns:1fr}.stappen ol{flex-direction:column}.top{gap:6px}main{padding:10px}}
+.cards>.vandaag,.cards>.vandaag-wrap{grid-column:1/-1}
+@media (min-width:900px){.tabs{flex-wrap:wrap}}

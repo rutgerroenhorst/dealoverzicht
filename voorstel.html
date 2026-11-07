@@ -1,0 +1,22 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Voorstel inruil</title><style>
+body{font:15px/1.5 -apple-system,"Segoe UI",Inter,Roboto,sans-serif;color:#14161a;background:#f5f6f8;margin:0}
+.p{max-width:640px;margin:24px auto;background:#fff;border:1px solid #e3e6eb;border-radius:12px;padding:28px}
+h1{font-size:20px;margin:0 0 4px}.m{color:#5d6470;font-size:13px}table{width:100%;border-collapse:collapse;margin:18px 0;font-variant-numeric:tabular-nums}
+td{padding:10px 0;border-bottom:1px solid #e3e6eb}td:last-child{text-align:right;font-weight:600}tr.t td{border-bottom:0;font-size:17px}
+button{border:1px solid #c9ced6;background:#fff;border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer}
+@media print{body{background:#fff}.p{border:0;margin:0}button{display:none}}</style></head><body><div class="p" id="p"><div class="m">Voorstel laden</div></div>
+<script>
+const eur=n=>"€ "+Math.round(n).toLocaleString("nl-NL"),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const API="https://2-31-144-18.sslip.io/api/inst";
+function toon(v){if(!v){document.getElementById("p").innerHTML='<h1>Voorstel niet gevonden</h1><div class="m">De link is verlopen of onvolledig. Vraag een nieuwe link aan.</div>';return}
+ document.getElementById("p").innerHTML=`<h1>Voorstel inruil</h1><div class="m">${esc(v.bedrijf||"")} · ${esc(v.datum||"")}${v.verloopt?" · geldig tot "+esc(v.verloopt):""}</div>
+ <table>${v.voorraad_titel?`<tr><td>Uw nieuwe auto: ${esc(v.voorraad_titel)}</td><td>${eur(v.voorraad_prijs)}</td></tr>`:""}
+ <tr><td>Inruil: ${esc(v.auto)}${v.kenteken?" ("+esc(v.kenteken)+")":""}</td><td>${v.voorraad_titel?"min ":""}${eur(v.inruil)}</td></tr>
+ ${v.bijbetalen!=null?`<tr class="t"><td>U betaalt bij</td><td>${eur(v.bijbetalen)}</td></tr>`:""}</table>
+ <div class="m">Inruilwaarde onder voorbehoud van inspectie van de auto en de juistheid van de opgegeven gegevens.${v.notitie?" "+esc(v.notitie):""}</div>
+ <p><button onclick="print()">Afdrukken of opslaan als PDF</button></p>`}
+const q=new URLSearchParams(location.search),t=q.get("t");
+if(t)fetch(API+"/voorstel?t="+encodeURIComponent(t)).then(r=>r.ok?r.json():null).then(toon).catch(()=>toon(null));
+else{try{const h=location.hash.replace(/^#d=/,"");toon(h?JSON.parse(decodeURIComponent(escape(atob(h)))):null)}catch(e){toon(null)}}
+</script></body></html>

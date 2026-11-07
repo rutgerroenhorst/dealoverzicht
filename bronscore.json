@@ -1,0 +1,502 @@
+{
+ "bijgewerkt": "2026-11-07 15:46",
+ "dagen": 60,
+ "deals": 236,
+ "per_bron": {
+  "AutoScout24": 163,
+  "AutoTrack": 37,
+  "Marktplaats": 36
+ },
+ "per_model": [
+  {
+   "model": "Audi RS7",
+   "deals": 108,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoTrack": 28,
+    "AutoScout24": 80
+   }
+  },
+  {
+   "model": "Porsche Cayenne",
+   "deals": 21,
+   "beste": "Marktplaats",
+   "verdeling": {
+    "Marktplaats": 12,
+    "AutoTrack": 7,
+    "AutoScout24": 2
+   }
+  },
+  {
+   "model": "Land Rover Defender",
+   "deals": 10,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 5,
+    "Marktplaats": 5
+   }
+  },
+  {
+   "model": "Mercedes-Benz SLS",
+   "deals": 9,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 9
+   }
+  },
+  {
+   "model": "Audi Q5",
+   "deals": 6,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 6
+   }
+  },
+  {
+   "model": "Mercedes-Benz G",
+   "deals": 6,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 6
+   }
+  },
+  {
+   "model": "Lamborghini Urus",
+   "deals": 5,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 5
+   }
+  },
+  {
+   "model": "Porsche Macan",
+   "deals": 4,
+   "beste": "AutoTrack",
+   "verdeling": {
+    "AutoTrack": 2,
+    "Marktplaats": 2
+   }
+  },
+  {
+   "model": "Land Rover Range",
+   "deals": 3,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 2,
+    "Marktplaats": 1
+   }
+  },
+  {
+   "model": "Ferrari California",
+   "deals": 3,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 3
+   }
+  },
+  {
+   "model": "Mercedes-Benz GLC",
+   "deals": 2,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 2
+   }
+  },
+  {
+   "model": "Citroen C1",
+   "deals": 2,
+   "beste": "Marktplaats",
+   "verdeling": {
+    "Marktplaats": 2
+   }
+  },
+  {
+   "model": "Citroën C3",
+   "deals": 2,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 2
+   }
+  },
+  {
+   "model": "Fiat Panda",
+   "deals": 2,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1,
+    "Marktplaats": 1
+   }
+  },
+  {
+   "model": "Opel Corsa",
+   "deals": 2,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1,
+    "Marktplaats": 1
+   }
+  },
+  {
+   "model": "BMW M3",
+   "deals": 2,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 2
+   }
+  },
+  {
+   "model": "Lotus Elise",
+   "deals": 2,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 2
+   }
+  },
+  {
+   "model": "Porsche 911",
+   "deals": 2,
+   "beste": "Marktplaats",
+   "verdeling": {
+    "Marktplaats": 2
+   }
+  },
+  {
+   "model": "Daihatsu Cuore",
+   "deals": 2,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 2
+   }
+  },
+  {
+   "model": "Lamborghini Murciélago",
+   "deals": 2,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 2
+   }
+  },
+  {
+   "model": "Mercedes-Benz Citan",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Hyundai Atos",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Chevrolet Kalos",
+   "deals": 1,
+   "beste": "Marktplaats",
+   "verdeling": {
+    "Marktplaats": 1
+   }
+  },
+  {
+   "model": "Nissan Pixo",
+   "deals": 1,
+   "beste": "Marktplaats",
+   "verdeling": {
+    "Marktplaats": 1
+   }
+  },
+  {
+   "model": "Suzuki Alto",
+   "deals": 1,
+   "beste": "Marktplaats",
+   "verdeling": {
+    "Marktplaats": 1
+   }
+  },
+  {
+   "model": "Lotus Exige",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Ferrari Mondial",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Ferrari Dino",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Mercedes-Benz B",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Porsche 718",
+   "deals": 1,
+   "beste": "Marktplaats",
+   "verdeling": {
+    "Marktplaats": 1
+   }
+  },
+  {
+   "model": "Mini John",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Mercedes-Benz CLA",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Daihatsu Sirion",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Suzuki Swift",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Audi S8",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Mercedes-Benz A",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Audi RS6",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Ferrari 812",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Porsche Carrera",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Mercedes-Benz SLR",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Porsche 918",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Ferrari Roma",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Ferrari 296",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Opel Astra",
+   "deals": 1,
+   "beste": "Marktplaats",
+   "verdeling": {
+    "Marktplaats": 1
+   }
+  },
+  {
+   "model": "Audi TT",
+   "deals": 1,
+   "beste": "Marktplaats",
+   "verdeling": {
+    "Marktplaats": 1
+   }
+  },
+  {
+   "model": "Volkswagen Polo",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Rolls-Royce Cullinan",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Audi RS3",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Audi RS4",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Mini COOPER",
+   "deals": 1,
+   "beste": "Marktplaats",
+   "verdeling": {
+    "Marktplaats": 1
+   }
+  },
+  {
+   "model": "Ferrari FF",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Ferrari 458",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Ferrari 488",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Kia Picanto",
+   "deals": 1,
+   "beste": "Marktplaats",
+   "verdeling": {
+    "Marktplaats": 1
+   }
+  },
+  {
+   "model": "Toyota Yaris",
+   "deals": 1,
+   "beste": "Marktplaats",
+   "verdeling": {
+    "Marktplaats": 1
+   }
+  },
+  {
+   "model": "Peugeot 206",
+   "deals": 1,
+   "beste": "Marktplaats",
+   "verdeling": {
+    "Marktplaats": 1
+   }
+  },
+  {
+   "model": "Porsche Panamera",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Porsche Taycan",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Lamborghini Gallardo",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "McLaren 570S",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  }
+ ],
+ "advies": [],
+ "regel": "Alleen meekijken. Budget wordt niet automatisch verschoven; dekking gaat voor."
+}
