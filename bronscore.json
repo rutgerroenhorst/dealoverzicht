@@ -1,9 +1,9 @@
 {
- "bijgewerkt": "2026-11-10 07:32",
+ "bijgewerkt": "2026-11-10 11:58",
  "dagen": 60,
- "deals": 306,
+ "deals": 308,
  "per_bron": {
-  "AutoScout24": 231,
+  "AutoScout24": 233,
   "AutoTrack": 39,
   "Marktplaats": 36
  },
@@ -37,10 +37,10 @@
   },
   {
    "model": "Mercedes-Benz SLS",
-   "deals": 10,
+   "deals": 11,
    "beste": "AutoScout24",
    "verdeling": {
-    "AutoScout24": 10
+    "AutoScout24": 11
    }
   },
   {
@@ -69,21 +69,21 @@
    }
   },
   {
+   "model": "Porsche 911",
+   "deals": 5,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 3,
+    "Marktplaats": 2
+   }
+  },
+  {
    "model": "Land Rover Range",
    "deals": 5,
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 4,
     "Marktplaats": 1
-   }
-  },
-  {
-   "model": "Porsche 911",
-   "deals": 4,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 2,
-    "Marktplaats": 2
    }
   },
   {
