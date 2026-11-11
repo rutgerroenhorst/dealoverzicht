@@ -1,9 +1,9 @@
 {
- "bijgewerkt": "2026-11-10 19:49",
+ "bijgewerkt": "2026-11-11 07:46",
  "dagen": 60,
- "deals": 308,
+ "deals": 316,
  "per_bron": {
-  "AutoScout24": 233,
+  "AutoScout24": 241,
   "AutoTrack": 39,
   "Marktplaats": 36
  },
@@ -18,6 +18,14 @@
    }
   },
   {
+   "model": "Audi Q5",
+   "deals": 22,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 22
+   }
+  },
+  {
    "model": "Porsche Cayenne",
    "deals": 21,
    "beste": "Marktplaats",
@@ -25,14 +33,6 @@
     "Marktplaats": 12,
     "AutoTrack": 7,
     "AutoScout24": 2
-   }
-  },
-  {
-   "model": "Audi Q5",
-   "deals": 19,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 19
    }
   },
   {
@@ -87,6 +87,30 @@
    }
   },
   {
+   "model": "Audi A3",
+   "deals": 4,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 4
+   }
+  },
+  {
+   "model": "Mercedes-Benz GLC",
+   "deals": 4,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 4
+   }
+  },
+  {
+   "model": "BMW 330",
+   "deals": 4,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 4
+   }
+  },
+  {
    "model": "Porsche Macan",
    "deals": 4,
    "beste": "AutoTrack",
@@ -96,35 +120,19 @@
    }
   },
   {
-   "model": "BMW 330",
-   "deals": 3,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 3
-   }
-  },
-  {
-   "model": "Audi A3",
-   "deals": 3,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 3
-   }
-  },
-  {
-   "model": "Mercedes-Benz GLC",
-   "deals": 3,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 3
-   }
-  },
-  {
    "model": "Ferrari California",
    "deals": 3,
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 3
+   }
+  },
+  {
+   "model": "Ferrari 458",
+   "deals": 2,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 2
    }
   },
   {
@@ -191,6 +199,14 @@
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 2
+   }
+  },
+  {
+   "model": "Audi Q8",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
    }
   },
   {
@@ -458,14 +474,6 @@
    }
   },
   {
-   "model": "Ferrari 458",
-   "deals": 1,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 1
-   }
-  },
-  {
    "model": "Ferrari 488",
    "deals": 1,
    "beste": "AutoScout24",
@@ -483,14 +491,6 @@
   },
   {
    "model": "Toyota Yaris",
-   "deals": 1,
-   "beste": "Marktplaats",
-   "verdeling": {
-    "Marktplaats": 1
-   }
-  },
-  {
-   "model": "Peugeot 206",
    "deals": 1,
    "beste": "Marktplaats",
    "verdeling": {
