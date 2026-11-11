@@ -1,9 +1,9 @@
 {
- "bijgewerkt": "2026-11-11 07:46",
+ "bijgewerkt": "2026-11-11 11:58",
  "dagen": 60,
- "deals": 316,
+ "deals": 317,
  "per_bron": {
-  "AutoScout24": 241,
+  "AutoScout24": 242,
   "AutoTrack": 39,
   "Marktplaats": 36
  },
@@ -125,6 +125,14 @@
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 3
+   }
+  },
+  {
+   "model": "Ferrari 488",
+   "deals": 2,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 2
    }
   },
   {
@@ -467,14 +475,6 @@
   },
   {
    "model": "Ferrari FF",
-   "deals": 1,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 1
-   }
-  },
-  {
-   "model": "Ferrari 488",
    "deals": 1,
    "beste": "AutoScout24",
    "verdeling": {
