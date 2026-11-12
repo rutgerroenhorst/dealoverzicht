@@ -1,0 +1,63 @@
+/* INRUILTAX_V1: compacte inruil-taxatie, iPhone eerst. Geen dubbele blokken, geen lege grijze vlakken. */
+#cards .txin{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:14px 14px 88px;max-width:640px;margin:0 auto;box-shadow:none}
+#cards .txin h2{margin:0 0 10px;font-size:1.15rem}
+#cards .txin h3{margin:16px 0 8px;font-size:.95rem}
+#cards .txin p.txin-mute,#cards .txin .txin-mute{color:var(--mute);font-size:.82rem;margin:0 0 10px;line-height:1.35}
+#cards .txin label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--mute)}
+#cards .txin input,#cards .txin select,#cards .txin textarea{
+  background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;
+  padding:9px 10px;font-size:16px;width:100%;box-sizing:border-box;min-height:42px
+}
+#cards .txin textarea{min-height:64px;font-size:.9rem}
+.txin-zoek{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-bottom:10px}
+.txin-zoek btn,.txin-zoek button,.txin-btn{
+  background:var(--acc);color:#fff;border:0;border-radius:999px;padding:10px 16px;font-weight:600;font-size:.95rem;min-height:42px
+}
+.txin-btn.sec{background:var(--chip);color:var(--ink)}
+.txin-rdw{background:var(--chip);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0 0 12px}
+.txin-rdw[hidden]{display:none!important}
+.txin-rdw strong{display:block;font-size:1rem;color:var(--ink)}
+.txin-rdw span{display:block;color:var(--mute);font-size:.85rem;margin-top:2px}
+.txin-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin-bottom:8px}
+.txin-grid .breed{grid-column:1/-1}
+@media(max-width:380px){.txin-grid{grid-template-columns:1fr}}
+.txin-opt{margin:12px 0 4px}
+.txin-opt-h{display:flex;align-items:center;gap:8px;font-size:.9rem;font-weight:600;color:var(--ink)}
+.txin-i{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:var(--chip);color:var(--mute);font:italic 13px/20px Georgia,serif;padding:0;cursor:pointer}
+.txin-i-tekst{font-size:.78rem;color:var(--mute);background:var(--chip);border-radius:8px;padding:8px 10px;margin:8px 0;line-height:1.4}
+.txin-i-tekst[hidden]{display:none!important}
+.txin-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.txin-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:5px 9px;font-size:.78rem;cursor:pointer;user-select:none}
+.txin-chip input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.txin-chip.aan{background:var(--okbg);border-color:var(--ok);color:var(--ink)}
+.txin-chip.aan::before{content:"✓";font-size:.75rem;color:var(--ok);font-weight:700}
+.txin-uit{margin:12px 0}
+.txin-kaart{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;margin:0 0 10px}
+.txin-kaart.fout{background:var(--warnbg);border-color:var(--warn)}
+.txin-rijen{display:grid;gap:6px}
+.txin-rij{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:.95rem}
+.txin-rij b{font-variant-numeric:tabular-nums}
+.txin-rij .l{color:var(--mute);font-size:.82rem}
+.txin-meta{color:var(--mute);font-size:.8rem;margin-top:8px}
+.txin-hand{margin:8px 0 12px;padding:0;border:0}
+.txin-acties{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.txin-sticky{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--card);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;justify-content:center}
+.txin-sticky button{flex:1;max-width:420px;background:var(--acc);color:#fff;border:0;border-radius:999px;padding:12px 18px;font-weight:700;font-size:1rem;min-height:48px}
+/* voorkom dat oude stappen/optie-duplicaten of lege grijze vlakken blijven staan */
+#cards .txstappen,#cards .tx-stappen,#cards .txopt-x{display:none!important}
+#cards .txin .txopt-melding,#cards .txin .txopt-bron{display:none!important}
+/* Mijn taxaties */
+.txin-lijst{margin:0 0 14px}
+.txin-lijst h3{margin:0 0 8px}
+.txin-zoekf{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:8px}
+.txin-item{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0 0 8px}
+.txin-item .txin-item-t{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.txin-item .txin-item-t b{font-size:.95rem}
+.txin-item .txin-item-m{color:var(--mute);font-size:.78rem;margin:4px 0 8px;line-height:1.35}
+.txin-item .txin-item-a{display:flex;flex-wrap:wrap;gap:6px}
+.txin-item .txin-item-a button{background:var(--chip);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:.78rem;min-height:34px}
+.txin-item .txin-item-a button.gevaar{color:var(--bad)}
+.txin-tabs{display:flex;gap:6px;margin:0 0 8px}
+.txin-tabs button{background:transparent;border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--ink);font-size:.8rem}
+.txin-tabs button.aan{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.txin-leeg{color:var(--mute);font-size:.85rem;padding:8px 0}
