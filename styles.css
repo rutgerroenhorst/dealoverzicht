@@ -121,3 +121,19 @@ section.mk-sec{margin-top:14px;border-top:1px solid var(--line,#ddd);padding-top
 
 /* Compacte toelichting op afgewezen kandidaten, ook op mobiel. */
 .afg-auto{padding:14px 0;border-top:1px solid var(--line,#39404a);min-width:0}.afg-auto h3{margin:0 0 6px}.afweging{font-size:14px;overflow-wrap:anywhere}.afweging p{margin:8px 0}.afweging summary{cursor:pointer;padding:8px 0}.afweging dl{margin:8px 0}.afweging dd{margin:0 0 9px}.afweging li{margin-bottom:8px}.afweging ul{padding-left:20px}
+
+/* TEKSTEN_V1: compacte vergelijkers op de dealkaart */
+.versheid-regel{margin:10px 0 4px;font-size:14px;line-height:1.4}
+.versheid-regel .chip.weinig{margin-left:6px;background:#fff4e0;color:#8a5a00}
+.versheid-regel .vgl-info{display:inline;margin-left:4px}
+.vgl-info>summary{display:inline;list-style:none;cursor:pointer;font-size:14px;padding:2px 4px}
+.vgl-info>summary::-webkit-details-marker{display:none}
+.vgl-info p{margin:6px 0 0;font-size:13px;color:var(--mute);line-height:1.4}
+.versheid>summary{cursor:pointer;padding:6px 0}
+.vgl-lijst{list-style:none;padding:0;margin:4px 0 0}
+.vgl-lijst li{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-top:1px solid var(--line,#39404a);font-size:14px;line-height:1.35}
+.vgl-t{font-weight:650}
+.vgl-t .vgl-link{margin-left:4px;text-decoration:none;font-weight:700}
+.vgl-m{color:var(--mute);font-size:13px}
+.vgl-meer{margin-top:6px}
+.vgl-meer summary{cursor:pointer;padding:6px 0}
