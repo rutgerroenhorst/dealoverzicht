@@ -61,3 +61,7 @@
 .txin-tabs button{background:transparent;border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--ink);font-size:.8rem}
 .txin-tabs button.aan{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .txin-leeg{color:var(--mute);font-size:.85rem;padding:8px 0}
+
+.txin-zoekst{border-color:var(--acc);background:var(--chip)}
+.txin-zoekst b{display:block;margin-bottom:4px}
+#txzoekgericht{background:var(--acc);color:#fff}

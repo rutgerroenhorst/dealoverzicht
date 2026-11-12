@@ -136,6 +136,87 @@ function uitBedragen(R){
   const landen=R.landen||(R.V&&R.V.landen)||["NL"];
   return {verkoop,bod,marge,n,landen,fout:R.fout||null,label_de:R.label_de,regelversie:R.regelversie,handmatig:!!R.handmatig};
 }
+
+function zoekApiPad(){
+  if(isBedrijf())return apiRoot().replace(/\/$/,"")+"/taxaties/bedrijf/zoek";
+  return apiRoot().replace(/\/$/,"")+"/taxatie/zoek";
+}
+function zoekAuthHeaders(){
+  const h={"Content-Type":"application/json"};
+  if(isBedrijf()&&window.TX_BEDRIJF_TOKEN)h.Authorization="Bearer "+TX_BEDRIJF_TOKEN;
+  else{try{const t=localStorage.inst_token||localStorage["inst_token_"+((typeof TXSLUG==="function"?TXSLUG():"brns") )];if(t)h.Authorization="Bearer "+t;}catch(e){}}
+  return h;
+}
+async function zoekFetch(method,body,id){
+  const url=zoekApiPad()+(id?"/"+encodeURIComponent(id):"");
+  const r=await fetch(url,{method:method,headers:zoekAuthHeaders(),body:body?JSON.stringify(body):undefined,credentials:"include"});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok&&!j.ok&&j.fout)throw new Error(j.fout);
+  return j;
+}
+function zoekStatusHtml(job,meldingen){
+  if(!job&&!(meldingen&&meldingen.length))return "";
+  const j=job||{};
+  const b=j.bericht||(j.status==="wacht"?"Gericht zoeken gestart, verwacht binnen ± 30 min":"");
+  const wie=j.door?(" · opdracht van "+j.door):"";
+  const st={wacht:"in de wachtrij",bezig:"bezig",klaar:"klaar",niets:"geen extra vergelijkers",budget:"dagmaximum",blokkade:"bron niet beschikbaar"}[j.status]||j.status||"";
+  let h=`<div class="txin-kaart txin-zoekst" id="txzoekstatus"><b>Gericht zoeken</b>`;
+  if(b)h+=`<div class="txin-meta">${esc(b)}${esc(wie)}</div>`;
+  if(st)h+=`<div class="txin-meta">Status: ${esc(st)}</div>`;
+  if(j.oude_uitkomst&&j.nieuwe_uitkomst){
+    const o=j.oude_uitkomst,n=j.nieuwe_uitkomst;
+    h+=`<div class="txin-rijen"><div class="txin-rij"><span class="l">Vorige taxatie</span><b>${euro(o.verkoop)} · bod ${euro(o.bod)}</b></div>`;
+    h+=`<div class="txin-rij"><span class="l">Nieuwe taxatie</span><b>${euro(n.verkoop)} · bod ${euro(n.bod)}</b></div></div>`;
+  }
+  h+=`</div>`;
+  return h;
+}
+async function zoekStart(){
+  syncVelden();
+  if(!TX.merk||!TX.model){if(typeof toast==="function")toast("Eerst merk en model (of kenteken ophalen).");return;}
+  const oude=uitBedragen(TXR3&&TXR3.r);
+  const body={merk:TX.merk,model:TX.model,jaar:TX.jaar,km:TX.km,kenteken:TX.kenteken||"",taxatie_id:TX3.id||"",door:wie(),oude_uitkomst:{verkoop:oude.verkoop,bod:oude.bod,marge:oude.marge,n:oude.n,landen:oude.landen}};
+  try{
+    const r=await zoekFetch("POST",body);
+    window.TXZOEK=r.job||r;
+    if(typeof toast==="function")toast((r.bericht||"Gericht zoeken gestart, verwacht binnen ± 30 min"));
+    toonUitkomst();
+    zoekPollStart();
+  }catch(e){if(typeof toast==="function")toast(e.message||"Zoeken starten mislukt");}
+}
+let TXZOEKPOLL=null;
+function zoekPollStart(){
+  if(TXZOEKPOLL)clearInterval(TXZOEKPOLL);
+  let n=0;
+  TXZOEKPOLL=setInterval(async()=>{
+    n++;
+    const id=(window.TXZOEK&&TXZOEK.id);
+    if(!id||n>80){clearInterval(TXZOEKPOLL);TXZOEKPOLL=null;return;}
+    try{
+      const r=await zoekFetch("GET",null,id);
+      const job=r.job||((r.jobs||[])[0]);
+      if(job){window.TXZOEK=job;toonUitkomst();}
+      if(job&&["klaar","niets","budget","blokkade"].indexOf(job.status)>=0){
+        clearInterval(TXZOEKPOLL);TXZOEKPOLL=null;
+        if(job.nieuwe_uitkomst&&(job.nieuwe_uitkomst.verkoop||job.nieuwe_uitkomst.bod)){
+          TXR3=Object.assign(TXR3||{},{r:Object.assign({},TXR3.r||{},{verkoop:job.nieuwe_uitkomst.verkoop,inruil:job.nieuwe_uitkomst.bod,marge:job.nieuwe_uitkomst.marge,n:job.nieuwe_uitkomst.n,landen:job.nieuwe_uitkomst.landen,vorige:job.oude_uitkomst}),fout:null});
+          toonUitkomst();
+        }
+        if(typeof lijstLaden==="function")try{lijstLaden();}catch(e){}
+      }
+    }catch(e){}
+  },8000);
+}
+async function zoekDeAds(cb){
+  try{
+    const r=await fetch(apiRoot().replace(/\/$/,"")+"/taxatie/de-ads?merk="+encodeURIComponent(TX.merk||"")+"&model="+encodeURIComponent(TX.model||"")+"&jaar="+encodeURIComponent(TX.jaar||""),{credentials:"include"});
+    const j=await r.json();
+    window.TXDEADS=j;
+    if(cb)cb(j);
+    toonUitkomst();
+  }catch(e){window.TXDEADS=window.TXDEADS||{n:0};}
+}
+
 function toonUitkomst(){
   const box=document.getElementById("txUit");if(!box)return;
   const R=TXR3&&TXR3.r,fout=TXR3&&TXR3.fout,de=TXR3&&TXR3.de;
@@ -158,8 +239,18 @@ function toonUitkomst(){
     if(hm&&R.marge!=null&&!hm.value)hm.value=R.marge;
     if(hb&&R.inruil&&!hb.value)hb.value=R.inruil;
   }
-  const weinig=(!R||!R.n||R.n<5||(TXR3&&TXR3.fout));
-  if(weinig)h+=`<div class="txin-acties"><button type="button" class="txin-btn sec" id="txde">Vergelijk met Duitsland</button></div>`;
+  const weinig=(!B||!B.n||B.n<5||(TXR3&&TXR3.fout));
+  const deN=(window.TXDEADS&&typeof TXDEADS.n==="number")?TXDEADS.n:((de&&de.n)||null);
+  const zoekNodig=weinig||deN==null||deN<3;
+  if(weinig||zoekNodig){
+    h+=`<div class="txin-acties">`;
+    if(weinig||true)h+=`<button type="button" class="txin-btn sec" id="txde">Vergelijk met Duitsland</button>`;
+    if(zoekNodig)h+=`<button type="button" class="txin-btn" id="txzoekgericht">Zoek gericht</button>`;
+    h+=`</div>`;
+  }
+  if(window.TXZOEK)h+=zoekStatusHtml(TXZOEK);
+  const siteM=(window.TXZOEKM||[]);
+  if(siteM[0]&&(!window.TXZOEK||siteM[0].job_id!==(TXZOEK&&TXZOEK.id)))h+=zoekStatusHtml(null,siteM);
   if(de){
     if(de.fout)h+=`<div class="txin-kaart fout">${esc(de.fout)}</div>`;
     else{
@@ -368,6 +459,7 @@ async function vergelijkDE(){
 }
 function bind(){
   const g=id=>document.getElementById(id);
+  if(g("txzoekgericht"))g("txzoekgericht").addEventListener("click",()=>zoekStart());
   if(g("txophalen"))g("txophalen").onclick=ophalen;
   if(g("txtaxeer"))g("txtaxeer").onclick=taxeer;
   if(g("txhandtoepas"))g("txhandtoepas").onclick=handToepas;
@@ -378,8 +470,9 @@ function bind(){
   document.querySelectorAll("#txopt .txin-chip input").forEach(inp=>{inp.addEventListener("change",()=>{const lab=inp.closest(".txin-chip");if(lab)lab.classList.toggle("aan",inp.checked);});});
   const root=document.getElementById("tx-inruil");
   if(root)root.addEventListener("click",e=>{
-    const b=e.target.closest("[data-txa],[data-txlijst],#txde,#txzoekbtn");
+    const b=e.target.closest("[data-txa],[data-txlijst],#txde,#txzoekbtn,#txzoekgericht");
     if(!b)return;
+    if(b.id==="txzoekgericht"){zoekStart();return;}
     if(b.id==="txde"){vergelijkDE();return;}
     if(b.id==="txzoekbtn"){TXL.filter=(g("txzoek")||{}).value||"";lijstTeken();return;}
     if(b.dataset.txlijst){TXL.prul=b.dataset.txlijst==="prul";lijstTeken();return;}
@@ -438,6 +531,7 @@ window.txGo=async function(){
   TXR3=Object.assign(TXR3||{},{r:typeof txBereken3==="function"?txBereken3():null,fout:null});
   if(TXR3.r&&TXR3.r.fout)TXR3.fout=TXR3.r.fout;
   if(typeof taxatie2==="function")taxatie2();
+  if(TX.merk&&TX.model)zoekDeAds();
 };
 window.txStappen=function(){return;};
 const _cui=window.txCatRefreshUI;

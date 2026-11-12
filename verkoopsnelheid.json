@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "klant": "brns",
-  "bijgewerkt": "2026-11-12T09:51:34+01:00",
+  "bijgewerkt": "2026-11-12T17:56:45+01:00",
   "waarneming_vanaf": "2026-10-29",
   "historiedagen": 14,
   "items": [
@@ -151381,9 +151381,9 @@
     "gevolgde_voertuigen": 88537,
     "profiel_voertuigen": 80998,
     "bevestigd_offline": 3,
-    "liveness_records": 317,
+    "liveness_records": 308,
     "liveness_onbekend": 247,
-    "liveness_online": 63,
+    "liveness_online": 58,
     "herplaatst": 0,
     "normale_bronnen": [
       "AT"
