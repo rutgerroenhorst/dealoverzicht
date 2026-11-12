@@ -43,3 +43,22 @@ h2.t{font-weight:600;letter-spacing:-.01em}
 @media (max-width:640px){.vgrid{grid-template-columns:1fr}.stappen ol{flex-direction:column}.top{gap:6px}main{padding:10px}}
 .cards>.vandaag,.cards>.vandaag-wrap{grid-column:1/-1}
 @media (min-width:900px){.tabs{flex-wrap:wrap}}
+
+.vtop{margin-bottom:12px}
+.vk-rustig{margin:4px 0 14px}
+.vk-rustig .btn{background:transparent;border:1px solid var(--line);color:var(--ink);font-weight:500}
+.dtegels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 10px}
+.dtegel{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:12px 14px;border:1px solid var(--line);background:var(--card);border-radius:14px;cursor:pointer;font:inherit;color:inherit;min-height:72px;touch-action:manipulation}
+.dtegel b{font-size:22px;line-height:1.1;font-weight:700;letter-spacing:-.02em}
+.dtegel span{font-size:13px;color:var(--mute)}
+.dtegel:active,.dtegel:focus-visible{border-color:var(--acc);outline:none;box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 30%,transparent)}
+.dhoe{margin:4px 0 14px;font-size:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0 14px}
+.dhoe summary{cursor:pointer;font-weight:600;padding:12px 0;color:var(--ink)}
+.dhoe p{margin:0 0 10px}
+.dag-kop{font-size:16px;margin:0 0 10px}
+.daglijst{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:0 0 12px}
+.daglijst h3{font-size:15px;margin:0 0 8px}
+.dag-vandaag{margin:12px 0}
+body.toast-on{padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+#toast{z-index:40}
+@media (max-width:640px){.dtegels{grid-template-columns:repeat(2,minmax(0,1fr))}.vandaag .vk{gap:6px}}

@@ -33,6 +33,8 @@ function vRij(t,s,a,extra){extra=extra||{};const open=extra.open,foto=extra.foto
  const thumb=open?`<div class="vr-ph" aria-hidden="true">${foto?`<img src="${esc(foto)}" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'vr-ph-x',textContent:'Geen foto'}))">`:`<span class="vr-ph-x">Geen foto</span>`}</div>`:"";
  const chev=open?`<span class="vr-chev" aria-hidden="true">›</span>`:"";
  return `<li class="${cls}"${open?` data-open="${esc(open)}" role="link" tabindex="0" title="Bekijk deal">`:">"}${thumb}<div class="vr-m"><div class="vr-t">${t}</div><div class="vr-s">${s||""}</div></div>${chev}<div class="vr-a">${a||""}</div></li>`}
+function opvolgTitel(u,p,d){if(d&&d.titel)return d.titel;if(p&&p.titel)return p.titel;const nt=(p&&p.notitie)||'';if(nt&&!/^https?:/i.test(nt))return nt.slice(0,80);
+ try{const x=new URL(u),last=decodeURIComponent((x.pathname||'').split('/').filter(Boolean).pop()||'').replace(/[-_+]+/g,' ').replace(/\.\w+$/,'');if(last&&!/^\d+$/.test(last)&&last.length>3)return last.replace(/\b\w/g,c=>c.toUpperCase());return (x.hostname||'').replace(/^www\./,'')+' · advertentie'}catch(e){return 'Advertentie (niet meer in de lijst)'}}
 function vandaag(){upFetch();$("#kpis").innerHTML="";const A=alleDeals().filter(d=>!HID.has(d.deal_url)&&d.c&&d.c.online!==false&&!d.verlopen&&!/verkocht/i.test(d.titel||"")),nu=Date.now();
  const open=A.filter(d=>!["Gekocht","Afgewezen"].includes(pget(d.deal_url).status)).sort((a,b)=>String(b.nieuw_iso||"").localeCompare(String(a.nieuw_iso||""))||((b.marge||{}).marge||0)-((a.marge||{}).marge||0));
  const vers=open.filter(d=>d.nieuw_iso&&nu-new Date(d.nieuw_iso).getTime()<48*3600e3),H=herinneringen(),T=Object.values(txAll()).sort((a,b)=>String(b.gewijzigd||"").localeCompare(String(a.gewijzigd||""))).slice(0,6);
@@ -46,18 +48,20 @@ function vandaag(){upFetch();$("#kpis").innerHTML="";const A=alleDeals().filter(
    {open:d.id,foto})};
 
  const blok=(t,n,inh,leeg)=>`<section class="vb"><h3>${t}${n!=null?` <span class="cnt">${n}</span>`:""}</h3>${inh||`<div class="meta">${leeg}</div>`}</section>`;
- const opvolgen=H.map(([u,p])=>{const d=A.find(x=>x.deal_url===u);
-  if(d) return vRij(`<span class="vr-titel">${esc(d.titel)}</span>`,`${esc(p.status)} · herinnering ${esc(String(p.herinner).replace("T"," "))}${p.notitie?" · "+esc(p.notitie.slice(0,60)):""}`,`<span class="btn sm ghost vr-bekijk">Bekijk deal</span>`,{open:d.id,foto:(d.c&&d.c.foto)||""});
-  return vRij(esc(u.slice(0,50)),`${esc(p.status)} · herinnering ${esc(String(p.herinner).replace("T"," "))}${p.notitie?" · "+esc(p.notitie.slice(0,60)):""}`,"")});
+ const opvolgen=H.map(([u,p])=>{const d=A.find(x=>x.deal_url===u)||(typeof alleDeals==='function'?alleDeals().find(x=>x.deal_url===u):null);
+  const titel=opvolgTitel(u,p,d);
+  if(d) return vRij(`<span class="vr-titel">${esc(titel)}</span>`,`${esc(p.status)} · herinnering ${esc(String(p.herinner).replace("T"," "))}${p.notitie&&!/^https?:/i.test(p.notitie)?" · "+esc(p.notitie.slice(0,60)):""}`,`<span class="btn sm ghost vr-bekijk">Bekijk deal</span>`,{open:d.id,foto:(d.c&&d.c.foto)||""});
+  return vRij(`<span class="vr-titel">${esc(titel)}</span>`,`${esc(p.status)} · herinnering ${esc(String(p.herinner).replace("T"," "))}`,"")});
  const bs=BSC&&BSC.per_bron?Object.entries(BSC.per_bron).map(([b,n])=>`${esc(b)} ${n}`).join(", "):"";
  const lr=LRN&&LRN.paren!=null?`Leren van eigen verkopen: ${LRN.paren} inkoop en verkoop gekoppeld, ${LRN.actief?"model actief":"model actief vanaf "+LRN.drempel+" (nog "+LRN.nog_nodig+" nodig)"}.`:upTok()?"":"Log in bij Instellingen om taxaties, dossier en leren op alle toestellen te zien.";
- $("#cards").innerHTML=`<div class="vandaag"><div class="vk">${knop("Nieuwe taxatie",13)} ${knop("Alle deals",Math.max(0,D.segmenten.findIndex(x=>x.id==="brns")),"ghost")} ${knop("Bijna-deals",18,"ghost")} ${knop("Eigen voorraad",12,"ghost")} ${knop("Meldingen",6,"ghost")}</div>
- <div class="vgrid">${blok("Nu opvolgen",H.length,H.length?`<ul class="vl">${opvolgen.join("")}</ul>`:"","Geen herinneringen voor vandaag.")}
- ${blok("Nieuwe deals (48 uur)",vers.length,vers.length?`<ul class="vl">${vers.slice(0,8).map(dl).join("")}</ul>${vers.length>8?`<div class="meta">Nog ${vers.length-8} nieuw — open Inkoopkansen of Eigen flips.</div>`:""}`:"","Geen nieuwe deals in de laatste 48 uur.")}
+ $("#cards").innerHTML=`<div class="vandaag"><div class="vgrid vtop">${blok("Nu opvolgen",H.length,H.length?`<ul class="vl">${opvolgen.join("")}</ul>`:"","Geen herinneringen voor vandaag.")}</div>
+ <div id="dagtegels"></div>
+ <div class="vk vk-rustig">${knop("Nieuwe taxatie",13,"ghost")} ${knop("Eigen voorraad",12,"ghost")} ${knop("Meldingen",6,"ghost")}</div>
+ <div class="vgrid">${blok("Nieuwe deals (48 uur)",vers.length,vers.length?`<ul class="vl">${vers.slice(0,8).map(dl).join("")}</ul>${vers.length>8?`<div class="meta">Nog ${vers.length-8} nieuw — open Inkoopkansen of Eigen flips.</div>`:""}`:"","Geen nieuwe deals in de laatste 48 uur.")}
  ${blok("Open deals",open.length,open.length?`<ul class="vl">${open.filter(d=>!vers.includes(d)).slice(0,6).map(dl).join("")}</ul><div class="meta">Open deals = alle segmenten (Inkoopkansen ${nBrns} + Eigen flips ${nFlips}${open.length!==nBrns+nFlips?`, waarvan ${open.length} niet afgewezen/gekocht`:""}). Tab Inkoopkansen toont alleen BRNS (${nBrns}). Tik op een regel voor de volledige kaart (foto, marge, vergelijkers).</div>`:"","Geen open deals.")}
  ${blok("Open taxaties en voorstellen",T.length,T.length?`<ul class="vl">${T.map(t=>vRij(`<a href="#taxatie-${esc(t.id)}" data-vtx="${esc(t.id)}">${esc(t.auto)}</a>`,`${esc(t.datum||"")} · inruil ${eur(t.inruil_midden||0)}${t.soort==="voorstel"?" · voorstel":""}`,"")).join("")}</ul>`:"","Nog geen opgeslagen taxaties.")}
  ${blok("Voorraad die te lang staat",V.length,V.length?`<div class="meta">Te lang = minstens 30 dagen in voorraad sinds onze eerste meting, of vraagprijs meer dan 5% boven de mediaan van minstens 4 vergelijkbare NL-advertenties. Wij wijzigen nooit zelf een prijs.</div><ul class="vl">${V.map(vrLangRij).join("")}</ul>`:"",TXV?"Geen voorraad die opvalt.":"Voorraad laden")}
- </div><div class="meta vfoot">${bs?`Deals per bron (${BSC.dagen} dagen): ${bs}. `:""}${esc(lr)}${upTok()?' <button type="button" class="btn sm ghost" data-paren>Verkopen invoeren</button>':""}</div></div>`}
+ </div><div class="meta vfoot">${bs?`Deals per bron (${BSC.dagen} dagen): ${bs}. `:""}${esc(lr)}${upTok()?' <button type="button" class="btn sm ghost" data-paren>Verkopen invoeren</button>':""}</div></div>`;if(typeof dagToon==='function')dagToon()}
 function vrId(u){let h=0;for(const c of String(u||""))h=(h*31+c.charCodeAt(0))|0;return (h>>>0).toString(36)}
 function vrLangRij(a){const ad=a.advies||{},bov=/boven markt/.test(ad.label||""),lang=(a.dagen||0)>=30,ik=(typeof ikGet==="function"?ikGet(a.url):null)||{};
  const waarom=[lang?`${a.dagen} dagen sinds onze eerste meting (${esc(a.sinds||"")}; echte statijd kan langer zijn)`:"",bov?`${esc(ad.label)} (mediaan ${eur(ad.mediaan)}, n=${ad.n})`:(!lang?"":ad.mediaan?`markt ${eur(ad.mediaan)}, n=${ad.n}`:`te weinig vergelijkers (n=${ad.n||0})`)].filter(Boolean).join(" · ");

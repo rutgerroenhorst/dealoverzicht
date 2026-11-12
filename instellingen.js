@@ -28,10 +28,18 @@ const st=document.createElement("style");st.textContent=`
 #inst .instbar .w2{max-width:640px;margin:0 auto;display:block;width:auto}#inst .pv{font-size:14px;margin-bottom:8px}
 #inst .knop{font:inherit;font-size:16px;padding:10px 14px;border-radius:10px;border:1px solid #888;background:inherit;color:inherit;cursor:pointer}
 #inst .knop.p{background:#1a5;color:#fff;border-color:#1a5}#inst .fout{color:#c22}
-#inst .lijst{font-size:14px}#inst .lijst div{padding:4px 0;border-top:1px solid var(--line,#eee)}`;document.head.appendChild(st);
+#inst .lijst{font-size:14px}#inst .lijst div{padding:4px 0;border-top:1px solid var(--line,#eee)}
+#inst .ihulp{font-size:13px;opacity:.75;margin:0 0 8px;line-height:1.4}
+#inst .ig>summary{font-size:16px}
+#inst .ok{color:#157347;font-weight:600}
+#inst input[type=text],#inst textarea{width:100%;max-width:100%;font-size:16px;padding:8px;border:1px solid #bbb;border-radius:8px;background:inherit;color:inherit;box-sizing:border-box}
+#inst .r label small{margin-top:2px;line-height:1.3}
+#inst .bevest{background:#e8f7ee;color:#157347;border-radius:10px;padding:8px 10px;margin:0 0 8px;font-size:14px}
+#inst h3{font-size:15px;margin:10px 0 4px}`;document.head.appendChild(st);
 const el=document.createElement("div");el.id="inst";document.body.appendChild(el);
 function knop(){const h=document.querySelector("header.top");if(!h||document.getElementById("instbtn"))return;const b=document.createElement("button");b.id="instbtn";b.textContent="Instellingen";b.setAttribute("aria-label","Instellingen");b.onclick=open;h.appendChild(b)}
 knop();
+if(location.hash==="#instellingen")setTimeout(()=>open(),0);
 function get(p){return p.split(".").reduce((o,k)=>o==null?o:o[k],S)}
 function set(p,v){const k=p.split(".");let o=S;k.slice(0,-1).forEach(x=>{o[x]=o[x]||{};o=o[x]});o[k[k.length-1]]=v}
 const N=(p,lab,uit)=>`<div class="r"><label for="i_${p}">${lab}${uit?`<small>${uit}</small>`:""}</label><input id="i_${p}" type="number" inputmode="decimal" data-p="${p}" value="${esc(get(p))}"></div>`;
@@ -49,38 +57,96 @@ function close(){el.style.display="none";document.body.style.overflow=""}
 window.openInstellingen=open;
 async function laad(){el.innerHTML=`<div class="w"><p>Laden...</p></div>`;try{const r=await api("/instellingen");S=r.instellingen;STD=r.standaard;ORIG=JSON.stringify(S);
  if(!localStorage["inkoop_gemigreerd_"+SLUG])ikSync();teken()}catch(e){if(e.status===401&&!OPEN)login("Log opnieuw in.");else if(e.status===401)throw e;else el.innerHTML=`<div class="w"><p class="fout">${esc(e.message)}</p><button class="knop" onclick="document.getElementById('inst').style.display='none'">Sluiten</button></div>`}}
-function teken(){const M=S.marge;let h=`<div class="w"><h2>Instellingen <button class="knop" id="ix">Sluiten</button></h2>
-<p style="font-size:14px;opacity:.8">Kansen en het dagoverzicht rekenen direct opnieuw; de overige dealkaarten wijzigen bij de volgende scan. Onderaan zie je direct wat het met de auto's van vandaag zou doen.</p>
-<details open><summary>Minimale marge</summary><p style="font-size:14px">Een auto is een deal als de verwachte marge minstens het hoogste is van het bedrag en het percentage van de vraagprijs.</p>`;
- for(const k of Object.keys(KL_))h+=`<div class="r"><label>${KL_[k]} BRNS</label><input type="number" inputmode="numeric" data-p="marge.brns.${k}.abs" value="${M.brns[k].abs}" aria-label="bedrag"><input type="number" inputmode="decimal" style="width:64px" data-p="marge.brns.${k}.pct" value="${M.brns[k].pct}" aria-label="procent">%</div>`;
- h+=N("flips.marge","Flips","Vast bedrag per flip");
- h+=`<div class="r"><label>Per merk<small>Bijvoorbeeld: porsche 3000 6. Eén merk per regel.</small></label></div><textarea id="imerk" rows="3" style="width:100%;font-size:16px">${esc(Object.entries(M.merken||{}).map(([m,r])=>m+" "+r.abs+" "+r.pct).join("\n"))}</textarea>
- ${N("marge.factor_lagere_zekerheid","Factor bij lagere zekerheid","Minimum keer dit getal als er weinig vergelijkbare auto's zijn")}${N("marge.factor_particulier","Factor particulier","Minimum keer dit getal bij een particuliere verkoper")}</details>
-<details><summary>Strengheid</summary>${N("strengheid.pct_onder_mediaan","Procent onder de mediaan","Hoeveel goedkoper dan vergelijkbare auto's")}${N("strengheid.min_vergelijkbaar","Minimaal aantal vergelijkbare auto's")}${B("strengheid.lagere_zekerheid","Ook deals met lagere zekerheid tonen")}</details>
-<details><summary>Kansen</summary><div class="r"><label>Dekking mobile.de</label><select data-p="kansen.modus">${[["aanvulling","mobile.de als aanvulling"],["alles","alles meenemen"],["exclusief_particulier","alleen exclusief/particulier"]].map(([v,t])=>`<option value="${v}" ${(get("kansen.modus")||"aanvulling")===v?"selected":""}>${t}</option>`).join("")}</select></div><p>Als aanvulling zakken modellen die AutoScout24 al goed dekt. Alles meenemen schakelt die straf uit. Exclusief/particulier kiest exclusieve modellen of richt de zoekopdracht alleen op particuliere verkopers. Na opslaan rekent Kansen direct opnieuw.</p></details><details><summary>Profiel</summary>${N("profiel.bouwjaar_min","Bouwjaar vanaf")}${N("profiel.km_max","Maximaal aantal km")}${N("profiel.prijs_min","Prijs vanaf")}${N("profiel.prijs_max","Prijs tot")}
-<div class="r"><label>Btw/marge voor mobile.de</label><select data-p="profiel.btw_regeling">${[["alle","Alles (marge voorzichtig gerekend)"],["btw","Alleen btw-auto"],["marge","Alleen margeauto"]].map(([v,t])=>`<option value="${v}" ${get("profiel.btw_regeling")===v?"selected":""}>${t}</option>`).join("")}</select></div><div class="r"><label>Verkoper mobile.de</label><select data-p="profiel.verkoper">${[["alle","Particulier en handelaar"],["particulier","Particulier"],["bedrijf","Handelaar"]].map(([v,t])=>`<option value="${v}" ${get("profiel.verkoper")===v?"selected":""}>${t}</option>`).join("")}</select></div>${T("profiel.merken_uit","Merken uit","Gescheiden door komma's")}${T("profiel.modellen_uit","Modellen uit","Bijvoorbeeld: cayenne diesel, x5")}${T("profiel.brandstof","Alleen brandstof","Leeg is alles. Bijvoorbeeld: benzine, hybride")}${T("profiel.transmissie","Alleen transmissie","Leeg is alles. Bijvoorbeeld: automaat")}</details>
-<details><summary>Landen en bronnen</summary>${Object.keys(S.landen).map(l=>B("landen."+l,l)).join("")}${Object.keys(S.bronnen).filter(b=>typeof S.bronnen[b]==="boolean"&&!['bat_trends','classicdriver','classic_driver','motorguild'].includes(b)).map(b=>B("bronnen."+b,b)).join("")}
-<p style="font-size:13px;opacity:.75">mobile.de wordt alleen via jouw meldingsmails verwerkt; de tab Kansen geeft de zoekfilters. mobile.de en Gaspedaal worden nooit gescrapet.</p>${N("ophalen_max","Maximale ophaalkosten","0 is geen grens")}</details>
-<details><summary>Kosten</summary>${Object.keys(S.kosten.transport).map(l=>N("kosten.transport."+l,"Transport "+l)).join("")}${N("kosten.opknap_buffer","Opknapbuffer per auto")}${N("kosten.stakosten_per_dag","Stakosten per dag")}${N("kosten.rente_pct","Rente per jaar in procent")}</details>
-<details><summary>Meldingen in Telegram</summary><div class="r"><label for="i_ms">Welke deals</label><select id="i_ms" data-p="meldingen.soort">${[["top","Alleen topdeals"],["deals","Alle deals"],["deals_en_bijna","Deals en bijna-deals"]].map(([v,t])=>`<option value="${v}" ${S.meldingen.soort===v?"selected":""}>${t}</option>`).join("")}</select></div>
-${N("meldingen.top_marge","Topdeal vanaf marge","Zelfde als /drempel in Telegram. Tijdens stille uren komen alleen topdeals door.")}${N("meldingen.stil_van","Stil vanaf uur")}${N("meldingen.stil_tot","Stil tot uur")}${N("meldingen.max_per_dag","Maximaal per dag")}</details>
-<details><summary>Flips</summary>${N("flips.prijs_max","Prijsgrens")}${T("flips.landen","Regio, landen","Leeg is alle landen. Bijvoorbeeld: NL, BE")}</details>
+
+const BRON_WEG=new Set(["bat_trends","classicdriver","classic_driver","motorguild"]);
+const BRON_LAB={autoscout24:"AutoScout24",marktplaats:"Marktplaats",autotrack:"AutoTrack",rdw:"RDW",AutoScout24:"AutoScout24",Marktplaats:"Marktplaats",AutoTrack:"AutoTrack",RDW:"RDW"};
+function teken(){const M=S.marge;
+ const bronnen=Object.keys(S.bronnen).filter(b=>typeof S.bronnen[b]==="boolean"&&!BRON_WEG.has(b));
+ let h=`<div class="w"><h2>Instellingen <button class="knop" id="ix">Sluiten</button></h2>
+<p class="ihulp">Belangrijkste keuzes staan bovenaan. Kansen en Vandaag rekenen direct opnieuw; dealkaarten volgen bij de volgende scan.</p>
+<details class="ig" open><summary>Zoekcriteria en marge</summary>
+<p class="ihulp">Een auto is een deal als de verwachte marge minstens het hoogste is van het bedrag en het percentage van de vraagprijs.</p>`;
+ for(const k of Object.keys(KL_))h+=`<div class="r"><label>${KL_[k]} BRNS<small>Minimumbedrag en percentage van de vraagprijs.</small></label><input type="number" inputmode="numeric" data-p="marge.brns.${k}.abs" value="${M.brns[k].abs}" aria-label="bedrag ${KL_[k]}"><input type="number" inputmode="decimal" style="width:64px" data-p="marge.brns.${k}.pct" value="${M.brns[k].pct}" aria-label="procent ${KL_[k]}">%</div>`;
+ h+=N("flips.marge","Flips, minimale marge","Vast minimumbedrag per flip.")+N("flips.prijs_max","Flips, prijsgrens","Auto's duurder dan dit bedrag tellen niet als flip.");
+ h+=N("strengheid.pct_onder_mediaan","Procent onder de mediaan","Hoeveel goedkoper dan vergelijkbare auto's een deal minstens moet zijn.")+N("strengheid.min_vergelijkbaar","Minimaal aantal vergelijkbare auto's","Onder dit aantal telt de auto niet als deal.")+B("strengheid.lagere_zekerheid","Ook deals met lagere zekerheid tonen","Toon ook auto's met betrouwbaarheid C.");
+ h+=N("profiel.bouwjaar_min","Bouwjaar vanaf","Leeg is geen ondergrens.")+N("profiel.km_max","Maximaal aantal km","Leeg is geen bovengrens.")+N("profiel.prijs_min","Prijs vanaf","Leeg is geen ondergrens.")+N("profiel.prijs_max","Prijs tot","Leeg is geen bovengrens.");
+ h+=`</details>
+<details class="ig"><summary>Bronnen</summary>
+<p class="ihulp">Zet een land of site uit als je die niet wilt meenemen. mobile.de komt alleen binnen via je meldingsmails; die en Gaspedaal worden nooit gescrapet.</p>
+${Object.keys(S.landen).map(l=>B("landen."+l,l,"Advertenties uit dit land meenemen.")).join("")}
+${bronnen.map(b=>B("bronnen."+b,BRON_LAB[b]||b,"Advertenties van deze bron meenemen.")).join("")}
+${N("ophalen_max","Maximale ophaalkosten","0 of leeg is geen grens.")}
+</details>
+<details class="ig"><summary>Meldingen en Telegram</summary>
+<p class="ihulp">Bepaalt welke deals de bot stuurt, en wanneer het stil is.</p>
+<div class="r"><label for="i_ms">Welke deals<small>Tijdens stille uren komen alleen topdeals door.</small></label><select id="i_ms" data-p="meldingen.soort">${[["top","Alleen topdeals"],["deals","Alle deals"],["deals_en_bijna","Deals en bijna-deals"]].map(([v,t])=>`<option value="${v}" ${S.meldingen.soort===v?"selected":""}>${t}</option>`).join("")}</select></div>
+${N("meldingen.top_marge","Topdeal vanaf marge","Zelfde drempel als /drempel in Telegram.")}
+${N("meldingen.stil_van","Stil vanaf uur","Uur (0–23) waarop meldingen stilgaan.")}
+${N("meldingen.stil_tot","Stil tot uur","Uur (0–23) waarop meldingen weer mogen.")}
+${N("meldingen.max_per_dag","Maximaal per dag","0 is geen limiet.")}
+</details>
+<details class="ig"><summary>Klanten</summary>
+<p class="ihulp">Aanvullende filters voor wat je voor klanten zoekt, en hoe mobile.de-kansen worden meegenomen.</p>
+<div class="r"><label>Dekking mobile.de<small>Als aanvulling zakken modellen die AutoScout24 al goed dekt. Na opslaan rekent Kansen direct opnieuw.</small></label><select data-p="kansen.modus">${[["aanvulling","mobile.de als aanvulling"],["alles","Alles meenemen"],["exclusief_particulier","Alleen exclusief of particulier"]].map(([v,t])=>`<option value="${v}" ${(get("kansen.modus")||"aanvulling")===v?"selected":""}>${t}</option>`).join("")}</select></div>
+<div class="r"><label>Btw-regeling mobile.de<small>Alleen voor kansen uit je mobile.de-mails.</small></label><select data-p="profiel.btw_regeling">${[["alle","Alles (marge voorzichtig gerekend)"],["btw","Alleen btw-auto"],["marge","Alleen margeauto"]].map(([v,t])=>`<option value="${v}" ${get("profiel.btw_regeling")===v?"selected":""}>${t}</option>`).join("")}</select></div>
+<div class="r"><label>Verkoper mobile.de<small>Filter op soort verkoper in die mails.</small></label><select data-p="profiel.verkoper">${[["alle","Particulier en handelaar"],["particulier","Particulier"],["bedrijf","Handelaar"]].map(([v,t])=>`<option value="${v}" ${get("profiel.verkoper")===v?"selected":""}>${t}</option>`).join("")}</select></div>
+${T("profiel.merken_uit","Merken uit","Komma's ertussen. Deze merken sluit je uit.")}
+${T("profiel.modellen_uit","Modellen uit","Bijvoorbeeld: cayenne diesel, x5.")}
+${T("profiel.brandstof","Alleen brandstof","Leeg is alles. Bijvoorbeeld: benzine, hybride.")}
+${T("profiel.transmissie","Alleen transmissie","Leeg is alles. Bijvoorbeeld: automaat.")}
+</details>
+<details class="ig"><summary>Weergave</summary>
+<p class="ihulp">Alleen op dit toestel. Dit verandert niets aan deals of scans.</p>
+<div class="r"><label for="i_thema">Thema<small>Licht, donker, of automatisch met je toestel.</small></label>
+<select id="i_thema">${[["auto","Automatisch"],["licht","Licht"],["donker","Donker"]].map(([v,t])=>`<option value="${v}" ${(localStorage.thema||"auto")===v?"selected":""}>${t}</option>`).join("")}</select></div>
+</details>
+<details class="ig"><summary>Geavanceerd</summary>
+<p class="ihulp">Technische en zelden gebruikte instellingen. Kosten gelden bij de volgende scan.</p>
+${N("marge.factor_lagere_zekerheid","Factor bij lagere zekerheid","Minimum keer dit getal als er weinig vergelijkbare auto's zijn.")}
+${N("marge.factor_particulier","Factor particulier","Minimum keer dit getal bij een particuliere verkoper.")}
+<div class="r"><label for="imerk">Per merk<small>Bijvoorbeeld: porsche 3000 6. Eén merk per regel.</small></label></div>
+<textarea id="imerk" rows="3">${esc(Object.entries(M.merken||{}).map(([m,r])=>m+" "+r.abs+" "+r.pct).join("\n"))}</textarea>
+${T("flips.landen","Flips, alleen deze landen","Leeg is alle landen. Bijvoorbeeld: NL, BE.")}
+${Object.keys(S.kosten.transport).map(l=>N("kosten.transport."+l,"Transport "+l,"Vaste transportkosten naar dit land.")).join("")}
+${N("kosten.opknap_buffer","Opknapbuffer per auto","Extra bedrag dat je aanhoudt voor opknappen.")}
+${N("kosten.stakosten_per_dag","Stakosten per dag","Kosten per dag dat de auto stilstaat.")}
+${N("kosten.rente_pct","Rente per jaar in procent","Jaarlijkse rente in de kostencalculatie.")}
 <details><summary>Logboek en terugzetten</summary><div id="ilog" class="lijst">Laden...</div></details>
-<p><button class="knop" id="istd">Standaardwaarden invullen</button></p></div>
+<p><button class="knop" id="istd">Standaardwaarden invullen</button></p>
+</details>
+</div>
 <div class="instbar"><div class="w2"><div class="pv" id="ipv">Geen wijzigingen.</div><button class="knop p" id="isave">Opslaan</button> <button class="knop" id="iher">Bekijk auto's</button></div></div><div id="ilst" class="w lijst"></div>`;
  el.innerHTML=h;el.querySelector("#ix").onclick=close;
  el.querySelectorAll("[data-p]").forEach(i=>i.addEventListener(i.type==="checkbox"||i.tagName==="SELECT"?"change":"input",()=>{const p=i.dataset.p;let v=i.type==="checkbox"?i.checked:i.dataset.l?i.value.split(",").map(s=>s.trim()).filter(Boolean):i.tagName==="SELECT"?i.value:(i.value===""?null:+i.value.replace(",","."));set(p,v);preview()}));
  el.querySelector("#imerk").addEventListener("input",e=>{const o={};e.target.value.split("\n").forEach(l=>{const m=l.trim().match(/^(.+?)\s+(\d+)\s+([\d.,]+)$/);if(m)o[m[1].toLowerCase()]={abs:+m[2],pct:+m[3].replace(",",".")}});S.marge.merken=o;preview()});
  el.querySelector("#istd").onclick=()=>{S=JSON.parse(JSON.stringify(STD));teken();preview()};
- el.querySelector("#isave").onclick=bewaar;el.querySelector("#iher").onclick=()=>preview(true);logboek()}
-function preview(lijst){clearTimeout(tmr);tmr=setTimeout(async()=>{const pv=el.querySelector("#ipv");if(JSON.stringify(S)===ORIG&&!lijst){pv.textContent="Geen wijzigingen.";return}
+ el.querySelector("#isave").onclick=bewaar;el.querySelector("#iher").onclick=()=>preview(true);
+ const th=el.querySelector("#i_thema");if(th)th.addEventListener("change",()=>{localStorage.thema=th.value;if(typeof upThema==="function")upThema();const b=document.getElementById("thema");if(b)b.textContent="Weergave: "+{auto:"automatisch",licht:"licht",donker:"donker"}[th.value]});
+ logboek()}
+function valideer(){const fout=[],num=(p,min,max,lab)=>{const v=get(p);if(v==null||v==="")return;const n=+v;if(!Number.isFinite(n))fout.push(lab+": vul een getal in");else{if(min!=null&&n<min)fout.push(lab+" is te laag");if(max!=null&&n>max)fout.push(lab+" is te hoog")}};
+ for(const k of Object.keys(KL_)){num("marge.brns."+k+".abs",0,1e9,KL_[k]+" bedrag");num("marge.brns."+k+".pct",0,100,KL_[k]+" percentage")}
+ num("flips.marge",0,1e9,"Flipsmarge");num("flips.prijs_max",0,1e9,"Flips prijsgrens");
+ num("strengheid.pct_onder_mediaan",0,100,"Procent onder de mediaan");num("strengheid.min_vergelijkbaar",1,100,"Minimaal aantal vergelijkbare auto's");
+ num("profiel.bouwjaar_min",1950,2035,"Bouwjaar vanaf");num("profiel.km_max",0,1e7,"Maximaal aantal km");
+ num("profiel.prijs_min",0,1e9,"Prijs vanaf");num("profiel.prijs_max",0,1e9,"Prijs tot");
+ const pmin=get("profiel.prijs_min"),pmax=get("profiel.prijs_max");if(pmin!=null&&pmax!=null&&Number.isFinite(+pmin)&&Number.isFinite(+pmax)&&+pmin>+pmax)fout.push("Prijs vanaf is hoger dan prijs tot");
+ num("ophalen_max",0,1e9,"Maximale ophaalkosten");
+ num("meldingen.top_marge",0,1e9,"Topdeal vanaf marge");num("meldingen.stil_van",0,23,"Stil vanaf uur");num("meldingen.stil_tot",0,23,"Stil tot uur");num("meldingen.max_per_dag",0,1000,"Maximaal per dag");
+ num("marge.factor_lagere_zekerheid",0.1,10,"Factor bij lagere zekerheid");num("marge.factor_particulier",0.1,10,"Factor particulier");
+ for(const l of Object.keys((S.kosten&&S.kosten.transport)||{}))num("kosten.transport."+l,0,1e9,"Transport "+l);
+ num("kosten.opknap_buffer",0,1e9,"Opknapbuffer");num("kosten.stakosten_per_dag",0,1e6,"Stakosten per dag");num("kosten.rente_pct",0,100,"Rente");
+ return fout}
+function preview(lijst){clearTimeout(tmr);tmr=setTimeout(async()=>{const pv=el.querySelector("#ipv");if(!pv)return;const fout=valideer();if(fout.length){pv.innerHTML=`<span class="fout">${esc(fout.join(". "))}.</span>`;return}
+ if(JSON.stringify(S)===ORIG&&!lijst){pv.textContent="Geen wijzigingen.";return}
  try{const r=await api("/voorbeeld","POST",{instellingen:S});const d=r.straks-r.nu;
   pv.textContent=d===0&&!r.extra.length?"Met deze instelling zou je vandaag evenveel deals zien ("+r.nu+").":"Met deze instelling zou je vandaag "+(r.extra.length?r.extra.length+" deals extra":"")+(r.extra.length&&r.minder.length?" en ":"")+(r.minder.length?r.minder.length+" deals minder":"")+" zien ("+r.straks+" in plaats van "+r.nu+").";
   if(lijst){const f=x=>`<div><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.titel)}</a><br>${eur(x.prijs)}${x.marge!=null?" · marge "+eur(x.marge):""}${x.redenen&&x.redenen.length?" · "+esc(x.redenen.join(", ")):""}</div>`;
    el.querySelector("#ilst").innerHTML=`<h3>Herbeoordeling van de auto's van vandaag</h3><p style="font-size:13px">Op basis van ${r.kandidaten} kandidaten uit de laatste scan, inclusief afgewezen auto's. Er wordt niets opnieuw opgehaald.</p><h4>Erbij (${r.extra.length})</h4>${r.extra.map(f).join("")||"<div>Geen</div>"}<h4>Eraf (${r.minder.length})</h4>${r.minder.map(f).join("")||"<div>Geen</div>"}`;el.querySelector("#ilst").scrollIntoView({behavior:"smooth"})}}
  catch(e){pv.innerHTML=`<span class="fout">${esc(e.message)}</span>`}},lijst?0:400)}
-async function bewaar(){const pv=el.querySelector("#ipv");try{const r=await api("/instellingen","PUT",{instellingen:S});ORIG=JSON.stringify(S);pv.textContent=r.gewijzigd?"Opgeslagen. Geldt vanaf de volgende scan.":"Niets gewijzigd.";logboek()}
- catch(e){pv.innerHTML=`<span class="fout">${esc(e.message)}${e.j&&e.j.details?": "+esc(e.j.details.join(". ")):""}</span>`}}
+async function bewaar(){const pv=el.querySelector("#ipv");const fout=valideer();if(fout.length){pv.innerHTML=`<span class="fout">Niet opgeslagen. ${esc(fout.join(". "))}.</span>`;return}
+ try{const r=await api("/instellingen","PUT",{instellingen:S});ORIG=JSON.stringify(S);const tm=new Date().toLocaleTimeString("nl-NL",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Amsterdam"});
+  pv.innerHTML=`<span class="bevest">${r.gewijzigd?"Opgeslagen om "+tm+". Kansen en Vandaag rekenen direct opnieuw; dealkaarten volgen bij de volgende scan.":"Opgeslagen om "+tm+". Er was niets gewijzigd."}</span>`;logboek()}
+ catch(e){pv.innerHTML=`<span class="fout">Niet opgeslagen. ${esc(e.message)}${e.j&&e.j.details?": "+esc(e.j.details.join(". ")):""}</span>`}}
 async function logboek(){const b=el.querySelector("#ilog");if(!b)return;try{const r=await api("/logboek");
  b.innerHTML=r.logboek.map(x=>`<div>${esc(x.tijd)} · ${esc(x.gebruiker)}<br>${esc(x.wat)}${x.soort==="instellingen"?` <button class="knop" data-u="${x.id}">Terugzetten</button>`:""}</div>`).join("")||"Nog geen wijzigingen.";
  b.querySelectorAll("[data-u]").forEach(k=>k.onclick=async()=>{if(!confirm("Deze wijziging terugzetten?"))return;await api("/ongedaan","POST",{id:+k.dataset.u});laad()})}catch(e){b.textContent=e.message}}
