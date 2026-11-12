@@ -34,6 +34,9 @@ function takenTabs(){
 const _renderTaken=typeof render==="function"?render:function(){};
 render=function(){
   if(seg!==TAKEN_SEG){_renderTaken();takenTabs();takenInstel();return}
+  // Eerst de gewone tabbalk opbouwen (zelfde patroon als tab Vandaag), anders blijft bij #taken alleen Taken over.
+  const was=seg;seg=8;
+  try{_renderTaken()}finally{seg=was}
   const f=document.querySelector(".filters"),br=document.querySelector(".bronnen");
   if(f)f.style.display="none";if(br)br.style.display="none";
   const sb=document.getElementById("sbox");if(sb)sb.remove();
