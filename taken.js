@@ -9,7 +9,7 @@ const HOST=location.hostname||"";
 const LIVE=HOST==="rutgerroenhorst.github.io"||/\.sslip\.io$/.test(HOST)||HOST==="2-31-144-18.sslip.io";
 const OPEN=((typeof KL!=="undefined"&&KL.slug)||"brns")==="brns"&&LIVE;
 const tok=()=>localStorage["inst_token_"+((typeof KL!=="undefined"&&KL.slug)||"brns")]||"";
-function hdr(){const h={"Content-Type":"application/json","Cache-Control":"no-store"};if(tok())h.Authorization="Bearer "+tok();else if(OPEN)h["X-Klant"]="brns";return h}
+function hdr(){const h={"Content-Type":"application/json"};/* geen Cache-Control-kop: niet toegestaan door CORS (preflight faalde), fetch gebruikt al cache:no-store */if(tok())h.Authorization="Bearer "+tok();else if(OPEN)h["X-Klant"]="brns";return h}
 async function api(p,method,body){
   if(!LIVE) throw Object.assign(Error("Taken komen live van de server; deze pagina is een lokale test."),{offline:true});
   const r=await fetch(API+p,{method:method||"GET",headers:hdr(),body:body?JSON.stringify(body):undefined,cache:"no-store"});
