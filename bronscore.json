@@ -1,9 +1,9 @@
 {
- "bijgewerkt": "2026-11-11 19:47",
+ "bijgewerkt": "2026-11-12 07:45",
  "dagen": 60,
- "deals": 317,
+ "deals": 324,
  "per_bron": {
-  "AutoScout24": 242,
+  "AutoScout24": 249,
   "AutoTrack": 39,
   "Marktplaats": 36
  },
@@ -19,10 +19,10 @@
   },
   {
    "model": "Audi Q5",
-   "deals": 22,
+   "deals": 24,
    "beste": "AutoScout24",
    "verdeling": {
-    "AutoScout24": 22
+    "AutoScout24": 24
    }
   },
   {
@@ -36,6 +36,15 @@
    }
   },
   {
+   "model": "Land Rover Defender",
+   "deals": 11,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 6,
+    "Marktplaats": 5
+   }
+  },
+  {
    "model": "Mercedes-Benz SLS",
    "deals": 11,
    "beste": "AutoScout24",
@@ -44,20 +53,11 @@
    }
   },
   {
-   "model": "Land Rover Defender",
+   "model": "Mercedes-Benz G",
    "deals": 10,
    "beste": "AutoScout24",
    "verdeling": {
-    "AutoScout24": 5,
-    "Marktplaats": 5
-   }
-  },
-  {
-   "model": "Mercedes-Benz G",
-   "deals": 9,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 9
+    "AutoScout24": 10
    }
   },
   {
@@ -66,6 +66,14 @@
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 7
+   }
+  },
+  {
+   "model": "BMW 330",
+   "deals": 5,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 5
    }
   },
   {
@@ -103,14 +111,6 @@
    }
   },
   {
-   "model": "BMW 330",
-   "deals": 4,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 4
-   }
-  },
-  {
    "model": "Porsche Macan",
    "deals": 4,
    "beste": "AutoTrack",
@@ -125,6 +125,14 @@
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 3
+   }
+  },
+  {
+   "model": "Audi Q8",
+   "deals": 2,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 2
    }
   },
   {
@@ -210,7 +218,7 @@
    }
   },
   {
-   "model": "Audi Q8",
+   "model": "BMW 530",
    "deals": 1,
    "beste": "AutoScout24",
    "verdeling": {
@@ -483,14 +491,6 @@
   },
   {
    "model": "Kia Picanto",
-   "deals": 1,
-   "beste": "Marktplaats",
-   "verdeling": {
-    "Marktplaats": 1
-   }
-  },
-  {
-   "model": "Toyota Yaris",
    "deals": 1,
    "beste": "Marktplaats",
    "verdeling": {
