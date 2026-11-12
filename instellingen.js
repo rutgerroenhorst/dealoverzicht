@@ -2,15 +2,16 @@
 (function(){
 const API=(typeof KL!=="undefined"&&KL.instellingen_api)||"https://2-31-144-18.sslip.io/api/inst";
 const SLUG=(typeof KL!=="undefined"&&KL.slug)||"brns",TK="inst_token_"+SLUG;
+const OPEN=SLUG==="brns"&&location.hostname==="rutgerroenhorst.github.io"; // BRNS_OPEN_V1: geen wachtwoordscherm alleen op de echte BRNS-site (niet op localhost)
 let S=null,STD=null,ORIG=null,tmr=null;
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const eur=n=>n==null?"":"€ "+Math.round(n).toLocaleString("nl-NL");
-async function api(p,m,b){const r=await fetch(API+p,{method:m||"GET",headers:Object.assign({"Content-Type":"application/json"},localStorage[TK]?{Authorization:"Bearer "+localStorage[TK]}:{}),body:b?JSON.stringify(b):undefined});
+async function api(p,m,b){const r=await fetch(API+p,{method:m||"GET",headers:Object.assign({"Content-Type":"application/json"},localStorage[TK]?{Authorization:"Bearer "+localStorage[TK]}:(OPEN?{"X-Klant":"brns"}:{})),body:b?JSON.stringify(b):undefined});
  const j=await r.json().catch(()=>({fout:"Geen antwoord van de server"}));if(r.status===401&&p!=="/login"){delete localStorage[TK]}if(!r.ok)throw Object.assign(new Error(j.fout||"Fout"),{j,status:r.status});return j}
 // ---------- inkoopprijzen synchroniseren ----------
-async function ikSync(){if(!localStorage[TK]||typeof ikAll!=="function")return;
+async function ikSync(){if((!OPEN&&!localStorage[TK])||typeof ikAll!=="function")return;
  try{const lokaal=ikAll();const r=await api("/inkoop","PUT",{inkoop:lokaal});const o=Object.assign({},r.inkoop);localStorage[IKKEY()]=JSON.stringify(o);localStorage["inkoop_gemigreerd_"+SLUG]="1"}catch(e){}}
-if(typeof ikSet==="function"){const orig=ikSet;window.ikSet=ikSet=function(u,k,v){orig(u,k,v);if(!localStorage[TK])return;const r=ikAll()[u]||{inkoop:null,kosten:null,gewijzigd:new Date().toISOString().slice(0,16)};api("/inkoop","PUT",{inkoop:{[u]:r}}).catch(()=>{})}}
+if(typeof ikSet==="function"){const orig=ikSet;window.ikSet=ikSet=function(u,k,v){orig(u,k,v);if(!OPEN&&!localStorage[TK])return;const r=ikAll()[u]||{inkoop:null,kosten:null,gewijzigd:new Date().toISOString().slice(0,16)};api("/inkoop","PUT",{inkoop:{[u]:r}}).catch(()=>{})}}
 // ---------- scherm ----------
 const st=document.createElement("style");st.textContent=`
 #instbtn{margin-left:auto;background:none;border:1px solid var(--line,#ccc);border-radius:10px;padding:6px 10px;font:inherit;color:inherit;cursor:pointer}
@@ -43,11 +44,11 @@ function login(msg){el.innerHTML=`<div class="w"><h2>Instellingen <button class=
 <div class="r"><label for="lp">Wachtwoord</label><input id="lp" type="password" autocomplete="current-password" style="width:170px"></div>
 <p class="fout">${esc(msg||"")}</p><button class="knop p" id="lgo">Inloggen</button></div>`;
  el.querySelector("#ix").onclick=close;el.querySelector("#lgo").onclick=async()=>{try{const r=await api("/login","POST",{klant:SLUG,gebruiker:lu.value,wachtwoord:lp.value});localStorage[TK]=r.token;await ikSync();laad()}catch(e){login(e.message)}}}
-async function open(){el.style.display="block";document.body.style.overflow="hidden";if(!localStorage[TK])return login();laad()}
+async function open(){el.style.display="block";document.body.style.overflow="hidden";if(!OPEN&&!localStorage[TK])return login();laad()}
 function close(){el.style.display="none";document.body.style.overflow=""}
 window.openInstellingen=open;
 async function laad(){el.innerHTML=`<div class="w"><p>Laden...</p></div>`;try{const r=await api("/instellingen");S=r.instellingen;STD=r.standaard;ORIG=JSON.stringify(S);
- if(!localStorage["inkoop_gemigreerd_"+SLUG])ikSync();teken()}catch(e){if(e.status===401)login("Log opnieuw in.");else el.innerHTML=`<div class="w"><p class="fout">${esc(e.message)}</p><button class="knop" onclick="document.getElementById('inst').style.display='none'">Sluiten</button></div>`}}
+ if(!localStorage["inkoop_gemigreerd_"+SLUG])ikSync();teken()}catch(e){if(e.status===401&&!OPEN)login("Log opnieuw in.");else if(e.status===401)throw e;else el.innerHTML=`<div class="w"><p class="fout">${esc(e.message)}</p><button class="knop" onclick="document.getElementById('inst').style.display='none'">Sluiten</button></div>`}}
 function teken(){const M=S.marge;let h=`<div class="w"><h2>Instellingen <button class="knop" id="ix">Sluiten</button></h2>
 <p style="font-size:14px;opacity:.8">Kansen en het dagoverzicht rekenen direct opnieuw; de overige dealkaarten wijzigen bij de volgende scan. Onderaan zie je direct wat het met de auto's van vandaag zou doen.</p>
 <details open><summary>Minimale marge</summary><p style="font-size:14px">Een auto is een deal als de verwachte marge minstens het hoogste is van het bedrag en het percentage van de vraagprijs.</p>`;

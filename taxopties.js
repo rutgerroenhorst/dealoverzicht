@@ -100,10 +100,10 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-txoptfix]"
  if(!confirm("Markeer «"+(txOptLabel(k,TX.merk))+"» als niet horend bij dit model?\nDit verbetert de catalogus (met bewijs). Eén taxatie-vinkje telt niet mee."))return;
  delete TX3.opt[k];
  const api=(typeof TXAPI==="function"?TXAPI():((typeof KL!=="undefined"&&KL.instellingen_api)||"https://2-31-144-18.sslip.io/api/inst"));
- const tok=localStorage["inst_token_"+(typeof TXSLUG==="function"?TXSLUG():"brns")];
- if(!tok){alert("Log in bij Instellingen om de cataloguscorrectie op te slaan. De optie is lokaal verborgen voor deze sessie.");
+ const tok=localStorage["inst_token_"+(typeof TXSLUG==="function"?TXSLUG():"brns")],_sl=(typeof TXSLUG==="function"?TXSLUG():"brns"),open=_sl==="brns"&&location.hostname==="rutgerroenhorst.github.io";
+ if(!tok&&!open){alert("Log in bij Instellingen om de cataloguscorrectie op te slaan. De optie is lokaal verborgen voor deze sessie.");
   if(TXCAT&&TXCAT.opties)TXCAT.opties=TXCAT.opties.filter(o=>o.id!==k);const z=document.querySelector(".txopt-zone");if(z)z.innerHTML=txOptHtml(TX.merk);return}
- fetch(api+"/opties/correctie",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+tok},body:JSON.stringify({merk:TX.merk,model:TX.model,jaar:+TX.jaar||null,uitvoering:TX.var||"",optie:k,oordeel:"onmogelijk",bewijs:"gebruiker: hoort niet bij dit model"})})
+ fetch(api+"/opties/correctie",{method:"POST",headers:Object.assign({"Content-Type":"application/json"},tok?{"Authorization":"Bearer "+tok}:{"X-Klant":"brns"}),body:JSON.stringify({merk:TX.merk,model:TX.model,jaar:+TX.jaar||null,uitvoering:TX.var||"",optie:k,oordeel:"onmogelijk",bewijs:"gebruiker: hoort niet bij dit model"})})
   .then(r=>r.json()).then(()=>{TXCAT=null;return txCatFetch(true)}).then(()=>{const z=document.querySelector(".txopt-zone");if(z)z.innerHTML=txOptHtml(TX.merk)}).catch(()=>{});
 },true);
 // lichte styling

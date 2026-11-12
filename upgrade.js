@@ -3,7 +3,8 @@
 // Laadt als laatste en wikkelt bestaande functies in; zonder dit bestand werkt de app zoals voorheen.
 const VD=20,ASSIST=(typeof KL!=="undefined"&&KL.assistent_bot)||"Assistent_Rutger_bot";
 const upTok=()=>localStorage["inst_token_"+((typeof KL!=="undefined"&&KL.slug)||"brns")]||"";
-const upApi=(p,o)=>fetch(TXAPI()+p,Object.assign({},o||{},{headers:Object.assign({Authorization:"Bearer "+upTok()},(o&&o.headers)||{})}));
+const upOpen=()=>((typeof KL!=="undefined"&&KL.slug)||"brns")==="brns"&&location.hostname==="rutgerroenhorst.github.io";
+const upApi=(p,o)=>fetch(TXAPI()+p,Object.assign({},o||{},{headers:Object.assign(upTok()?{Authorization:"Bearer "+upTok()}:(upOpen()?{"X-Klant":"brns"}:{}),(o&&o.headers)||{})}));
 let BSC=null,LRN=null,DOS=null,DOSURL={};
 // ---------- licht/donker ----------
 function upThema(){const t=localStorage.thema||"auto";if(t==="auto")delete document.documentElement.dataset.thema;else document.documentElement.dataset.thema=t}

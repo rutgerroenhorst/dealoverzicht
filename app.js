@@ -111,7 +111,13 @@ function uitleg(){$("#kpis").innerHTML="";setTimeout(statusBox,0);const B=(t,l)=
  B("🆕 Alleen nieuwe deals",["Het tabblad <b>Meldingen</b> toont elke melding met tijdstip, nieuwste eerst; het rode getal = ongelezen. Links in de chat openen direct de juiste kaart.","<b>Geplaatst</b> = datum/tijd van plaatsing; <b>Huidige eigenaar sinds</b> = laatste tenaamstelling (RDW); <b>Zelfde kenteken eerder gezien</b> = andere advertenties van dezelfde auto.","Je ziet alleen auto's die nog niet eerder gemeld zijn, of die in prijs zijn gezakt.","Is er niets nieuws, dan blijft een onderdeel leeg en krijg je geen bericht."])+
  B("Berichten aan verkopers",["Het bericht is een <b>concept</b>. Er wordt nooit iets automatisch verstuurd.","Het bericht noemt <b>nooit</b> marktprijzen, prijsbanden of vergelijkingen; dat werkt tegen je. Een bod staat er alleen in als het te onderbouwen is met punten uit de advertentie of RDW (banden, remmen, APK, schade, lampjes, distributieriem, ontbrekende historie), met een grove kosteninschatting. Zonder gebreken: geen bedrag, wel beschikbaarheid, bezichtiging/proefrit en snel/contant/zelf ophalen.","Toon: particulier = je/jij en gemak; handelaar = u, zakelijk (factuur, marge/btw, handelsprijs); exclusieve auto = formeel en vraagt naar onderhoudsboekje, historie en aantal eigenaren. Onder <b>Waarom dit bericht</b> zie je welke punten gebruikt zijn.","De knoppen (WhatsApp, bellen, reageren via de site) openen alleen je eigen app met de tekst klaar; jij beslist en verstuurt zelf."])}
 
-let KW=null,KWerr="";const kwLoad=()=>API.list().then(j=>{KW=j;KWerr="";if(seg===7&&D)render()}).catch(e=>{KW=[];KWerr=e.message;if(seg===7&&D)render()});kwLoad();
+let KW=null,KWerr="";
+const kwLoad=()=>{const slug=(typeof KL!=="undefined"&&KL.slug)||"brns",tok=localStorage["inst_token_"+slug],api=(typeof KL!=="undefined"&&KL.instellingen_api)||"https://2-31-144-18.sslip.io/api/inst";
+ const toep=j=>{KW=j;KWerr="";if(seg===7&&D)render()};
+ const pub=()=>API.list().then(toep).catch(e=>{KW=[];KWerr=e.message;if(seg===7&&D)render()});
+ if(slug!=="brns"&&tok){fetch(api+"/klantwensen",{headers:{Authorization:"Bearer "+tok},cache:"no-store"}).then(r=>{if(!r.ok)throw Error();return r.json()}).then(j=>toep(j.wensen||j)).catch(()=>pub())}
+ else pub()};
+kwLoad();
 const OPT=["lederen bekleding","stoelverwarming","360/camera","adaptieve cruise","premium audio (B&O/Burmester/Bose/H-K)","matrix/laser LED","panoramadak","luchtvering","head-up display","carbon","trekhaak","stoelventilatie","keramische remmen","sportuitlaat","Apple CarPlay","sportstoelen"];
 function klant(){$("#kpis").innerHTML="";const F=(id,l,t="text",x="")=>`<label>${l}<input name="${id}" type="${t}" ${t==="number"?'inputmode="numeric"':""} ${x}></label>`,
  Sl=(id,l,o)=>`<label>${l}<select name="${id}"><option value="">Maakt niet uit</option>${o.map(v=>`<option>${v}</option>`).join("")}</select></label>`,

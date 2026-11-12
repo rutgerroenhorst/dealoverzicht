@@ -9,8 +9,8 @@ const euro=n=>'€'+Math.round(n||0).toLocaleString('nl-NL');
 async function laad(){
  if(bezig)return;bezig=true;fout='';
  try{
-  const token=localStorage['inst_token_'+SLUG];
-  const r=await fetch(token?API+'/kansen':'mobilede_kansen.json?'+Date.now(),{headers:token?{Authorization:'Bearer '+token}:{},cache:'no-store'});
+  const token=localStorage['inst_token_'+SLUG],open=SLUG==='brns'&&location.hostname==='rutgerroenhorst.github.io';
+  const r=await fetch((token||open)?API+'/kansen':'mobilede_kansen.json?'+Date.now(),{headers:token?{Authorization:'Bearer '+token}:(open?{'X-Klant':'brns'}:{}),cache:'no-store'});
   if(!r.ok)throw new Error('Kansenlijst tijdelijk niet beschikbaar.');
   const j=await r.json();if(j.klant!==SLUG)throw new Error('Klantcontrole mislukt.');data=j;
   if(j.omloop_inzichten)omloop=j.omloop_inzichten;else await omloopLaad();
