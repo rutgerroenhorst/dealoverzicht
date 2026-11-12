@@ -1,15 +1,15 @@
 // Tab 'Bijna-deals': auto's die net niet door de dealcriteria kwamen (bijna.json, gemaakt door de normale scan; geen extra verzoeken).
 // Verdachte advertenties en uitschieters staan hier bewust niet in. 'Zo kan het toch' rekent alleen met echte data; schattingen staan erbij.
-let BJ=null,BJF="alle",BJME=null;
-const BJS={marge:"Marge net te laag",prijs:"Prijs net boven drempel",vergelijking:"Te weinig vergelijkbare auto's",vertrouwen:"Eerst controleren",profiel:"Buiten inkoopprofiel"};
+let BJ=null,BJF="net",BJME=null;
+const BJS={net:"Net onder de drempel",marge:"Te weinig marge",prijs:"Prijs net boven drempel",vergelijking:"Te weinig vergelijkbare auto's",vertrouwen:"Eerst controleren",profiel:"Buiten inkoopprofiel"};
 function bjEu(x){return x==null||isNaN(x)?"n.b.":"€"+Math.round(x).toLocaleString("nl-NL")}
 function bjPct(a,b){return b?Math.round((1-a/b)*100):null}
 function bjEuMarkt(x){if(!BJME||!BJME.modellen)return null;const mk=(x.merk||"").toLowerCase(),t=(x.titel||"").toLowerCase();let best=null;
  for(const m of BJME.modellen){if((m.merk||"").toLowerCase()!==mk)continue;const md=(m.model||"").toLowerCase();if(md&&t.includes(md)&&(!best||md.length>best.model.length))best=m}return best}
 function bijnaDeals(){$("#kpis").innerHTML="";
  if(!BJ){$("#cards").innerHTML='<div class="meta">Bijna-deals laden…</div>';Promise.all([fetch("bijna.json?"+Date.now()).then(r=>r.ok?r.json():{items:[]}).catch(()=>({items:[]})),fetch("markt_eu.json?"+Date.now()).then(r=>r.ok?r.json():null).catch(()=>null)]).then(([j,m])=>{BJ=j;BJME=m;render()});return}
- const all=BJ.items||[],L=all.filter(x=>BJF==="alle"||x.soort===BJF);
- const knop=(k,t)=>{const n=k==="alle"?all.length:all.filter(x=>x.soort===k).length;return `<button type="button" class="chip bjf${BJF===k?" on":""}" data-bjf="${k}" aria-pressed="${BJF===k}">${esc(t)} (${n})</button>`};
+ const all=BJ.items||[],isNet=x=>x.net===true||(x.soort==="marge"&&((x.afstand!=null&&x.afstand<=0.15)||(x.drempel&&x.marge!=null&&x.drempel-x.marge<=1000))),L=all.filter(x=>BJF==="alle"||(BJF==="net"?isNet(x):x.soort===BJF));
+ const knop=(k,t)=>{const n=k==="alle"?all.length:k==="net"?all.filter(isNet).length:all.filter(x=>x.soort===k).length;return `<button type="button" class="chip bjf${BJF===k?" on":""}" data-bjf="${k}" aria-pressed="${BJF===k}">${esc(t)} (${n})</button>`};
  const kaart=x=>{const sc=Math.max(0,Math.round((1-(x.afstand||0))*100)),land=x.land||"NL",vk=x.verkoper||"onbekend";
   const mg=x.marge!=null?`Geschatte marge <b>${bjEu(x.marge)}</b>${x.drempel?` · minimum ${bjEu(x.drempel)}`:""}`:x.verschil!=null?`${bjEu(x.verschil)} onder de mediaan (vóór kosten)`:"";
   const vs=x.mediaan&&x.prijs?`<b>${bjEu(x.prijs)}</b> · mediaan ${bjEu(x.mediaan)} (${bjPct(x.prijs,x.mediaan)>=0?bjPct(x.prijs,x.mediaan)+"% onder":(-bjPct(x.prijs,x.mediaan))+"% boven"})${x.n_vergelijk!=null?` · ${x.n_vergelijk} vergelijkbaar`:""}`:`<b>${bjEu(x.prijs)}</b>`;
@@ -20,9 +20,9 @@ function bijnaDeals(){$("#kpis").innerHTML="";
   <div class="meta">${esc(x.merk||"")}</div><h3 class="t">${esc(x.titel||"")}</h3><div class="chips">${spec}</div>
   <div class="meta">${vs}</div>${mg?`<div class="meta">${mg}</div>`:""}
   ${(x.vlaggen||[]).length?`<div class="chips">${x.vlaggen.map(f=>`<span class="chip warn">${esc(f)}</span>`).join("")}</div>`:""}
-  ${dealAfweging(x,x.soort)}<div>${link}</div></div></article>`};
- $("#cards").innerHTML=`<div class="card wide"><h3>Bijna-deals</h3><div class="meta">Auto's die net niet door de criteria kwamen, de dichtstbijzijnde eerst. Marges en mediaan zijn schattingen; controleer zelf. Verdachte advertenties en uitschieters staan hier niet tussen.${BJ.bijgewerkt?" Bijgewerkt "+esc(BJ.bijgewerkt.replace("T"," ")):""}</div>
- <div class="chips" id="bjchips">${knop("alle","Alle")}${Object.keys(BJS).map(k=>knop(k,BJS[k])).join("")}</div><div class="meta" id="bjn">${BJF==="alle"?"":L.length+" getoond: "+esc(BJS[BJF])}</div></div>`+bjAfgewezen()+(L.length?L.map(kaart).join(""):'<div class="meta">Geen bijna-deals in deze categorie.</div>')}
+  ${x.waarom?`<p class="waarom-geen-deal"><b>Waarom geen deal:</b> ${esc(x.waarom)}</p>`:""}${dealAfweging(x,x.soort)}<div>${link}</div></div></article>`};
+ $("#cards").innerHTML=`<div class="card wide"><h3>Bijna-deals</h3><div class="meta">Auto's die net onder de drempel vielen: de geschatte marge is te laag, maar niet ver. Per kaart staat waarom het geen deal is. Marges zijn schattingen; controleer de advertentie zelf. Verdachte uitschieters staan hier niet tussen.${BJ.bijgewerkt?" Bijgewerkt "+esc(BJ.bijgewerkt.replace("T"," ")):""}</div>
+ <div class="chips" id="bjchips">${knop("net",BJS.net)}${knop("alle","Alle")}${Object.keys(BJS).filter(k=>k!=="net").map(k=>knop(k,BJS[k])).join("")}</div><div class="meta" id="bjn">${BJF==="alle"?"":L.length+" getoond: "+esc(BJS[BJF])}</div></div>`+bjAfgewezen()+(L.length?L.map(kaart).join(""):'<div class="meta">Geen bijna-deals in deze categorie.</div>')}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-bjf]");if(!b)return;e.preventDefault();BJF=b.dataset.bjf;render()});
 
 /* 04-11: afgewezen lijsten uit Markt (Eerst taxeren, Buiten profiel, Te weinig marge) als inklapbare secties. */
