@@ -1,0 +1,29 @@
+/* Taken-werkomgeving: mobiel eerst, openbare-site-waarschuwing zichtbaar. */
+.tk-wrap{padding:0 12px 96px;max-width:720px;margin:0 auto}
+.tk-warn{background:#fff3cd;color:#5c4800;border:1px solid #f0d58a;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.45;margin:8px 0 12px}
+.tk-warn b{display:block;margin-bottom:2px}
+.tk-filters{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:4px 0 10px;scrollbar-width:none}
+.tk-filters::-webkit-scrollbar{display:none}
+.tk-filters button,.tk-card button,.tk-btn{appearance:none;border:1px solid var(--lijn,#ccc);background:var(--kaart,#fff);color:inherit;border-radius:999px;padding:8px 12px;font:inherit;font-size:13px;white-space:nowrap;cursor:pointer}
+.tk-filters button.on{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+[data-thema="donker"] .tk-filters button.on,html[data-thema="donker"] .tk-filters button.on{background:#eee;color:#111}
+.tk-sub{display:flex;gap:6px;overflow-x:auto;padding:0 0 10px}
+.tk-sub select{font:inherit;font-size:13px;padding:8px;border-radius:8px;border:1px solid var(--lijn,#ccc);background:inherit;color:inherit;max-width:48%}
+.tk-card{background:var(--kaart,#fff);border:1px solid var(--lijn,#e3e3e3);border-radius:14px;padding:12px;margin:0 0 10px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.tk-card h3{margin:0 0 6px;font-size:16px;line-height:1.3}
+.tk-meta{font-size:13px;opacity:.8;margin:0 0 8px}
+.tk-late{border-color:#c44;box-shadow:inset 3px 0 0 #c44}
+.tk-acties{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.tk-btn.prim,.tk-card a.tk-btn{background:#1a6b3c;color:#fff;border-color:#1a6b3c;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.tk-btn.sec{background:transparent}
+.tk-bron{font-size:11px;opacity:.7;margin:4px 0 0}
+.tk-leeg{padding:24px 8px;text-align:center;opacity:.7}
+.tk-notitie{display:none;margin-top:8px}
+.tk-notitie.on{display:block}
+.tk-notitie textarea{width:100%;min-height:72px;box-sizing:border-box;font:inherit;padding:8px;border-radius:8px;border:1px solid var(--lijn,#ccc);background:inherit;color:inherit}
+.tk-notitie input{width:100%;box-sizing:border-box;font:inherit;padding:8px;margin:6px 0;border-radius:8px;border:1px solid var(--lijn,#ccc);background:inherit;color:inherit}
+.tk-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tk-mic{min-width:44px;min-height:44px;border-radius:10px}
+.tk-vraag{background:#eef4ff;border-color:#b9c9e8}
+.tk-med{font-size:13px;margin:16px 0;padding:10px;border:1px dashed var(--lijn,#ccc);border-radius:10px}
+@media(max-width:420px){.tk-wrap{padding:0 8px 96px}.tk-card{padding:12px 10px}}
