@@ -36,13 +36,14 @@ function uitvoeringen(merk,model,titels,rdwHb){
   return out;
 }
 function kiesUitvoering(lijst,hb,titels){const tekst=[hb||""].concat(titels||[]).join(" ");if(!tekst.trim())return "";const s=lijst.slice().sort((a,b)=>b.length-a.length);for(const n of s)if(trimIn(n,tekst))return n;return "";}
+function fmtApk(v){const s=String(v||"").replace(/\D/g,"");return s.length===8?s.slice(0,4)+"-"+s.slice(4,6)+"-"+s.slice(6,8):String(v||"");}
 function euro(n){if(n==null||n===""||isNaN(n))return "—";if(typeof eur==="function")try{return eur(n);}catch(e){}return "€\u00a0"+Math.round(n).toLocaleString("nl-NL");}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
 function asset(f){if(location.pathname.indexOf("/bedrijf")>=0||location.pathname.indexOf("/api/inst")>=0)return GH+f;return f;}
 function apiRoot(){return (typeof TXAPI==="function"?TXAPI():((typeof KL!=="undefined"&&KL.instellingen_api)||"https://2-31-144-18.sslip.io/api/inst"));}
 function wie(){if(window.TX_BEDRIJF_NAAM)return String(TX_BEDRIJF_NAAM).trim();try{const u=JSON.parse(localStorage["inst_gebruiker_"+((typeof TXSLUG==="function"?TXSLUG():"brns"))]||localStorage.inst_gebruiker||"null");if(u&&(u.naam||u.gebruiker))return u.naam||u.gebruiker;}catch(e){}return "via site";}
 function isBedrijf(){return !!(window.TX_BEDRIJF_TOKEN||(location.pathname||"").indexOf("/bedrijf")>=0);}
-window.mkmd=function(merk,hb){const keys=(window.MI&&MI.groepen)?Object.keys(MI.groepen):[];const mk=normMerk(merk);const md=matchModel(merk,hb,keys)||predModel(merk,hb)||"";return [mk,md];};
+window.mkmd=function(merk,hb){const keys=(typeof MI!=="undefined"&&MI&&MI.groepen)?Object.keys(MI.groepen):[];const mk=normMerk(merk);const md=matchModel(merk,hb,keys)||predModel(merk,hb)||"";return [mk,md];};
 let TXL={taxaties:{},prullenbak:[],verwijderd:[],filter:"",prul:false};
 let TXI=false;
 function merken(){const mc={};if(!MI||!MI.groepen)return [];for(const k in MI.groepen){const m=k.split("|")[0];mc[m]=(mc[m]||0)+MI.groepen[k].length;}return Object.keys(mc).filter(m=>mc[m]>=20&&/^[a-zë-]+$/.test(m)).sort();}
@@ -69,7 +70,7 @@ function html(){
   const varVrij=TX.var&&!U.some(u=>fold(u)===fold(TX.var));
   if(varVrij&&TX.var)U.unshift(TX.var);
   const rdw=TXR3&&TXR3.rdw;
-  const rdwTxt=rdw?`<div class="txin-rdw" id="txrdwblok"><strong>${esc(mooiNaam(rdw.merk||TX.merk,"merk"))} · ${esc(mooiNaam((TX.model||rdw.handelsbenaming||""),"model"))}</strong><span>${esc([rdw.uitvoering||TX.var,rdw.jaar||TX.jaar,rdw.brandstof||TX.brandstof].filter(Boolean).join(" · "))}${rdw.apk?" · APK "+esc(rdw.apk):""}${rdw.co2?" · CO₂ "+rdw.co2+" g/km":""}</span></div>`:`<div class="txin-rdw" id="txrdwblok" hidden></div>`;
+  const rdwTxt=rdw?`<div class="txin-rdw" id="txrdwblok"><strong>${esc(mooiNaam(rdw.merk||TX.merk,"merk"))} · ${esc(mooiNaam((TX.model||rdw.handelsbenaming||""),"model"))}</strong><span>${esc([rdw.uitvoering||TX.var,rdw.jaar||TX.jaar,rdw.brandstof||TX.brandstof].filter(Boolean).join(" · "))}${rdw.apk?" · APK "+esc(fmtApk(rdw.apk)):""}${rdw.co2?" · CO₂ "+rdw.co2+" g/km":""}</span></div>`:`<div class="txin-rdw" id="txrdwblok" hidden></div>`;
   const optHtml=optiesLijst().map(o=>`<label class="txin-chip${TX3.opt&&TX3.opt[o.id]?" aan":""}"><input type="checkbox" data-txopt="${esc(o.id)}"${TX3.opt&&TX3.opt[o.id]?" checked":""}><span>${esc(o.naam)}</span></label>`).join("");
   const autos=(isBedrijf()?[]:((window.TXV&&TXV.autos)||[]));
   return `<div id="tx-inruil" class="txin">
@@ -123,22 +124,34 @@ function syncVelden(){
   document.querySelectorAll("#tx-inruil [data-tx3]").forEach(el=>{if(el.type==="checkbox")return;TX3[el.dataset.tx3]=el.value;});
 }
 
+function uitBedragen(R){
+  if(!R)return {verkoop:null,bod:null,marge:null,n:0,landen:["NL"],fout:null};
+  const verkoop=R.verkoop!=null?R.verkoop:R.verk;
+  let bod=null;
+  if(typeof R.inruil==="number")bod=R.inruil;
+  else if(R.inruil&&typeof R.inruil==="object")bod=R.inruil.midden!=null?R.inruil.midden:(R.inruil.laag!=null?R.inruil.laag:null);
+  else if(R.bod!=null)bod=R.bod;
+  const marge=R.marge!=null?R.marge:(verkoop!=null&&bod!=null?Math.round(verkoop-bod):null);
+  const n=R.n||(R.V&&R.V.n)||0;
+  const landen=R.landen||(R.V&&R.V.landen)||["NL"];
+  return {verkoop,bod,marge,n,landen,fout:R.fout||null,label_de:R.label_de,regelversie:R.regelversie,handmatig:!!R.handmatig};
+}
 function toonUitkomst(){
   const box=document.getElementById("txUit");if(!box)return;
   const R=TXR3&&TXR3.r,fout=TXR3&&TXR3.fout,de=TXR3&&TXR3.de;
+  const B=uitBedragen(R);
   let h="";
-  if(fout&&!(R&&R.inruil))h+=`<div class="txin-kaart fout"><b>${esc(fout)}</b><div class="txin-meta">Je kunt hieronder handmatig taxeren, of vergelijken met Duitsland als er te weinig Nederlandse advertenties zijn.</div></div>`;
-  if(R&&(R.verkoop||R.inruil||R.fout)){
-    if(!(R.fout&&!R.inruil)){
-      const n=R.n||(R.V&&R.V.n)||0;
-      const landen=(R.landen||(R.V&&R.V.landen)||["NL"]);
+  if((fout||B.fout)&&!B.bod)h+=`<div class="txin-kaart fout"><b>${esc(fout||B.fout)}</b><div class="txin-meta">Je kunt hieronder handmatig taxeren, of vergelijken met Duitsland als er te weinig Nederlandse advertenties zijn.</div></div>`;
+  if(R&&(B.verkoop||B.bod||B.fout||fout)){
+    if(!(B.fout&&!B.bod)){
+      const n=B.n,landen=B.landen;
       const landTxt=landen.length===1&&landen[0]==="NL"?"Nederland":landen.join(", ");
-      const lbl=R.label_de?" · "+R.label_de:"";
+      const lbl=B.label_de?" · "+B.label_de:"";
       h+=`<div class="txin-kaart"><div class="txin-rijen">
-        <div class="txin-rij"><span class="l">Verkoopwaarde</span><b>${euro(R.verkoop)}</b></div>
-        <div class="txin-rij"><span class="l">Veilig bod</span><b>${euro(R.inruil)}</b></div>
-        <div class="txin-rij"><span class="l">Marge</span><b>${euro(R.marge!=null?R.marge:(R.verkoop&&R.inruil?R.verkoop-R.inruil:null))}</b></div>
-      </div><div class="txin-meta">${R.handmatig?"Handmatig getaxeerd":(n+" vergelijker"+(n===1?"":"s")+" ("+esc(landTxt)+")")}${lbl}${R.regelversie?" · regels "+esc(R.regelversie):""}</div></div>`;
+        <div class="txin-rij"><span class="l">Verkoopwaarde</span><b>${euro(B.verkoop)}</b></div>
+        <div class="txin-rij"><span class="l">Veilig bod</span><b>${euro(B.bod)}</b></div>
+        <div class="txin-rij"><span class="l">Marge</span><b>${euro(B.marge)}</b></div>
+      </div><div class="txin-meta">${B.handmatig?"Handmatig getaxeerd":(n+" vergelijker"+(n===1?"":"s")+" ("+esc(landTxt)+")")}${lbl}${B.regelversie?" · regels "+esc(B.regelversie):""}</div></div>`;
     }
     const hv=document.getElementById("txhv"),hm=document.getElementById("txhm"),hb=document.getElementById("txhb");
     if(hv&&R.verkoop&&!hv.value)hv.value=R.verkoop;
@@ -250,14 +263,15 @@ async function herstelTaxatie(id){
 function bouwRecord(actie){
   const R=TXR3&&TXR3.r||{};
   const auto=[mooiNaam(TX.merk,"merk"),mooiNaam(TX.model,"model"),TX.var,TX.jaar].filter(Boolean).join(" ");
-  const rec={auto,kenteken:TX.kenteken||"",km:TX.km||"",jaar:TX.jaar||"",verkoop:R.verkoop,inruil:R.inruil,marge:R.marge,n:R.n,handmatig:!!R.handmatig,invoer:{TX:Object.assign({},TX),TX3:Object.assign({},TX3)},laatste_actie:actie||"opgeslagen"};
+  const B=uitBedragen(R);
+  const rec={auto,kenteken:TX.kenteken||"",km:TX.km||"",jaar:TX.jaar||"",verkoop:B.verkoop,inruil:B.bod,marge:B.marge,n:B.n,handmatig:!!B.handmatig,invoer:{TX:Object.assign({},TX),TX3:Object.assign({},TX3)},laatste_actie:actie||"opgeslagen"};
   rec.datum=new Date().toISOString().slice(0,16).replace("T"," ");
   return rec;
 }
 async function opslaanNu(actie){
   syncVelden();
   const R=TXR3&&TXR3.r;
-  if(!R||!R.inruil){if(typeof toast==="function")toast("Eerst taxeren (automatisch of handmatig).");return;}
+  if(!R||!uitBedragen(R).bod){if(typeof toast==="function")toast("Eerst taxeren (automatisch of handmatig).");return;}
   const id=TX3.id||("t"+Date.now().toString(36));TX3.id=id;
   const rec=bouwRecord(actie||"opgeslagen");rec.id=id;rec.door=wie();
   try{await api("/taxaties","PUT",{taxaties:{[id]:rec}});await lijstLaden();if(typeof toast==="function")toast("Taxatie opgeslagen");}
@@ -383,19 +397,20 @@ let TXLAAD=null;
 function ladenDan(teken){
   if(isBedrijf()){
     const need=[];
-    if(!window.MI)need.push(fetch(asset("marktindex.json")+"?"+Date.now()).then(r=>r.json()).then(a=>{MI=a;}));
-    if(!window.WM)need.push(fetch(asset("waardemodel.json")+"?"+Date.now()).then(r=>r.ok?r.json():{}).catch(()=>({})).then(b=>{WM=b;}));
-    window.TXV=window.TXV||{autos:[]};
+    if(!(typeof MI!=="undefined"&&MI))need.push(fetch(asset("marktindex.json")+"?"+Date.now()).then(r=>r.json()).then(a=>{MI=a;try{window.MI=a;}catch(e){}}));
+    if(!(typeof WM!=="undefined"&&WM))need.push(fetch(asset("waardemodel.json")+"?"+Date.now()).then(r=>r.ok?r.json():{}).catch(()=>({})).then(b=>{WM=b;try{window.WM=b;}catch(e){}}));
+    if(!(typeof TXV!=="undefined"&&TXV)){TXV={autos:[]};try{window.TXV=TXV;}catch(e){}}
     if(need.length){Promise.all(need).then(teken).catch(()=>{const T=document.getElementById("cards")||document.getElementById("m");if(T)T.innerHTML='<div class="txin-leeg">Marktindex niet geladen.</div>';});return true;}
     return false;
   }
-  if(!window.MI||!window.WM||!window.TXV){
+  const heeftMI=typeof MI!=="undefined"&&MI,heeftWM=typeof WM!=="undefined"&&WM,heeftTXV=typeof TXV!=="undefined"&&TXV;
+  if(!heeftMI||!heeftWM||!heeftTXV){
     if(!TXLAAD){
       TXLAAD=Promise.all([
-        window.MI?MI:fetch("marktindex.json?"+Date.now()).then(r=>r.json()),
-        window.WM?WM:fetch("waardemodel.json?"+Date.now()).then(r=>r.ok?r.json():{}).catch(()=>({})),
-        window.TXV?TXV:fetch("voorraad.json?"+Date.now()).then(r=>r.ok?r.json():{autos:[]}).catch(()=>({autos:[]}))
-      ]).then(([a,b,c])=>{MI=a;WM=b;TXV=c;TXLAAD=null;teken();}).catch(()=>{
+        heeftMI?MI:fetch("marktindex.json?"+Date.now()).then(r=>r.json()),
+        heeftWM?WM:fetch("waardemodel.json?"+Date.now()).then(r=>r.ok?r.json():{}).catch(()=>({})),
+        heeftTXV?TXV:fetch("voorraad.json?"+Date.now()).then(r=>r.ok?r.json():{autos:[]}).catch(()=>({autos:[]}))
+      ]).then(([a,b,c])=>{MI=a;WM=b;TXV=c;try{window.MI=a;window.WM=b;window.TXV=c;}catch(e){}teken();TXLAAD=null;}).catch(()=>{
         TXLAAD=null;
         const T=document.getElementById("cards");if(T)T.innerHTML='<div class="empty"><b>Inruil-taxatie nog niet beschikbaar</b><div class="meta">De marktindex ontbreekt nog.</div></div>';
       });

@@ -1,5 +1,5 @@
 /* INRUILTAX_V1: compacte inruil-taxatie, iPhone eerst. Geen dubbele blokken, geen lege grijze vlakken. */
-#cards .txin{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:14px 14px 88px;max-width:640px;margin:0 auto;box-shadow:none}
+#cards .txin{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:14px 14px 124px;max-width:640px;margin:0 auto;box-shadow:none}
 #cards .txin h2{margin:0 0 10px;font-size:1.15rem}
 #cards .txin h3{margin:16px 0 8px;font-size:.95rem}
 #cards .txin p.txin-mute,#cards .txin .txin-mute{color:var(--mute);font-size:.82rem;margin:0 0 10px;line-height:1.35}
@@ -41,7 +41,7 @@
 .txin-meta{color:var(--mute);font-size:.8rem;margin-top:8px}
 .txin-hand{margin:8px 0 12px;padding:0;border:0}
 .txin-acties{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.txin-sticky{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--card);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;justify-content:center}
+.txin-sticky{position:fixed;left:0;right:0;bottom:0;z-index:3000;background:var(--card);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;justify-content:center}
 .txin-sticky button{flex:1;max-width:420px;background:var(--acc);color:#fff;border:0;border-radius:999px;padding:12px 18px;font-weight:700;font-size:1rem;min-height:48px}
 /* voorkom dat oude stappen/optie-duplicaten of lege grijze vlakken blijven staan */
 #cards .txstappen,#cards .tx-stappen,#cards .txopt-x{display:none!important}
