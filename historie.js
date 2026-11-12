@@ -1,4 +1,4 @@
-/* HISTORIE_V1: advertentiehistorie per kenteken/VIN, live van de server (niet via gh-pages).
+/* HISTORIE_V1/V3: advertentiehistorie per kenteken/VIN, live van de server (niet via gh-pages).
    Eén bestand voor de site (Robin/Rutger) en de medewerkerpagina /bedrijf/<token>.
    Medewerkers krijgen van de server geen inkoop, marges, biedingen, taxaties of deals. */
 (function(){
@@ -48,6 +48,9 @@ function css(){if(document.getElementById("hi-css"))return;const s=document.crea
 .hi-pw tr.rec td:first-child:before,.hi-dot.rec:before{background:#a855f7}.hi-dot{display:inline-block}
 a.hi-src{display:inline-block;font-size:12px;line-height:1;padding:3px 6px;border-radius:8px;background:var(--chip,#eef0f3);color:var(--acc,#2563eb);text-decoration:none}
 .hi-det summary{font-weight:700;font-size:16px;cursor:pointer;list-style-position:inside}.hi-det summary .hi-m{font-weight:400;margin-left:4px}.hi-alle td:nth-child(2){font-size:13px}
+.hi-zv{margin-top:8px;padding-top:8px;border-top:1px solid var(--line,#e3e6eb);font-size:12.5px;color:var(--mute,#5d6470)}
+.hi-zv b{color:var(--ink,#14161a);font-weight:600}.hi-bl{list-style:none;padding:0;margin:6px 0}.hi-bl li{font-size:13px;margin:3px 0}
+.hi-bl .g{color:var(--ok,#16a34a)}.hi-bl .n{color:var(--mute,#5d6470)}.hi-bl .x{color:var(--warn,#c2410c)}
 `;document.head.appendChild(s)}
 
 let HUIDIG=null,POLL=null;
@@ -61,7 +64,10 @@ function open(q){css();sluit();const ov=document.createElement("div");ov.id="hi-
   if(q)zoek(q)}
 function sluit(){const o=document.getElementById("hi-ov");if(o)o.remove();document.body.style.overflow="";if(POLL){clearInterval(POLL);POLL=null}}
 async function zoek(q){const r=document.getElementById("hi-r");if(!r)return;r.innerHTML='<div class="hi-m">Zoeken…</div>';
-  try{HUIDIG=await haal("?q="+encodeURIComponent(q.trim()));teken()}catch(x){r.innerHTML=`<div class="hi-sig">${e(x.message)}</div>`}}
+  try{HUIDIG=await haal("?q="+encodeURIComponent(q.trim()));teken();
+    const k=HUIDIG.kenteken;if(k&&!(HUIDIG.zoekverslag||{}).compleet&&!AUTO[k]){AUTO[k]=1;terug()}}
+  catch(x){r.innerHTML=`<div class="hi-sig">${e(x.message)}</div>`}}
+const AUTO={};
 
 const bronL=(l,b)=>l?`<a class="hi-src" href="${e(l)}" target="_blank" rel="noopener" title="${e(b||"Bron")}" aria-label="Bron: ${e(b||"")}">↗</a>`:"";
 const pct=n=>n==null?"":Number(n).toLocaleString("nl-NL",{maximumFractionDigits:1})+"%";
@@ -75,6 +81,8 @@ function teken(){const d=HUIDIG,r=document.getElementById("hi-r");if(!d||!r)retu
   h+=`<div class="hi-g"><span>Te koop sinds</span><b>${e(dag(S.te_koop_sinds)||"—")}</b><span>Dagen te koop</span><b>${S.dagen_te_koop!=null?e(S.dagen_te_koop)+" dagen":"—"}${S.dagen_te_koop!=null&&S.dagen_tot?` <span class="hi-m">(tot ${e(S.dagen_tot)})</span>`:""}</b>
     <span>Dealer</span><b>${e(S.dealer||"—")}</b></div>`;
   if(S.gereconstrueerd)h+=`<div class="hi-m" style="margin-top:6px"><span class="hi-badge">deels gereconstrueerd</span> uit openbare archieven, met gaten.</div>`;
+  const zv=d.zoekverslag||{};
+  h+=`<div class="hi-zv">${zv.regel?e(zv.regel):""}${zv.compleet?"":(d.kenteken?" <b>Overal zoeken loopt…</b>":"")}${zv.uitleg?" "+e(zv.uitleg):""}<div id="hi-st"></div></div>`;
   h+=`</div>`;
   if(d.deal)h+=`<div class="hi-k hi-deal"><h3>In ons dealsysteem</h3><div>${e(d.deal.titel||"")}${d.deal.marge!=null?" · marge "+eur(d.deal.marge):""}</div><div class="hi-m">Alleen zichtbaar voor Robin en Rutger.</div></div>`;
   h+=`<div class="hi-k"><h3>Prijswijzigingen</h3>`+(P.length?`<table class="hi-pw">${P.slice().reverse().map(p=>`<tr class="${p.gereconstrueerd?"rec":""}"><td>${e(dag(p.datum))}</td><td class="hi-pr">${eur(p.prijs)}</td><td class="hi-vs">${p.verschil?(p.verschil<0?"−":"+")+eur(Math.abs(p.verschil)):"start"}</td><td>${bronL(p.link,p.bron)}</td></tr>`).join("")}</table>
@@ -90,15 +98,18 @@ function teken(){const d=HUIDIG,r=document.getElementById("hi-r");if(!d||!r)retu
   h+=`<h3 style="margin-top:12px">Advertenties in ons archief (${A.length})</h3>`+(A.length?A.map(a=>`<div style="margin:4px 0 8px"><b>${e(a.bron)}</b>${a.dealer?" · "+e(a.dealer):""} · ${e(a.status)} ${bronL(a.url,"Open advertentie")}
     <div class="hi-m">Sinds ${e(dag(a.online_sinds||a.eerst_gezien))} · laatst gezien ${e(dag(a.laatst_gezien))}${a.dagen_online!=null?" · "+e(a.dagen_online)+" dagen":""}${a.km?" · "+Number(a.km).toLocaleString("nl-NL")+" km":""}</div></div>`).join("")
     :`<div class="hi-m">Niet gezien in ons eigen archief (loopt vanaf ${e(dag((d.archief||{}).vanaf))}).</div>`);
-  h+=`<h3 style="margin-top:12px">Zoek oudere historie</h3><div class="hi-m">Via de openbare Wayback-index (archive.org), in een laag tempo en alleen voor deze auto. Gevonden punten zijn "gereconstrueerd".</div>
-    ${tz?`<div class="hi-m" style="margin-top:4px">Laatst gezocht ${e(String(tz.ts||"").replace("T"," "))}: ${e(tz.treffers)} treffers, ${e(tz.bekeken)} archiefpagina's.</div>`:""}
-    <div style="display:flex;gap:8px;margin-top:8px"><input id="hi-hint" placeholder="Optioneel: link naar advertentie of dealer" style="flex:1;min-width:0;padding:9px;border:1px solid var(--line,#e3e6eb);border-radius:10px;font-size:15px"><button class="hi-b hi-s" id="hi-terug" type="button"${d.kenteken?"":" disabled"}>Zoek</button></div><div id="hi-st" class="hi-m" style="margin-top:6px"></div>
+  const ik={gevonden:["g","✓"],niets:["n","–"],geblokkeerd:["x","⛔"],overgeslagen:["n","·"],info:["n","i"]};
+  h+=`<h3 style="margin-top:12px">Waar is gezocht</h3><ul class="hi-bl">${(zv.bronnen||[]).map(b=>{const k=ik[b.status]||ik.info;return`<li><span class="${k[0]}">${k[1]}</span> <b>${e(b.bron)}</b>: ${e(b.tekst||b.status)}</li>`}).join("")}
+    ${(zv.niet_doorzocht||[]).map(b=>`<li><span class="n">✕</span> <b>${e(b.bron)}</b>: niet doorzocht, ${e(b.reden)}</li>`).join("")}</ul>
+    <div class="hi-m">Archiefpunten (archive.org) zijn "gereconstrueerd". Laag tempo, maximum per zoekopdracht, cache; bij een blokkade stoppen we.</div>
+    ${tz?`<div class="hi-m" style="margin-top:4px">Laatst gezocht ${e(String(tz.ts||"").replace("T"," "))}: ${e(tz.treffers)} archiefpunten, ${e(tz.bekeken)} archiefpagina's.</div>`:""}
+    <div style="display:flex;gap:8px;margin-top:8px"><input id="hi-hint" placeholder="Optioneel: link naar advertentie of dealer" style="flex:1;min-width:0;padding:9px;border:1px solid var(--line,#e3e6eb);border-radius:10px;font-size:15px"><button class="hi-b hi-s" id="hi-terug" type="button"${d.kenteken?"":" disabled"}>Opnieuw zoeken</button></div>
     <div class="hi-m" style="margin-top:8px">${e((d.archief||{}).uitleg||"")}</div></details>`;
   r.innerHTML=h;const b=document.getElementById("hi-terug");if(b)b.onclick=terug}
 async function terug(){const d=HUIDIG;if(!d||!d.kenteken)return;const st=document.getElementById("hi-st");
   try{await haal("/terugzoeken",{method:"POST",body:JSON.stringify({kenteken:d.kenteken,hint:(document.getElementById("hi-hint")||{}).value||""})});
-    st.textContent="Bezig… (dit duurt een paar minuten, in een laag tempo)";if(POLL)clearInterval(POLL);
-    POLL=setInterval(async()=>{try{const s=await haal("/status?k="+encodeURIComponent(d.kenteken));
+    st.textContent="Overal zoeken… (een paar minuten, in een laag tempo)";if(POLL)clearInterval(POLL);
+    POLL=setInterval(async()=>{try{const s=await haal("/status?k="+encodeURIComponent(d.kenteken));const st=document.getElementById("hi-st");if(!st)return;
       if(s.status==="bezig"){st.textContent="Bezig: "+(s.stap||"…");return}
       clearInterval(POLL);POLL=null;st.textContent=s.status==="fout"?(s.fout||"Mislukt"):"Klaar";zoek(d.kenteken)}catch(x){}},4000)}
   catch(x){st.textContent=x.message}}
