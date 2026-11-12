@@ -38,7 +38,17 @@ function css(){if(document.getElementById("hi-css"))return;const s=document.crea
 .hi-badge{display:inline-block;font-size:11px;padding:1px 7px;border-radius:9px;background:#f3e8ff;color:#7e22ce;margin-left:6px;vertical-align:1px}
 .hi-sig{background:var(--warnbg,#fff1e6);color:var(--warn,#c2410c);border-radius:12px;padding:8px 10px;margin:8px 0;font-size:14px}
 .hi-btn{margin-left:6px}a.hi-l{color:var(--acc,#2563eb);font-size:12px;text-decoration:none}
-.hi-deal{background:#eef6ff;border-color:#bfdbfe}`;document.head.appendChild(s)}
+.hi-deal{background:#eef6ff;border-color:#bfdbfe}
+.hi-kop{font-size:17px;margin:2px 0 8px}.hi-sam .hi-st{display:inline-block;font-weight:700;font-size:13px;padding:3px 10px;border-radius:10px;margin-bottom:8px}
+.hi-st.ok{background:var(--okbg,#e8f7ee);color:var(--ok,#16a34a)}.hi-st.verk{background:var(--warnbg,#fff1e6);color:var(--warn,#c2410c)}.hi-st.weg{background:var(--chip,#eef0f3);color:var(--mute,#5d6470)}
+.hi-prijs{font-size:22px;margin:2px 0}.hi-prijs span{color:var(--mute,#5d6470);font-size:18px}.hi-daling{color:var(--bad,#dc2626);font-weight:700;margin-bottom:8px}
+.hi-pw{width:100%;border-collapse:collapse;font-size:14px}.hi-pw td{padding:5px 4px;border-top:1px solid var(--line,#e3e6eb);vertical-align:top}.hi-pw tr:first-child td{border-top:0}
+.hi-pw td:first-child{white-space:nowrap;color:var(--mute,#5d6470);width:1%}.hi-pw td:last-child{width:1%;text-align:right}.hi-vs{color:var(--bad,#dc2626);white-space:nowrap;text-align:right}
+.hi-pw tr.rec td:first-child:before,.hi-dot:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc,#2563eb);margin-right:5px;vertical-align:1px}
+.hi-pw tr.rec td:first-child:before,.hi-dot.rec:before{background:#a855f7}.hi-dot{display:inline-block}
+a.hi-src{display:inline-block;font-size:12px;line-height:1;padding:3px 6px;border-radius:8px;background:var(--chip,#eef0f3);color:var(--acc,#2563eb);text-decoration:none}
+.hi-det summary{font-weight:700;font-size:16px;cursor:pointer;list-style-position:inside}.hi-det summary .hi-m{font-weight:400;margin-left:4px}.hi-alle td:nth-child(2){font-size:13px}
+`;document.head.appendChild(s)}
 
 let HUIDIG=null,POLL=null;
 function open(q){css();sluit();const ov=document.createElement("div");ov.id="hi-ov";
@@ -53,29 +63,37 @@ function sluit(){const o=document.getElementById("hi-ov");if(o)o.remove();docume
 async function zoek(q){const r=document.getElementById("hi-r");if(!r)return;r.innerHTML='<div class="hi-m">Zoeken…</div>';
   try{HUIDIG=await haal("?q="+encodeURIComponent(q.trim()));teken()}catch(x){r.innerHTML=`<div class="hi-sig">${e(x.message)}</div>`}}
 
+const bronL=(l,b)=>l?`<a class="hi-src" href="${e(l)}" target="_blank" rel="noopener" title="${e(b||"Bron")}" aria-label="Bron: ${e(b||"")}">↗</a>`:"";
+const pct=n=>n==null?"":Number(n).toLocaleString("nl-NL",{maximumFractionDigits:1})+"%";
 function teken(){const d=HUIDIG,r=document.getElementById("hi-r");if(!d||!r)return;
-  const rd=d.rdw||{},A=d.advertenties||[],T=d.tijdlijn||[];let h="";
-  h+=`<div class="hi-k"><h3>${e(d.kenteken_opmaak||d.kenteken||d.vin||"Onbekend")} ${rd.gevonden?"· "+e([rd.merk,rd.model].filter(Boolean).join(" ")):""}</h3>`;
-  if(rd.gevonden)h+=`<div class="hi-g"><span>Kleur (RDW)</span><b>${e(rd.kleur||"—")}</b><span>Eerste toelating</span><b>${e(dag(rd.datum_eerste_toelating)||"—")}</b>
-    <span>Import NL</span><b>${e(dag(rd.datum_eerste_tenaamstelling_nl)||"—")}</b><span>Laatste tenaamstelling</span><b>${e(dag(rd.datum_tenaamstelling)||"—")}</b>
-    <span>APK tot</span><b>${e(dag(rd.vervaldatum_apk)||"—")}</b><span>Tellerstand</span><b>${e(rd.tellerstandoordeel||"—")}${rd.jaar_laatste_tellerstand?" (laatst "+e(rd.jaar_laatste_tellerstand)+")":""}</b></div>
-    <div class="hi-m" style="margin-top:6px">Bron: <a class="hi-l" href="${e(rd.bron_url)}" target="_blank" rel="noopener">${e(rd.bron)}</a></div>`;
-  else h+=`<div class="hi-m">${e(rd.reden||"Geen RDW-gegevens")}</div>`;
+  const rd=d.rdw||{},A=d.advertenties||[],T=d.tijdlijn||[],S=d.samenvatting||{},P=d.prijswijzigingen||[];let h="";
+  h+=`<div class="hi-kop"><b>${e(d.kenteken_opmaak||d.kenteken||d.vin||"Onbekend")}</b>${rd.gevonden?" · "+e([rd.merk,rd.model].filter(Boolean).join(" "))+(rd.kleur?" · "+e(rd.kleur):""):""}</div>`;
+  const kl=S.status==="Nog te koop"?"ok":S.status==="Waarschijnlijk verkocht"?"verk":"weg";
+  h+=`<div class="hi-k hi-sam"><div class="hi-st ${kl}">${e(S.status_tekst||S.status||"Onbekend")}</div>`;
+  if(S.eerste_prijs!=null){h+=`<div class="hi-prijs"><span>${eur(S.eerste_prijs)}</span>${S.laatste_prijs!==S.eerste_prijs?` → <b>${eur(S.laatste_prijs)}</b>`:""}</div>`;
+    if(S.daling_eur)h+=`<div class="hi-daling">${S.daling_eur>0?"−":"+"}${eur(Math.abs(S.daling_eur))} (${S.daling_eur>0?"−":"+"}${pct(Math.abs(S.daling_pct))})</div>`}
+  h+=`<div class="hi-g"><span>Te koop sinds</span><b>${e(dag(S.te_koop_sinds)||"—")}</b><span>Dagen te koop</span><b>${S.dagen_te_koop!=null?e(S.dagen_te_koop)+" dagen":"—"}${S.dagen_te_koop!=null&&S.dagen_tot?` <span class="hi-m">(tot ${e(S.dagen_tot)})</span>`:""}</b>
+    <span>Dealer</span><b>${e(S.dealer||"—")}</b></div>`;
+  if(S.gereconstrueerd)h+=`<div class="hi-m" style="margin-top:6px"><span class="hi-badge">deels gereconstrueerd</span> uit openbare archieven, met gaten.</div>`;
   h+=`</div>`;
   if(d.deal)h+=`<div class="hi-k hi-deal"><h3>In ons dealsysteem</h3><div>${e(d.deal.titel||"")}${d.deal.marge!=null?" · marge "+eur(d.deal.marge):""}</div><div class="hi-m">Alleen zichtbaar voor Robin en Rutger.</div></div>`;
-  (d.signalen||[]).forEach(s=>h+=`<div class="hi-sig">${e(s.tekst)}</div>`);
-  h+=`<div class="hi-k"><h3>Tijdlijn</h3>`+(T.length?`<ul class="hi-t">${T.slice().reverse().map(t=>`<li class="${t.gereconstrueerd?"rec":e(t.soort)}"><div class="hi-d">${e(dag(t.datum))}${t.gereconstrueerd?'<span class="hi-badge">gereconstrueerd</span>':""}</div>
-    <div>${e(t.tekst)}${t.prijs!=null?` · <span class="hi-pr">${eur(t.prijs)}</span>`:""}</div>
-    <div>${t.link?`<a class="hi-l" href="${e(t.link)}" target="_blank" rel="noopener">${e(t.bron)}</a>`:`<span class="hi-m">${e(t.bron)}</span>`}</div></li>`).join("")}</ul>`:`<div class="hi-m">Nog geen gebeurtenissen.</div>`)+`</div>`;
-  h+=`<div class="hi-k"><h3>Advertenties in ons archief (${A.length})</h3>`+(A.length?A.map(a=>`<div style="margin:6px 0 10px"><div><b>${e(a.bron)}</b>${a.dealer?" · "+e(a.dealer):""} · ${e(a.status)}</div>
-    <div class="hi-m">Te koop sinds ${e(dag(a.online_sinds||a.eerst_gezien))} · laatst gezien ${e(dag(a.laatst_gezien))}${a.dagen_online!=null?" · "+e(a.dagen_online)+" dagen online":""}${a.km?" · "+Number(a.km).toLocaleString("nl-NL")+" km":""}</div>
-    <div>${(a.prijzen||[]).map(p=>`${e(dag(p.datum))}: <b>${eur(p.prijs)}</b>`).join(" → ")}</div><a class="hi-l" href="${e(a.url)}" target="_blank" rel="noopener">Open advertentie</a></div>`).join("")
-    :`<div class="hi-m">Niet gezien in ons eigen archief (loopt vanaf ${e(dag((d.archief||{}).vanaf))}).</div>`)+`</div>`;
+  h+=`<div class="hi-k"><h3>Prijswijzigingen</h3>`+(P.length?`<table class="hi-pw">${P.slice().reverse().map(p=>`<tr class="${p.gereconstrueerd?"rec":""}"><td>${e(dag(p.datum))}</td><td class="hi-pr">${eur(p.prijs)}</td><td class="hi-vs">${p.verschil?(p.verschil<0?"−":"+")+eur(Math.abs(p.verschil)):"start"}</td><td>${bronL(p.link,p.bron)}</td></tr>`).join("")}</table>
+    <div class="hi-m" style="margin-top:4px"><span class="hi-dot rec"></span> gereconstrueerd (archive.org) · <span class="hi-dot"></span> eigen archief · ↗ bron</div>`:`<div class="hi-m">Geen prijzen bekend.</div>`)+`</div>`;
+  if(rd.gevonden&&rd.check){h+=`<details class="hi-k hi-det"><summary>Kentekencheck <span class="hi-m">RDW open data</span></summary><div class="hi-g" style="margin-top:8px">${rd.check.map(c=>`<span>${e(c.veld)}</span><b>${c.waarde==null||c.waarde===""?'<span class="hi-m">niet in RDW-data</span>':(/catalogusprijs/i.test(c.veld)?eur(c.waarde):/^\d{4}-\d{2}-\d{2}$/.test(String(c.waarde))?e(dag(c.waarde)):e(c.waarde))}</b>`).join("")}</div>
+    ${(rd.apk_meldingen||[]).length?`<div style="margin-top:8px"><b>APK-meldingen</b>${rd.apk_meldingen.slice().reverse().map(a=>`<div class="hi-m">${e(dag(a.datum))} · ${e(a.soort||"keuring")} · geldig tot ${e(dag(a.geldig_tot))}</div>`).join("")}</div>`:""}
+    <div class="hi-m" style="margin-top:6px">Bron: <a class="hi-l" href="${e(rd.bron_url)}" target="_blank" rel="noopener">${e(rd.bron)}</a>${rd.opgehaald?" · opgehaald "+e(String(rd.opgehaald).replace("T"," ")):""}</div></details>`}
+  else if(!rd.gevonden)h+=`<div class="hi-k hi-m">${e(rd.reden||"Geen RDW-gegevens")}</div>`;
   const tz=d.terugzoeken;
-  h+=`<div class="hi-k"><h3>Zoek oudere historie</h3><div class="hi-m">Via de openbare Wayback-zoekindex (archive.org), in een laag tempo en alleen voor deze auto. Gevonden punten krijgen het label "gereconstrueerd" en hebben gaten.</div>
-    ${tz?`<div class="hi-m" style="margin-top:6px">Laatst gezocht ${e(String(tz.ts||"").replace("T"," "))}: ${e(tz.treffers)} treffers, ${e(tz.bekeken)} archiefpagina's bekeken.</div>`:""}
-    <div style="display:flex;gap:8px;margin-top:8px"><input id="hi-hint" placeholder="Optioneel: link naar advertentie of dealersite" style="flex:1;min-width:0;padding:9px;border:1px solid var(--line,#e3e6eb);border-radius:10px;font-size:15px"><button class="hi-b hi-s" id="hi-terug" type="button"${d.kenteken?"":" disabled"}>Zoek</button></div><div id="hi-st" class="hi-m" style="margin-top:6px"></div></div>
-    <div class="hi-m">${e((d.archief||{}).uitleg||"")}</div>`;
+  h+=`<details class="hi-k hi-det"><summary>Meer info <span class="hi-m">tijdlijn, advertenties, bronnen</span></summary>`;
+  (d.signalen||[]).forEach(s=>h+=`<div class="hi-sig">${e(s.tekst)}</div>`);
+  h+=`<h3 style="margin-top:10px">Alle punten</h3>`+(T.length?`<table class="hi-pw hi-alle">${T.slice().reverse().map(t=>`<tr class="${t.gereconstrueerd?"rec":""}"><td>${e(dag(t.datum))}</td><td>${e(t.tekst)}${t.prijs!=null?` · <b>${eur(t.prijs)}</b>`:""}</td><td>${bronL(t.link,t.bron)}</td></tr>`).join("")}</table>`:`<div class="hi-m">Nog geen punten.</div>`);
+  h+=`<h3 style="margin-top:12px">Advertenties in ons archief (${A.length})</h3>`+(A.length?A.map(a=>`<div style="margin:4px 0 8px"><b>${e(a.bron)}</b>${a.dealer?" · "+e(a.dealer):""} · ${e(a.status)} ${bronL(a.url,"Open advertentie")}
+    <div class="hi-m">Sinds ${e(dag(a.online_sinds||a.eerst_gezien))} · laatst gezien ${e(dag(a.laatst_gezien))}${a.dagen_online!=null?" · "+e(a.dagen_online)+" dagen":""}${a.km?" · "+Number(a.km).toLocaleString("nl-NL")+" km":""}</div></div>`).join("")
+    :`<div class="hi-m">Niet gezien in ons eigen archief (loopt vanaf ${e(dag((d.archief||{}).vanaf))}).</div>`);
+  h+=`<h3 style="margin-top:12px">Zoek oudere historie</h3><div class="hi-m">Via de openbare Wayback-index (archive.org), in een laag tempo en alleen voor deze auto. Gevonden punten zijn "gereconstrueerd".</div>
+    ${tz?`<div class="hi-m" style="margin-top:4px">Laatst gezocht ${e(String(tz.ts||"").replace("T"," "))}: ${e(tz.treffers)} treffers, ${e(tz.bekeken)} archiefpagina's.</div>`:""}
+    <div style="display:flex;gap:8px;margin-top:8px"><input id="hi-hint" placeholder="Optioneel: link naar advertentie of dealer" style="flex:1;min-width:0;padding:9px;border:1px solid var(--line,#e3e6eb);border-radius:10px;font-size:15px"><button class="hi-b hi-s" id="hi-terug" type="button"${d.kenteken?"":" disabled"}>Zoek</button></div><div id="hi-st" class="hi-m" style="margin-top:6px"></div>
+    <div class="hi-m" style="margin-top:8px">${e((d.archief||{}).uitleg||"")}</div></details>`;
   r.innerHTML=h;const b=document.getElementById("hi-terug");if(b)b.onclick=terug}
 async function terug(){const d=HUIDIG;if(!d||!d.kenteken)return;const st=document.getElementById("hi-st");
   try{await haal("/terugzoeken",{method:"POST",body:JSON.stringify({kenteken:d.kenteken,hint:(document.getElementById("hi-hint")||{}).value||""})});

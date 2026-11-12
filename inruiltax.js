@@ -379,6 +379,7 @@ function bind(){
   });
   if(g("txzoek")){g("txzoek").addEventListener("input",e=>{TXL.filter=e.target.value;});g("txzoek").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();lijstTeken();}});}
 }
+let TXLAAD=null;
 function ladenDan(teken){
   if(isBedrijf()){
     const need=[];
@@ -389,13 +390,16 @@ function ladenDan(teken){
     return false;
   }
   if(!window.MI||!window.WM||!window.TXV){
-    Promise.all([
-      window.MI?MI:fetch("marktindex.json?"+Date.now()).then(r=>r.json()),
-      window.WM?WM:fetch("waardemodel.json?"+Date.now()).then(r=>r.ok?r.json():{}).catch(()=>({})),
-      window.TXV?TXV:fetch("voorraad.json?"+Date.now()).then(r=>r.ok?r.json():{autos:[]}).catch(()=>({autos:[]}))
-    ]).then(([a,b,c])=>{MI=a;WM=b;TXV=c;teken();}).catch(()=>{
-      const T=document.getElementById("cards");if(T)T.innerHTML='<div class="empty"><b>Inruil-taxatie nog niet beschikbaar</b><div class="meta">De marktindex ontbreekt nog.</div></div>';
-    });
+    if(!TXLAAD){
+      TXLAAD=Promise.all([
+        window.MI?MI:fetch("marktindex.json?"+Date.now()).then(r=>r.json()),
+        window.WM?WM:fetch("waardemodel.json?"+Date.now()).then(r=>r.ok?r.json():{}).catch(()=>({})),
+        window.TXV?TXV:fetch("voorraad.json?"+Date.now()).then(r=>r.ok?r.json():{autos:[]}).catch(()=>({autos:[]}))
+      ]).then(([a,b,c])=>{MI=a;WM=b;TXV=c;TXLAAD=null;teken();}).catch(()=>{
+        TXLAAD=null;
+        const T=document.getElementById("cards");if(T)T.innerHTML='<div class="empty"><b>Inruil-taxatie nog niet beschikbaar</b><div class="meta">De marktindex ontbreekt nog.</div></div>';
+      });
+    }else TXLAAD.then(()=>{if(typeof seg==="undefined"||seg===13||isBedrijf())teken();});
     return true;
   }
   return false;
