@@ -77,6 +77,10 @@ ${Object.keys(S.landen).map(l=>B("landen."+l,l,"Advertenties uit dit land meenem
 ${bronnen.map(b=>B("bronnen."+b,BRON_LAB[b]||b,"Advertenties van deze bron meenemen.")).join("")}
 ${N("ophalen_max","Maximale ophaalkosten","0 of leeg is geen grens.")}
 </details>
+<details class="ig"><summary>Volgorde</summary>
+<p class="ihulp">Alleen de volgorde, geen andere marge of fiscale regels.</p>
+${B("volgorde.buitenland_eerst","Buitenland eerst","Buitenlandse deals bovenaan bij Inkoopkansen, Nu opvolgen, de Wachtrij en in Telegram. Land onbekend telt niet als buitenland.")}
+</details>
 <details class="ig"><summary>Meldingen en Telegram</summary>
 <p class="ihulp">Bepaalt welke deals de bot stuurt, en wanneer het stil is.</p>
 <div class="r"><label for="i_ms">Welke deals<small>Tijdens stille uren komen alleen topdeals door.</small></label><select id="i_ms" data-p="meldingen.soort">${[["top","Alleen topdeals"],["deals","Alle deals"],["deals_en_bijna","Deals en bijna-deals"]].map(([v,t])=>`<option value="${v}" ${S.meldingen.soort===v?"selected":""}>${t}</option>`).join("")}</select></div>

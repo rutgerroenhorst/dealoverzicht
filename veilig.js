@@ -24,10 +24,10 @@ root.kort=function(d){let h=_kort(d);const f=fv(d),v=f.veilig;if(!v||f.bied_toeg
  let tx=[];try{tx=root.taxatie(d)}catch(e){}if(tx.length)return h;
  const e=typeof eur==="function"?eur:(n=>"€"+Math.round(n).toLocaleString("nl-NL"));
  h=h.replace("<span>Max. bod</span>",'<span>Max. bod (veilig)</span>');
- h=h.replace(/<div><span>Je houdt over<\/span><b class="[^"]*">[^<]*<\/b><\/div>/,`<div><span>Je houdt over (min.)</span><b class="${v.marge>0?"pos":"neg"}">${e(v.marge)}${typeof houdPct==="function"?houdPct(v.marge,(d.c||{}).prijs):""}</b></div>`);
+ h=h.replace(/<div><span>Verw\. brutomarge<\/span><b class="[^"]*">[^<]*<\/b><\/div>/,`<div><span>Min. brutomarge</span><b class="${v.marge>0?"pos":"neg"}">${e(v.marge)}</b></div>`);
  const esc_=typeof esc==="function"?esc:(s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])));
  const uitleg=`<div class="meta veilig">Veilig bod: gerekend met het slechtste scenario. ${esc_((v.aannames||[]).join("; "))}.</div>`;
  h=h.replace(/(<div class="chips">)/,uitleg+"$1");
  return h};
-if(typeof _deel==="function")root.deelTekst=function(d,mb,tx){let t=_deel(d,mb,tx);const f=fv(d),v=f.veilig;if(v&&!f.bied_toegestaan&&!(tx&&tx.length))t=t.replace(/Je houdt over [^\n]*?(?= · max\. bod|\n|$)/,`Je houdt over minimaal ${typeof eur==="function"?eur(v.marge):v.marge} (slechtste scenario)`);return t};
+if(typeof _deel==="function")root.deelTekst=function(d,mb,tx){let t=_deel(d,mb,tx);const f=fv(d),v=f.veilig;if(v&&!f.bied_toegestaan&&!(tx&&tx.length))t=t.replace(/Verwachte brutomarge [^\n·]*/,`Min. brutomarge ${typeof eur==="function"?eur(v.marge):v.marge} (veilig bod, slechtste scenario) `);return t};
 })(typeof window!=="undefined"?window:globalThis);

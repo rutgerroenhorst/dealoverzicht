@@ -27,3 +27,13 @@
 .tk-vraag{background:#eef4ff;border-color:#b9c9e8}
 .tk-med{font-size:13px;margin:16px 0;padding:10px;border:1px dashed var(--lijn,#ccc);border-radius:10px}
 @media(max-width:420px){.tk-wrap{padding:0 8px 96px}.tk-card{padding:12px 10px}}
+
+.tk-delen{display:flex;gap:8px;padding:8px 12px 0;max-width:720px;margin:0 auto}
+.tk-delen button{appearance:none;border:1px solid var(--lijn,#ccc);background:transparent;color:inherit;border-radius:999px;padding:8px 16px;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.tk-delen button.on{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+[data-thema="donker"] .tk-delen button.on,html[data-thema="donker"] .tk-delen button.on{background:#eee;color:#111}
+.tk-wacht{margin:0 0 14px}
+.tk-wacht h3,.tk-wrap h2.t{font-size:18px;margin:8px 0}
+.tk-toew{display:flex;align-items:center;gap:8px;font-size:13px;margin:6px 0}
+.tk-toew select{font:inherit;font-size:13px;padding:6px 8px;border-radius:8px;border:1px solid var(--lijn,#ccc);background:inherit;color:inherit}
+#tk-wacht-vd .tk-card{margin-top:8px}

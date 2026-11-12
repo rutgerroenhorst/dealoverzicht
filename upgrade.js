@@ -37,7 +37,7 @@ function opvolgTitel(u,p,d){if(d&&d.titel)return d.titel;if(p&&p.titel)return p.
  try{const x=new URL(u),last=decodeURIComponent((x.pathname||'').split('/').filter(Boolean).pop()||'').replace(/[-_+]+/g,' ').replace(/\.\w+$/,'');if(last&&!/^\d+$/.test(last)&&last.length>3)return last.replace(/\b\w/g,c=>c.toUpperCase());return (x.hostname||'').replace(/^www\./,'')+' · advertentie'}catch(e){return 'Advertentie (niet meer in de lijst)'}}
 function vandaag(){upFetch();$("#kpis").innerHTML="";const A=alleDeals().filter(d=>!HID.has(d.deal_url)&&d.c&&d.c.online!==false&&!d.verlopen&&!/verkocht/i.test(d.titel||"")),nu=Date.now();
  const open=A.filter(d=>!["Gekocht","Afgewezen"].includes(pget(d.deal_url).status)).sort((a,b)=>String(b.nieuw_iso||"").localeCompare(String(a.nieuw_iso||""))||((b.marge||{}).marge||0)-((a.marge||{}).marge||0));
- const vers=open.filter(d=>d.nieuw_iso&&nu-new Date(d.nieuw_iso).getTime()<48*3600e3),H=herinneringen(),T=Object.values(txAll()).sort((a,b)=>String(b.gewijzigd||"").localeCompare(String(a.gewijzigd||""))).slice(0,6);
+ const vers=open.filter(d=>d.nieuw_iso&&nu-new Date(d.nieuw_iso).getTime()<48*3600e3),H=(typeof volgordeOpvolgen==="function"?volgordeOpvolgen(herinneringen()):herinneringen()),T=Object.values(txAll()).sort((a,b)=>String(b.gewijzigd||"").localeCompare(String(a.gewijzigd||""))).slice(0,6);
  const V=((TXV&&TXV.autos)||[]).filter(a=>(a.dagen||0)>=30||/boven markt/.test((a.advies||{}).label||"")).sort((a,b)=>(b.dagen||0)-(a.dagen||0)).slice(0,6);
  const knop=(l,i,cl)=>`<button class="btn ${cl||""}" data-gotab="${i}">${l}</button>`;
  const bi=D.segmenten.findIndex(x=>x.id==="brns"),nBrns=bi>=0?D.segmenten[bi].deals.length:0,nFlips=(D.segmenten.find(x=>x.id==="flips")||{deals:[]}).deals.length;
