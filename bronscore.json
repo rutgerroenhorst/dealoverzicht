@@ -1,9 +1,9 @@
 {
- "bijgewerkt": "2026-11-12 07:45",
+ "bijgewerkt": "2026-11-12 11:53",
  "dagen": 60,
- "deals": 324,
+ "deals": 326,
  "per_bron": {
-  "AutoScout24": 249,
+  "AutoScout24": 251,
   "AutoTrack": 39,
   "Marktplaats": 36
  },
@@ -36,20 +36,20 @@
    }
   },
   {
+   "model": "Mercedes-Benz SLS",
+   "deals": 12,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 12
+   }
+  },
+  {
    "model": "Land Rover Defender",
    "deals": 11,
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 6,
     "Marktplaats": 5
-   }
-  },
-  {
-   "model": "Mercedes-Benz SLS",
-   "deals": 11,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 11
    }
   },
   {
@@ -62,10 +62,10 @@
   },
   {
    "model": "Lamborghini Urus",
-   "deals": 7,
+   "deals": 8,
    "beste": "AutoScout24",
    "verdeling": {
-    "AutoScout24": 7
+    "AutoScout24": 8
    }
   },
   {
