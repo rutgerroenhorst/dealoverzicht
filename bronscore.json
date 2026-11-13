@@ -1,9 +1,9 @@
 {
- "bijgewerkt": "2026-11-12 19:50",
+ "bijgewerkt": "2026-11-13 07:36",
  "dagen": 60,
- "deals": 326,
+ "deals": 330,
  "per_bron": {
-  "AutoScout24": 251,
+  "AutoScout24": 255,
   "AutoTrack": 39,
   "Marktplaats": 36
  },
@@ -19,10 +19,10 @@
   },
   {
    "model": "Audi Q5",
-   "deals": 24,
+   "deals": 26,
    "beste": "AutoScout24",
    "verdeling": {
-    "AutoScout24": 24
+    "AutoScout24": 26
    }
   },
   {
@@ -69,6 +69,14 @@
    }
   },
   {
+   "model": "Audi A3",
+   "deals": 5,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 5
+   }
+  },
+  {
    "model": "BMW 330",
    "deals": 5,
    "beste": "AutoScout24",
@@ -95,14 +103,6 @@
    }
   },
   {
-   "model": "Audi A3",
-   "deals": 4,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 4
-   }
-  },
-  {
    "model": "Mercedes-Benz GLC",
    "deals": 4,
    "beste": "AutoScout24",
@@ -125,6 +125,14 @@
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 3
+   }
+  },
+  {
+   "model": "BMW 530",
+   "deals": 2,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 2
    }
   },
   {
@@ -215,14 +223,6 @@
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 2
-   }
-  },
-  {
-   "model": "BMW 530",
-   "deals": 1,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 1
    }
   },
   {
