@@ -206,12 +206,14 @@ function takenRender(){
   const sort=$("#sort");if(sort)sort.innerHTML="";
   const cards=$("#cards");if(!cards)return;
   if(!TAKEN)cards.innerHTML=`<div class="tk-wrap"><p class="tk-leeg">Taken laden…</p></div>`;
+  else if(seg===TAKEN_SEG||seg===WACHT_SEG)tekenLijst();  /* NAV_V1: meteen de bekende lijst, nooit de vorige pagina laten staan */
   laadEnTeken();
 }
 
 async function laadEnTeken(stil){
   try{
     TAKEN=await api("/taken");
+    if(typeof window.navWacht==="function")navWacht((TAKEN.vragen||[]).filter(v=>v.status==="open").length);
   }catch(e){
     const cards=$("#cards");
     if(cards&&!stil)cards.innerHTML=`<div class="tk-wrap"><div class="tk-warn"><b>Taken niet geladen.</b>${esc(e.message)}</div></div>`;
@@ -408,16 +410,18 @@ function takenVandaagBlok(){
     const vandaagT=open.filter(t=>(t.deadline||"").slice(0,10)===v);
     const laat=open.filter(t=>{const d=(t.deadline||"").slice(0,10);return d&&d<v});
     const vr=(TAKEN.vragen||[]).filter(x=>x.status==="open");
+    if(typeof window.navWacht==="function")navWacht(vr.length);
+    /* NAV_V1 (t615u): "Wacht op jou" als eerste blok bovenaan Vandaag, daarna "Te doen vandaag" */
+    let w=document.getElementById("tk-wacht-vd");
+    if(!w){w=document.createElement("section");w.id="tk-wacht-vd";w.className="vb";host.insertBefore(w,host.firstChild)}
     let el=document.getElementById("tk-vandaag");
-    if(!el){el=document.createElement("section");el.id="tk-vandaag";el.className="vb";host.insertBefore(el,host.firstChild)}
+    if(!el){el=document.createElement("section");el.id="tk-vandaag";el.className="vb";w.insertAdjacentElement("afterend",el)}
     const rij=t=>`<li class="vr"><div class="vr-m"><div class="vr-t">${esc(t.titel)}${t.auto?" · "+esc(t.auto):""}</div><div class="vr-s">${t.deadline?"uiterlijk "+esc(dag(t.deadline)):""}${t.voor?" · "+esc(t.voor):""}${isTeLaat(t)?" · te laat":""}</div></div></li>`;
     const lijst=[...laat.map(rij),...vandaagT.map(rij)].join("")||"";
     el.innerHTML=`<h3>Te doen vandaag <span class="cnt">${vandaagT.length+laat.length}</span></h3>
       ${lijst?`<ul class="vl">${lijst}</ul>`:`<div class="meta">Niets met deadline vandaag.</div>`}
-      <div class="meta"><button class="btn sm ghost" data-gotab="19">Open Taken</button></div>`;
-    let w=document.getElementById("tk-wacht-vd");
-    if(!w){w=document.createElement("section");w.id="tk-wacht-vd";w.className="vb";el.insertAdjacentElement("afterend",w)}
-    w.innerHTML=vr.length?`<h3>Wacht op jou (Robin) <span class="cnt">${vr.length}</span></h3>${vr.map(vraagKaart).join("")}`:`<h3>Wacht op jou (Robin)</h3><div class="meta">Geen open vragen.</div>`;
+      <div class="meta"><button type="button" class="btn sm ghost" data-gotab="19" data-ga-route="taken">Open Taken</button></div>`;
+    w.innerHTML=vr.length?`<h3>Wacht op jou (Robin) <span class="cnt">${vr.length}</span></h3>${vr.map(vraagKaart).join("")}`:`<h3>Wacht op jou (Robin)</h3><div class="meta">Geen vragen voor jou.</div>`;
     w.querySelectorAll("[data-ant]").forEach(b=>b.onclick=()=>antwoord(b.dataset.ant,b.dataset.soort));
   };
   if(TAKEN)teken(TAKEN);

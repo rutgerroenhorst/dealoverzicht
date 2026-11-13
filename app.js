@@ -15,6 +15,9 @@ const v=id=>{const x=$(id).value.trim();return x===""?null:+x};
 function toast(t,ms){const e=$("#toast");e.textContent=t;e.classList.add("on");document.body.classList.add("toast-on");clearTimeout(toast.h);toast.h=setTimeout(()=>{e.classList.remove("on");document.body.classList.remove("toast-on")},ms||1600)}
 function deals(){const S=D.segmenten[seg];return S.deals.filter(d=>!HID.has(d.deal_url)||d.id===SH).map(d=>{const c=d.autos.find(a=>a.url===d.deal_url)||d.autos[0];return{...d,c,korting:Math.round((c.prijs/d.mediaan-1)*100)}})}
 function tabZichtbaar(){const t=$("#tabs"),o=t&&t.querySelector(".on");if(!t||!o)return;const tr=t.getBoundingClientRect(),or=o.getBoundingClientRect();if(or.left<tr.left+4)t.scrollLeft-=(tr.left-or.left)+8;else if(or.right>tr.right-4)t.scrollLeft+=(or.right-tr.right)+8}
+function kortBijgewerkt(v){/* NAV_V1: "12-11-2026 15:48" -> "Bijgewerkt vandaag 15:48" */const m=String(v||"").match(/^(\d{1,2})-(\d{1,2})-(\d{4})(?:\s+(\d{1,2}:\d{2}))?/);if(!m)return "Bijgewerkt "+(v||"");
+ const MN=["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"],d=new Date(+m[3],+m[2]-1,+m[1]),n=new Date(),dg=Math.round((new Date(n.getFullYear(),n.getMonth(),n.getDate())-d)/864e5);
+ return "Bijgewerkt "+(dg===0?"vandaag":dg===1?"gisteren":(+m[1])+" "+MN[+m[2]-1])+(m[4]?" "+m[4]:"")}
 function render(){
  gLaad();
  const bi=D.segmenten.findIndex(x=>x.id==="brns"),fi=D.segmenten.findIndex(x=>x.id==="flips"),tb=(i,l,n)=>`<button class="${seg===i?"on":""}" data-i="${i}">${l}${n!=null?` <span>${n}</span>`:""}</button>`,nh=herinneringen().length;
@@ -75,7 +78,7 @@ document.addEventListener("click",e=>{const tp=e.target.closest(".tip");if(tp){e
 document.addEventListener("input",e=>{if(e.target.closest(".filters"))render()});
 fetch("profiel.json?"+Date.now()).then(r=>r.json()).then(j=>{P=j;if(D)render()}).catch(()=>{});
 if(location.hash==="#pipeline")seg=11;if(location.hash==="#profiel")seg=9;if(location.hash==="#meldingen")seg=6;if(location.hash==="#uitleg")seg=8;if(location.hash==="#klantwensen")seg=7;if(location.hash==="#prijstrends")seg=10;
-fetch("data.json?"+Date.now()).then(r=>r.json()).then(j=>{D=norm(kmap(j));startSeg();$("#datum").textContent="Laatst bijgewerkt: "+j.datum+(j.laatste_run==="quick"?" (snelle check)":"");$("#bronnen").innerHTML=(j.bronnen||BRON).map(b=>`<li>${esc(b)}</li>`).join("");render();route()});
+fetch("data.json?"+Date.now()).then(r=>r.json()).then(j=>{D=norm(kmap(j));startSeg();$("#datum").textContent=kortBijgewerkt(j.datum);$("#bronnen").innerHTML=(j.bronnen||BRON).map(b=>`<li>${esc(b)}</li>`).join("");render();route()});
 if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js").then(r=>r.update());let herladen=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(herladen)return;herladen=true;location.reload()})}
 
 function bars(o){const e=Object.entries(o),mx=Math.max(...e.map(x=>x[1]));return e.map(([k,v])=>`<div class="bar"><span>${esc(k)}</span><i style="width:${v/mx*100}%"></i><b>${v}</b></div>`).join("")}

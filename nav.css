@@ -1,0 +1,43 @@
+/* NAV_V1 (t614u/t615u): één vaste tabbalk onderin zoals een iPhone-app; rustige kop. */
+#tabs,#tk-delen,#kansenbtn,#hi-kop,#instbtn,#thema{display:none!important}
+.top{flex-wrap:nowrap!important;justify-content:space-between;gap:8px!important;padding:calc(8px + env(safe-area-inset-top)) 14px 8px!important}
+.top .brand{min-width:0}
+.top .brand h1{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .brand small{display:block;font-size:12px;color:var(--mut,#6b7280)}
+.top .brand>div{display:block!important}
+#nav-zoek{appearance:none;border:1px solid var(--line,#e5e7eb);background:var(--card,#fff);color:inherit;border-radius:999px;min-height:40px;padding:0 14px;font:inherit;font-size:15px;display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;cursor:pointer}
+main{padding-bottom:calc(84px + env(safe-area-inset-bottom))!important}
+.toast{bottom:calc(84px + env(safe-area-inset-bottom))!important}
+#nav-titel{margin:4px 2px 10px;font-size:22px;font-weight:700;letter-spacing:-.01em}
+#nav-titel:empty{display:none}
+#nav-bar{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;justify-content:space-around;align-items:stretch;
+ background:color-mix(in srgb,var(--bg,#f6f7f9) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+ border-top:1px solid var(--line,#e5e7eb);padding:4px 4px calc(4px + env(safe-area-inset-bottom))}
+#nav-bar button{appearance:none;border:0;background:none;color:var(--mut,#6b7280);font:inherit;font-size:11px;font-weight:600;flex:1 1 0;min-height:52px;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative;border-radius:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#nav-bar button .ic{font-size:22px;line-height:1}
+#nav-bar button.on{color:var(--acc,#2563eb)}
+#nav-bar button.on .ic{transform:scale(1.06)}
+#nav-bar .bdg,.nav-m .bdg{position:absolute;top:3px;left:calc(50% + 6px);min-width:18px;height:18px;border-radius:9px;background:#e11d48;color:#fff;font-size:11px;line-height:18px;padding:0 5px;text-align:center}
+.nav-m .bdg{position:static;margin-left:auto}
+#nav-meer{position:fixed;inset:0;z-index:60;display:none}
+#nav-meer.open{display:block}
+#nav-meer .bg{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+#nav-meer .sh{position:absolute;left:0;right:0;bottom:0;max-height:82vh;overflow:auto;background:var(--card,#fff);color:inherit;border-radius:18px 18px 0 0;
+ padding:10px 14px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -8px 30px rgba(0,0,0,.18)}
+#nav-meer .grip{width:40px;height:5px;border-radius:3px;background:var(--line,#d1d5db);margin:2px auto 10px}
+#nav-meer h4{margin:12px 4px 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut,#6b7280)}
+.nav-m{appearance:none;width:100%;display:flex;align-items:center;gap:12px;border:0;background:none;color:inherit;font:inherit;font-size:16px;text-align:left;
+ min-height:48px;padding:0 6px;border-bottom:1px solid var(--line,#eef0f3);cursor:pointer}
+.nav-m .ic{width:26px;text-align:center;font-size:19px}
+.nav-m.on{color:var(--acc,#2563eb);font-weight:600}
+#nav-meer .sluit{appearance:none;width:100%;margin-top:12px;min-height:46px;border-radius:12px;border:1px solid var(--line,#e5e7eb);background:none;color:inherit;font:inherit;font-weight:600}
+.nav-laden{padding:28px 8px;text-align:center;color:var(--mut,#6b7280)}
+.vr-s .verlopen{color:#b91c1c;font-weight:600}
+/* geen horizontale overloop (die duwde de balk onderin uit beeld en kapte "Klaar" af) */
+html,body{overflow-x:clip;max-width:100%}
+.cards>*{min-width:0}
+#cards>.tk-wrap,#cards>.vandaag,#cards>div:not(.card){grid-column:1/-1}
+.tk-filters,.tk-sub{min-width:0;max-width:100%}
+/* Taxeer-knop van de taxatie boven de balk */
+.txin-sticky{bottom:calc(62px + env(safe-area-inset-bottom))!important;padding-bottom:10px!important;z-index:45!important}

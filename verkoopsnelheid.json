@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "klant": "brns",
-  "bijgewerkt": "2026-11-12T18:24:40+01:00",
+  "bijgewerkt": "2026-11-13T05:05:05+01:00",
   "waarneming_vanaf": "2026-10-29",
-  "historiedagen": 14,
+  "historiedagen": 15,
   "items": [
     {
       "mk": "aston-martin",
@@ -151381,9 +151381,9 @@
     "gevolgde_voertuigen": 88537,
     "profiel_voertuigen": 80998,
     "bevestigd_offline": 3,
-    "liveness_records": 308,
-    "liveness_onbekend": 247,
-    "liveness_online": 58,
+    "liveness_records": 305,
+    "liveness_onbekend": 251,
+    "liveness_online": 50,
     "herplaatst": 0,
     "normale_bronnen": [
       "AT"

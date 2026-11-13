@@ -28,7 +28,7 @@ if(typeof document!=='undefined'){
  const tegel=(v,lab,go,filt)=>`<button type="button" class="dtegel" data-gotab="${go}"${filt?` data-dagfilter="${filt}"`:''}><b>${n(v)}</b><span>${lab}</span></button>`;
  const regel=`Van de ${n(r.gescand)} advertentiecontroles vandaag voldeden er ${n(r.goede_deals)} aan je huidige dealcriteria; ${n(r.bijna_deals)} bijna-deals, ${n(r.onzeker)} onzeker (BPM niet exact).`;
  const bron=dagInst?'je huidige opgeslagen instellingen':'de instellingen bij de laatste scan';
- doel.innerHTML=`<h2 class="t dag-kop">Overzicht · ${esc(dagData.datum)}</h2>
+ doel.innerHTML=`<h2 class="t dag-kop">Overzicht · ${esc((m=>m?(+m[3])+' '+['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'][+m[2]-1]:dagData.datum)(String(dagData.datum||'').match(/^(\d{4})-(\d{2})-(\d{2})/)))}</h2>
  <div class="dtegels" role="navigation" aria-label="Cijfers van vandaag">
   ${tegel(r.goede_deals,'Deals',Math.max(0,bi),'')}
   ${tegel(r.bijna_deals,'Bijna-deals',18,'')}

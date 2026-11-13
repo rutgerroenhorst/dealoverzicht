@@ -33,7 +33,13 @@ function vRij(t,s,a,extra){extra=extra||{};const open=extra.open,foto=extra.foto
  const thumb=open?`<div class="vr-ph" aria-hidden="true">${foto?`<img src="${esc(foto)}" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'vr-ph-x',textContent:'Geen foto'}))">`:`<span class="vr-ph-x">Geen foto</span>`}</div>`:"";
  const chev=open?`<span class="vr-chev" aria-hidden="true">›</span>`:"";
  return `<li class="${cls}"${open?` data-open="${esc(open)}" role="link" tabindex="0" title="Bekijk deal">`:">"}${thumb}<div class="vr-m"><div class="vr-t">${t}</div><div class="vr-s">${s||""}</div></div>${chev}<div class="vr-a">${a||""}</div></li>`}
-function opvolgTitel(u,p,d){if(d&&d.titel)return d.titel;if(p&&p.titel)return p.titel;const nt=(p&&p.notitie)||'';if(nt&&!/^https?:/i.test(nt))return nt.slice(0,80);
+function mooiTitel(t){/* NAV_V1: "Polo 1 4 Trendline Benzine (" -> "Polo 1.4 Trendline Benzine" */t=String(t||"").replace(/\b(\d) (\d)\b(?= |$)/g,"$1.$2").replace(/\s*[(\[{-]\s*$/,"").replace(/\(([^)]*)$/,"$1").replace(/\s{2,}/g," ").trim();return t}
+function nlHerinnering(v){/* "2026-10-30T09:00" -> "30 okt 09:00" + verlopen-markering */const m=String(v||"").match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/);if(!m)return esc(String(v||""));
+ const MN=["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"],nu=new Date(),j=+m[1];
+ const d=new Date(j,+m[2]-1,+m[3],m[4]?+m[4]:9,m[5]?+m[5]:0);const lab=`${+m[3]} ${MN[+m[2]-1]}${j!==nu.getFullYear()?" "+j:""}${m[4]?" "+m[4]+":"+m[5]:""}`;
+ return d<nu?`<span class="verlopen" title="Deze herinnering is verlopen">${lab} · verlopen</span>`:lab}
+function opvolgTitel(u,p,d){return mooiTitel(opvolgTitel0(u,p,d))}
+function opvolgTitel0(u,p,d){if(d&&d.titel)return d.titel;if(p&&p.titel)return p.titel;const nt=(p&&p.notitie)||'';if(nt&&!/^https?:/i.test(nt))return nt.slice(0,80);
  try{const x=new URL(u),last=decodeURIComponent((x.pathname||'').split('/').filter(Boolean).pop()||'').replace(/[-_+]+/g,' ').replace(/\.\w+$/,'');if(last&&!/^\d+$/.test(last)&&last.length>3)return last.replace(/\b\w/g,c=>c.toUpperCase());return (x.hostname||'').replace(/^www\./,'')+' · advertentie'}catch(e){return 'Advertentie (niet meer in de lijst)'}}
 function vandaag(){upFetch();$("#kpis").innerHTML="";const A=alleDeals().filter(d=>!HID.has(d.deal_url)&&d.c&&d.c.online!==false&&!d.verlopen&&!/verkocht/i.test(d.titel||"")),nu=Date.now();
  const open=A.filter(d=>!["Gekocht","Afgewezen"].includes(pget(d.deal_url).status)).sort((a,b)=>String(b.nieuw_iso||"").localeCompare(String(a.nieuw_iso||""))||((b.marge||{}).marge||0)-((a.marge||{}).marge||0));
@@ -50,8 +56,8 @@ function vandaag(){upFetch();$("#kpis").innerHTML="";const A=alleDeals().filter(
  const blok=(t,n,inh,leeg)=>`<section class="vb"><h3>${t}${n!=null?` <span class="cnt">${n}</span>`:""}</h3>${inh||`<div class="meta">${leeg}</div>`}</section>`;
  const opvolgen=H.map(([u,p])=>{const d=A.find(x=>x.deal_url===u)||(typeof alleDeals==='function'?alleDeals().find(x=>x.deal_url===u):null);
   const titel=opvolgTitel(u,p,d);
-  if(d) return vRij(`<span class="vr-titel">${esc(titel)}</span>`,`${esc(p.status)} · herinnering ${esc(String(p.herinner).replace("T"," "))}${p.notitie&&!/^https?:/i.test(p.notitie)?" · "+esc(p.notitie.slice(0,60)):""}`,`<span class="btn sm ghost vr-bekijk">Bekijk deal</span>`,{open:d.id,foto:(d.c&&d.c.foto)||""});
-  return vRij(`<span class="vr-titel">${esc(titel)}</span>`,`${esc(p.status)} · herinnering ${esc(String(p.herinner).replace("T"," "))}`,"")});
+  if(d) return vRij(`<span class="vr-titel">${esc(titel)}</span>`,`${esc(p.status)} · herinnering ${nlHerinnering(p.herinner)}${p.notitie&&!/^https?:/i.test(p.notitie)?" · "+esc(p.notitie.slice(0,60)):""}`,`<span class="btn sm ghost vr-bekijk">Bekijk deal</span>`,{open:d.id,foto:(d.c&&d.c.foto)||""});
+  return vRij(`<span class="vr-titel">${esc(titel)}</span>`,`${esc(p.status)} · herinnering ${nlHerinnering(p.herinner)}`,"")});
  const bs=BSC&&BSC.per_bron?Object.entries(BSC.per_bron).map(([b,n])=>`${esc(b)} ${n}`).join(", "):"";
  const lr=LRN&&LRN.paren!=null?`Leren van eigen verkopen: ${LRN.paren} inkoop en verkoop gekoppeld, ${LRN.actief?"model actief":"model actief vanaf "+LRN.drempel+" (nog "+LRN.nog_nodig+" nodig)"}.`:upTok()?"":"Log in bij Instellingen om taxaties, dossier en leren op alle toestellen te zien.";
  $("#cards").innerHTML=`<div class="vandaag"><div class="vgrid vtop">${blok("Nu opvolgen",H.length,H.length?`<ul class="vl">${opvolgen.join("")}</ul>`:"","Geen herinneringen voor vandaag.")}</div>
