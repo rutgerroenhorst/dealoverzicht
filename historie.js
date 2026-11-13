@@ -82,7 +82,7 @@ function teken(){const d=HUIDIG,r=document.getElementById("hi-r");if(!d||!r)retu
     <span>Dealer</span><b>${e(S.dealer||"—")}</b></div>`;
   if(S.gereconstrueerd)h+=`<div class="hi-m" style="margin-top:6px"><span class="hi-badge">deels gereconstrueerd</span> uit openbare archieven, met gaten.</div>`;
   const zv=d.zoekverslag||{};
-  h+=`<div class="hi-zv">${zv.regel?e(zv.regel):""}${zv.compleet?"":(d.kenteken?" <b>Overal zoeken loopt…</b>":"")}${zv.uitleg?" "+e(zv.uitleg):""}<div id="hi-st"></div></div>`;
+  h+=`<div class="hi-zv">${zv.regel_kort||zv.regel?e(zv.regel_kort||zv.regel):""}${zv.compleet?"":(d.kenteken?" <b>Overal zoeken loopt…</b>":"")}${zv.uitleg?" "+e(zv.uitleg):""}<div id="hi-st"></div></div>`;
   h+=`</div>`;
   if(d.deal)h+=`<div class="hi-k hi-deal"><h3>In ons dealsysteem</h3><div>${e(d.deal.titel||"")}${d.deal.marge!=null?" · marge "+eur(d.deal.marge):""}</div><div class="hi-m">Alleen zichtbaar voor Robin en Rutger.</div></div>`;
   h+=`<div class="hi-k"><h3>Prijswijzigingen</h3>`+(P.length?`<table class="hi-pw">${P.slice().reverse().map(p=>`<tr class="${p.gereconstrueerd?"rec":""}"><td>${e(dag(p.datum))}</td><td class="hi-pr">${eur(p.prijs)}</td><td class="hi-vs">${p.verschil?(p.verschil<0?"−":"+")+eur(Math.abs(p.verschil)):"start"}</td><td>${bronL(p.link,p.bron)}</td></tr>`).join("")}</table>
