@@ -1,10 +1,10 @@
 {
- "bijgewerkt": "2026-11-13 11:55",
+ "bijgewerkt": "2026-11-14 07:35",
  "dagen": 60,
- "deals": 330,
+ "deals": 334,
  "per_bron": {
-  "AutoScout24": 255,
-  "AutoTrack": 39,
+  "AutoScout24": 258,
+  "AutoTrack": 40,
   "Marktplaats": 36
  },
  "per_model": [
@@ -44,6 +44,14 @@
    }
   },
   {
+   "model": "Mercedes-Benz G",
+   "deals": 11,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 11
+   }
+  },
+  {
    "model": "Land Rover Defender",
    "deals": 11,
    "beste": "AutoScout24",
@@ -53,19 +61,19 @@
    }
   },
   {
-   "model": "Mercedes-Benz G",
-   "deals": 10,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 10
-   }
-  },
-  {
    "model": "Lamborghini Urus",
    "deals": 8,
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 8
+   }
+  },
+  {
+   "model": "Mercedes-Benz GLC",
+   "deals": 5,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 5
    }
   },
   {
@@ -103,20 +111,20 @@
    }
   },
   {
-   "model": "Mercedes-Benz GLC",
-   "deals": 4,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 4
-   }
-  },
-  {
    "model": "Porsche Macan",
    "deals": 4,
    "beste": "AutoTrack",
    "verdeling": {
     "AutoTrack": 2,
     "Marktplaats": 2
+   }
+  },
+  {
+   "model": "Audi Q8",
+   "deals": 3,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 3
    }
   },
   {
@@ -129,14 +137,6 @@
   },
   {
    "model": "BMW 530",
-   "deals": 2,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 2
-   }
-  },
-  {
-   "model": "Audi Q8",
    "deals": 2,
    "beste": "AutoScout24",
    "verdeling": {
@@ -223,6 +223,14 @@
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 2
+   }
+  },
+  {
+   "model": "Ferrari 599",
+   "deals": 1,
+   "beste": "AutoTrack",
+   "verdeling": {
+    "AutoTrack": 1
    }
   },
   {
@@ -487,14 +495,6 @@
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 1
-   }
-  },
-  {
-   "model": "Kia Picanto",
-   "deals": 1,
-   "beste": "Marktplaats",
-   "verdeling": {
-    "Marktplaats": 1
    }
   }
  ],
