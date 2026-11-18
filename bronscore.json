@@ -1,9 +1,9 @@
 {
- "bijgewerkt": "2026-11-17 12:00",
+ "bijgewerkt": "2026-11-18 07:41",
  "dagen": 60,
- "deals": 363,
+ "deals": 369,
  "per_bron": {
-  "AutoScout24": 287,
+  "AutoScout24": 293,
   "AutoTrack": 40,
   "Marktplaats": 36
  },
@@ -36,6 +36,14 @@
    }
   },
   {
+   "model": "Mercedes-Benz G",
+   "deals": 13,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 13
+   }
+  },
+  {
    "model": "Land Rover Defender",
    "deals": 13,
    "beste": "AutoScout24",
@@ -45,7 +53,7 @@
    }
   },
   {
-   "model": "Mercedes-Benz G",
+   "model": "Audi A3",
    "deals": 12,
    "beste": "AutoScout24",
    "verdeling": {
@@ -61,19 +69,11 @@
    }
   },
   {
-   "model": "Audi A3",
+   "model": "Audi Q8",
    "deals": 10,
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 10
-   }
-  },
-  {
-   "model": "Audi Q8",
-   "deals": 9,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 9
    }
   },
   {
@@ -231,6 +231,22 @@
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 2
+   }
+  },
+  {
+   "model": "Ferrari 328",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Ferrari Testarossa",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
    }
   },
   {
@@ -475,22 +491,6 @@
   },
   {
    "model": "Rolls-Royce Cullinan",
-   "deals": 1,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 1
-   }
-  },
-  {
-   "model": "Audi RS3",
-   "deals": 1,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 1
-   }
-  },
-  {
-   "model": "Audi RS4",
    "deals": 1,
    "beste": "AutoScout24",
    "verdeling": {
