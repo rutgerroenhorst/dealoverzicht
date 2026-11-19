@@ -149,7 +149,10 @@ function preview(lijst){clearTimeout(tmr);tmr=setTimeout(async()=>{const pv=el.q
  catch(e){pv.innerHTML=`<span class="fout">${esc(e.message)}</span>`}},lijst?0:400)}
 async function bewaar(){const pv=el.querySelector("#ipv");const fout=valideer();if(fout.length){pv.innerHTML=`<span class="fout">Niet opgeslagen. ${esc(fout.join(". "))}.</span>`;return}
  try{const r=await api("/instellingen","PUT",{instellingen:S});ORIG=JSON.stringify(S);const tm=new Date().toLocaleTimeString("nl-NL",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Amsterdam"});
-  pv.innerHTML=`<span class="bevest">${r.gewijzigd?"Opgeslagen om "+tm+". Kansen en Vandaag rekenen direct opnieuw; dealkaarten volgen bij de volgende scan.":"Opgeslagen om "+tm+". Er was niets gewijzigd."}</span>`;logboek()}
+  pv.innerHTML=`<span class="bevest">${r.gewijzigd?"Opgeslagen om "+tm+". Kansen worden opnieuw berekend…; Vandaag telt direct opnieuw, dealkaarten volgen bij de volgende scan.":"Opgeslagen om "+tm+". Er was niets gewijzigd."}</span>`;logboek();
+  // KANSEN_TREND_V1: Kansen echt herberekenen (GET /kansen) en pas daarna melden dat het gebeurd is.
+  if(r.gewijzigd){let ok=false;try{ok=typeof window.kansenOpnieuw==="function"&&await window.kansenOpnieuw()}catch(_){ok=false}
+   pv.innerHTML=`<span class="bevest">Opgeslagen om ${tm}. ${ok?"Kansen zijn opnieuw berekend":"Kansen konden nu niet opnieuw berekend worden; dat gebeurt bij het openen van Kansen"}; Vandaag telt direct opnieuw, dealkaarten volgen bij de volgende scan.</span>`}}
  catch(e){pv.innerHTML=`<span class="fout">Niet opgeslagen. ${esc(e.message)}${e.j&&e.j.details?": "+esc(e.j.details.join(". ")):""}</span>`}}
 async function logboek(){const b=el.querySelector("#ilog");if(!b)return;try{const r=await api("/logboek");
  b.innerHTML=r.logboek.map(x=>`<div>${esc(x.tijd)} · ${esc(x.gebruiker)}<br>${esc(x.wat)}${x.soort==="instellingen"?` <button class="knop" data-u="${x.id}">Terugzetten</button>`:""}</div>`).join("")||"Nog geen wijzigingen.";
