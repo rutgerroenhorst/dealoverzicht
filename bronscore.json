@@ -1,9 +1,9 @@
 {
- "bijgewerkt": "2026-11-18 11:54",
+ "bijgewerkt": "2026-11-19 07:42",
  "dagen": 60,
- "deals": 369,
+ "deals": 373,
  "per_bron": {
-  "AutoScout24": 293,
+  "AutoScout24": 297,
   "AutoTrack": 40,
   "Marktplaats": 36
  },
@@ -37,10 +37,10 @@
   },
   {
    "model": "Mercedes-Benz G",
-   "deals": 13,
+   "deals": 14,
    "beste": "AutoScout24",
    "verdeling": {
-    "AutoScout24": 13
+    "AutoScout24": 14
    }
   },
   {
@@ -69,7 +69,7 @@
    }
   },
   {
-   "model": "Audi Q8",
+   "model": "Lamborghini Urus",
    "deals": 10,
    "beste": "AutoScout24",
    "verdeling": {
@@ -77,11 +77,11 @@
    }
   },
   {
-   "model": "Lamborghini Urus",
-   "deals": 9,
+   "model": "Audi Q8",
+   "deals": 10,
    "beste": "AutoScout24",
    "verdeling": {
-    "AutoScout24": 9
+    "AutoScout24": 10
    }
   },
   {
@@ -133,6 +133,14 @@
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 3
+   }
+  },
+  {
+   "model": "Audi RS3",
+   "deals": 2,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 2
    }
   },
   {
@@ -231,6 +239,22 @@
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 2
+   }
+  },
+  {
+   "model": "Mercedes-Benz C",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Volkswagen Tiguan",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
    }
   },
   {
@@ -471,30 +495,6 @@
    "beste": "Marktplaats",
    "verdeling": {
     "Marktplaats": 1
-   }
-  },
-  {
-   "model": "Audi TT",
-   "deals": 1,
-   "beste": "Marktplaats",
-   "verdeling": {
-    "Marktplaats": 1
-   }
-  },
-  {
-   "model": "Volkswagen Polo",
-   "deals": 1,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 1
-   }
-  },
-  {
-   "model": "Rolls-Royce Cullinan",
-   "deals": 1,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 1
    }
   }
  ],
