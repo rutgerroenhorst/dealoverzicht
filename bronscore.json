@@ -1,11 +1,11 @@
 {
- "bijgewerkt": "2026-11-19 19:50",
+ "bijgewerkt": "2026-11-20 07:39",
  "dagen": 60,
- "deals": 374,
+ "deals": 373,
  "per_bron": {
-  "AutoScout24": 298,
+  "AutoScout24": 299,
   "AutoTrack": 40,
-  "Marktplaats": 36
+  "Marktplaats": 34
  },
  "per_model": [
   {
@@ -19,28 +19,28 @@
   },
   {
    "model": "Audi Q5",
-   "deals": 34,
+   "deals": 35,
    "beste": "AutoScout24",
    "verdeling": {
-    "AutoScout24": 34
+    "AutoScout24": 35
    }
   },
   {
    "model": "Porsche Cayenne",
-   "deals": 21,
+   "deals": 20,
    "beste": "Marktplaats",
    "verdeling": {
     "Marktplaats": 12,
     "AutoTrack": 7,
-    "AutoScout24": 2
+    "AutoScout24": 1
    }
   },
   {
    "model": "Mercedes-Benz G",
-   "deals": 14,
+   "deals": 15,
    "beste": "AutoScout24",
    "verdeling": {
-    "AutoScout24": 14
+    "AutoScout24": 15
    }
   },
   {
@@ -93,6 +93,15 @@
    }
   },
   {
+   "model": "Land Rover Range",
+   "deals": 6,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 5,
+    "Marktplaats": 1
+   }
+  },
+  {
    "model": "Mercedes-Benz GLC",
    "deals": 6,
    "beste": "AutoScout24",
@@ -110,21 +119,20 @@
    }
   },
   {
-   "model": "Land Rover Range",
-   "deals": 5,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 4,
-    "Marktplaats": 1
-   }
-  },
-  {
    "model": "Porsche Macan",
    "deals": 4,
    "beste": "AutoTrack",
    "verdeling": {
     "AutoTrack": 2,
     "Marktplaats": 2
+   }
+  },
+  {
+   "model": "BMW 530",
+   "deals": 3,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 3
    }
   },
   {
@@ -145,14 +153,6 @@
   },
   {
    "model": "Audi A5",
-   "deals": 2,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 2
-   }
-  },
-  {
-   "model": "BMW 530",
    "deals": 2,
    "beste": "AutoScout24",
    "verdeling": {
@@ -193,15 +193,6 @@
   },
   {
    "model": "Fiat Panda",
-   "deals": 2,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 1,
-    "Marktplaats": 1
-   }
-  },
-  {
-   "model": "Opel Corsa",
    "deals": 2,
    "beste": "AutoScout24",
    "verdeling": {
@@ -355,6 +346,14 @@
   },
   {
    "model": "Lotus Exige",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Opel Corsa",
    "deals": 1,
    "beste": "AutoScout24",
    "verdeling": {
