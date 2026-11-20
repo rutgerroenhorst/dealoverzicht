@@ -1,11 +1,11 @@
 {
- "bijgewerkt": "2026-11-20 07:39",
+ "bijgewerkt": "2026-11-20 11:58",
  "dagen": 60,
- "deals": 373,
+ "deals": 374,
  "per_bron": {
-  "AutoScout24": 299,
+  "AutoScout24": 301,
   "AutoTrack": 40,
-  "Marktplaats": 34
+  "Marktplaats": 33
  },
  "per_model": [
   {
@@ -128,6 +128,15 @@
    }
   },
   {
+   "model": "Ferrari 488",
+   "deals": 3,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "Marktplaats": 1,
+    "AutoScout24": 2
+   }
+  },
+  {
    "model": "BMW 530",
    "deals": 3,
    "beste": "AutoScout24",
@@ -144,6 +153,14 @@
    }
   },
   {
+   "model": "Lamborghini Huracán",
+   "deals": 2,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 2
+   }
+  },
+  {
    "model": "Audi RS3",
    "deals": 2,
    "beste": "AutoScout24",
@@ -153,14 +170,6 @@
   },
   {
    "model": "Audi A5",
-   "deals": 2,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 2
-   }
-  },
-  {
-   "model": "Ferrari 488",
    "deals": 2,
    "beste": "AutoScout24",
    "verdeling": {
@@ -233,6 +242,14 @@
    }
   },
   {
+   "model": "Peugeot 206",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
    "model": "Renault Twingo",
    "deals": 1,
    "beste": "AutoScout24",
@@ -266,14 +283,6 @@
   },
   {
    "model": "Ferrari Testarossa",
-   "deals": 1,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 1
-   }
-  },
-  {
-   "model": "Lamborghini Huracán",
    "deals": 1,
    "beste": "AutoScout24",
    "verdeling": {
@@ -482,14 +491,6 @@
   },
   {
    "model": "Ferrari Roma",
-   "deals": 1,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 1
-   }
-  },
-  {
-   "model": "Ferrari 296",
    "deals": 1,
    "beste": "AutoScout24",
    "verdeling": {
