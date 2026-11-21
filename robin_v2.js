@@ -1,0 +1,129 @@
+/* ROBIN_V2 (ontwerp v2, akkoord Rutger t651s2583): Robin · Beheer.
+   Vandaag: snelle knoppen, ritten met routeknop (Apple Kaarten / Google Maps vanaf De Giessen 1, Dronten), ochtendbriefing (standaard UIT).
+   Klanten: WhatsApp-concepten (wa.me zonder nummer: Robin kiest zelf de klant en verstuurt zelf), terugbellen, opvolging na verkoop.
+   Voorraad: Auto binnen / Auto verkocht + "bijgewerkt om HH:MM" (live van de server, elk uur van de eigen site).
+   Openbare site: geen privénummers, geen klantnamen uit Telegram. Wordt vóór nav.js geladen. */
+(function(){
+"use strict";
+if(typeof render!=="function")return;
+if(typeof KL!=="undefined"&&KL.slug&&KL.slug!=="brns")return; /* alleen de eigen BRNS-site; andere klantsites niet */
+const KLANTEN_SEG=26,VD=20,VR_SEG=12;
+const API=(typeof KL!=="undefined"&&KL.instellingen_api)||"https://2-31-144-18.sslip.io/api/inst";
+const HOST=location.hostname||"";
+const LIVE=HOST==="rutgerroenhorst.github.io"||/\.sslip\.io$/.test(HOST);
+const VAN="De Giessen 1, Dronten";
+const e=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tok=()=>localStorage["inst_token_"+((typeof KL!=="undefined"&&KL.slug)||"brns")]||"";
+function hdr(){const h={"Content-Type":"application/json"};if(tok())h.Authorization="Bearer "+tok();else h["X-Klant"]="brns";return h}
+async function api(p,method,body){
+  if(!LIVE)throw Error("Deze knop werkt op de live site.");
+  const r=await fetch(API+p,{method:method||"GET",headers:hdr(),body:body?JSON.stringify(body):undefined,cache:"no-store"});
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.reden||j.fout||"Mislukt");return j;
+}
+const apple=a=>"https://maps.apple.com/?saddr="+encodeURIComponent(VAN)+"&daddr="+encodeURIComponent(a)+"&dirflg=d";
+const google=a=>"https://www.google.com/maps/dir/?api=1&origin="+encodeURIComponent(VAN)+"&destination="+encodeURIComponent(a)+"&travelmode=driving";
+const wa=t=>"https://wa.me/?text="+encodeURIComponent(t);
+window.ROBIN_V2={apple,google,wa};
+const CONCEPTEN_STD={terugbellen:"Hoi, je had gebeld over een auto. Wanneer komt het je uit dat ik even terugbel? Groet, Robin – BRNS Exclusief",
+  afspraak:"Hoi, hierbij de bevestiging van onze afspraak bij BRNS Exclusief, De Giessen 1 in Dronten. Tot dan! Groet, Robin",
+  auto_klaar:"Hoi, goed nieuws: de auto staat klaar. Wanneer kom je hem ophalen? Groet, Robin – BRNS Exclusief",
+  opvolging:"Hoi, hoe bevalt de auto? Als er iets is hoor ik het graag. Groet, Robin – BRNS Exclusief"};
+const CLAB={terugbellen:"Terugbellen",afspraak:"Afspraak bevestigen",auto_klaar:"Auto staat klaar",opvolging:"Opvolging na verkoop"};
+let V=null,TK=null;
+async function laadV(){try{V=await api("/taken/robin/vandaag")}catch(x){V=V||null}return V}
+async function laadT(){try{TK=await api("/taken")}catch(x){}return TK}
+function toast2(t){if(typeof toast==="function")toast(t);else alert(t)}
+function routeKn(a){return a?`<a class="btn sm" href="${e(apple(a))}" target="_blank" rel="noopener">🗺️ Route (Apple)</a> <a class="btn sm ghost" href="${e(google(a))}" target="_blank" rel="noopener">Google Maps</a>`:""}
+
+/* ---------- Vandaag ---------- */
+function vdBlok(){
+  const host=document.querySelector(".vandaag");if(!host)return;
+  let b=document.getElementById("rb-vd");
+  if(!b){b=document.createElement("section");b.id="rb-vd";b.className="vb rb"}
+  if(host.firstChild!==b)host.insertBefore(b,host.firstChild);
+  const r=(V&&V.ritten)||[];
+  const vr=(V&&V.voorraad)||{};const w=vr.wijzigingen||{};
+  b.innerHTML=`<h3>Snelle knoppen</h3><div class="rb-snel">
+    <button type="button" data-rb="taak">➕<span>Taak</span></button><button type="button" data-rb="binnen">🚗<span>Auto binnen</span></button>
+    <button type="button" data-rb="verkocht">✅<span>Verkocht</span></button><button type="button" data-rb="rit">🚚<span>Rit plannen</span></button>
+    <button type="button" data-rb="bellen">📞<span>Terugbellen</span></button><button type="button" data-rb="whatsapp">💬<span>WhatsApp</span></button>
+    <button type="button" data-rb="taxatie">🧮<span>Taxatie</span></button><button type="button" data-rb="voorraad">📦<span>Voorraad</span></button></div>
+    ${r.length?`<h3>Ritten <span class="cnt">${r.length}</span></h3>`+r.map(t=>`<div class="rb-rit"><b>${t.rit==="afleveren"?"Afleveren":"Ophalen"}: ${e(t.auto||t.titel)}</b><div class="meta">📍 ${e(t.adres)}${t.tijdslot?" · 🕒 "+e(t.tijdslot):""}${t.voor?" · "+e(t.voor):""}</div><div>${routeKn(t.adres)}</div></div>`).join(""):""}
+    <div class="meta">📦 Voorraad: ${vr.te_koop!=null?e(vr.te_koop)+" te koop":"onbekend"} · bijgewerkt ${e(vr.bijgewerkt||"onbekend")}${w&&w.nieuw!=null?` · ${w.nieuw} nieuw, ${w.prijs_gewijzigd||0} prijs gewijzigd, ${w.niet_meer_zichtbaar||0} niet meer zichtbaar`:""}</div>
+    <div class="meta">☀️ Ochtendbriefing 08:00: <b>${V&&V.briefing_aan?"AAN":"UIT"}</b> <button type="button" class="btn sm ghost" data-rb="briefing">${V&&V.briefing_aan?"Uitzetten":"Aanzetten"}</button>${V&&V.briefing?`<pre class="rb-brief">${e(V.briefing.tekst)}</pre>`:""}</div>`;
+  b.querySelectorAll("[data-rb]").forEach(x=>x.onclick=()=>actie(x.dataset.rb));
+}
+/* ---------- Voorraad ---------- */
+function vrBlok(){
+  const c=document.getElementById("cards");if(!c)return;
+  let b=document.getElementById("rb-vr");
+  if(!b){b=document.createElement("div");b.id="rb-vr";b.className="rb rb-vr"}
+  if(c.firstChild!==b)c.insertBefore(b,c.firstChild);
+  const vr=(V&&V.voorraad)||{};const w=vr.wijzigingen||{};
+  b.innerHTML=`<div class="row"><button type="button" class="btn" data-rb="binnen">🚗 Auto binnen</button><button type="button" class="btn" data-rb="verkocht">✅ Auto verkocht</button></div>
+   <div class="meta">🔄 Bijgewerkt om ${e(vr.bijgewerkt||"onbekend")} · elk uur van de eigen site${w&&w.nieuw!=null?` · laatste update: ${w.nieuw} nieuw, ${w.prijs_gewijzigd||0} prijs gewijzigd, ${w.verkocht||0} verkocht, ${w.niet_meer_zichtbaar||0} niet meer zichtbaar`:""}. "Verkocht" alleen via Auto verkocht of als de eigen site het zegt.</div>`;
+  b.querySelectorAll("[data-rb]").forEach(x=>x.onclick=()=>actie(x.dataset.rb));
+}
+/* ---------- Klanten ---------- */
+function klanten(){
+  const c=document.getElementById("cards");if(!c)return;
+  const C=Object.assign({},CONCEPTEN_STD,(V&&V.concepten)||{});
+  const open=((TK&&TK.taken)||[]).filter(t=>t.status==="open"||t.status==="bezig");
+  const bel=open.filter(t=>t.soort_actie==="bel"||/\b(bel|terugbellen|bellen)\b/i.test(t.titel||""));
+  const opv=open.filter(t=>/^Opvolging/i.test(t.titel||""));
+  const kaart=t=>{const b=t.bedrijf_info||{};
+    return `<article class="card"><div class="body"><b>${e(t.titel)}</b><div class="meta">${t.auto?e(t.auto)+" · ":""}${t.deadline?"uiterlijk "+e(String(t.deadline).slice(0,10)):""}</div>
+    <div class="row">${b.nummer?`<a class="btn sm" href="tel:${e(b.nummer)}">📞 Bel ${e(b.nummer)}</a>`:""}<a class="btn sm" href="${e(wa(/^Opvolging/i.test(t.titel)?C.opvolging:C.terugbellen))}" target="_blank" rel="noopener">💬 WhatsApp-concept</a>${t.adres?routeKn(t.adres):""}</div></div></article>`};
+  c.innerHTML=`<div class="rb-kl">
+   <article class="card"><div class="body"><h2 class="t">💬 WhatsApp-concepten</h2><div class="meta">Eén tik: WhatsApp opent met de tekst. Jij kiest de klant en verstuurt zelf; het systeem verstuurt nooit iets.</div>
+   ${Object.keys(CLAB).map(k=>`<div class="rb-con"><div><b>${CLAB[k]}</b><div class="meta">${e(C[k])}</div></div><div class="row"><a class="btn sm" href="${e(wa(C[k]))}" target="_blank" rel="noopener">WhatsApp</a><button type="button" class="btn sm ghost" data-kop="${k}">Kopieer</button></div></div>`).join("")}</div></article>
+   <h3>📞 Terugbellen <span class="cnt">${bel.length}</span></h3>${bel.map(kaart).join("")||'<div class="meta">Geen terugbel-taken.</div>'}
+   <h3>🤝 Opvolging na verkoop <span class="cnt">${opv.length}</span></h3>${opv.map(kaart).join("")||'<div class="meta">Geen opvolging open. Wordt klaargezet bij "Auto verkocht".</div>'}
+   <div class="meta">🔒 Privénummers en klantnamen staan niet op deze openbare site. Die blijven in Telegram/je telefoon.</div></div>`;
+  c.querySelectorAll("[data-kop]").forEach(b=>b.onclick=()=>{try{navigator.clipboard.writeText(C[b.dataset.kop]);toast2("Tekst gekopieerd")}catch(x){prompt("Kopieer:",C[b.dataset.kop])}});
+}
+/* ---------- acties ---------- */
+async function actie(a){
+  try{
+    if(a==="taak"){if(window.NAV)NAV.ga("taken");return}
+    if(a==="taxatie"){if(window.NAV)NAV.ga("taxatie");return}
+    if(a==="voorraad"){if(window.NAV)NAV.ga("voorraad");return}
+    if(a==="bellen"||a==="whatsapp"){if(window.NAV)NAV.ga("klanten");return}
+    if(a==="briefing"){const aan=!(V&&V.briefing_aan);if(aan&&!confirm("Ochtendbriefing om 08:00 aanzetten? Hij verschijnt alleen hier op je site; er wordt niets verstuurd."))return;
+      await api("/taken/robin/briefing","POST",{aan});await laadV();vdBlok();toast2(aan?"Ochtendbriefing staat aan":"Ochtendbriefing staat uit");return}
+    if(a==="binnen"){const auto=prompt("Welke auto is binnen? Bijv. BMW M3 Competition");if(!auto)return;const kenteken=prompt("Kenteken (optioneel)","")||"";const voor=prompt("Voor welke medewerker? (leeg = niet toegewezen)","")||"";
+      const r=await api("/taken/robin/auto-binnen","POST",{auto,kenteken,voor});toast2(((r.resultaat||[]).length)+" taken klaargezet: klaarmaken, foto's, advertentieconcept, verkoopkaart");return}
+    if(a==="verkocht"){let A=((typeof VR!=="undefined"&&VR&&VR.autos)||[]).slice(0,60);if(!A.length){try{A=((await api("/taken/robin/voorraad")).autos||[]).slice(0,60)}catch(x){}}
+      let keuze=null;if(A.length){const n=prompt("Welke auto is verkocht? Typ het nummer:\n"+A.map((x,i)=>(i+1)+". "+String(x.titel||"").split("|")[0]).join("\n"));if(!n)return;keuze=A[(+n)-1];if(!keuze){toast2("Onbekend nummer");return}}
+      else{const t=prompt("Welke auto is verkocht? (titel zoals op de site)");if(!t)return;keuze={titel:t}}
+      if(!confirm(String(keuze.titel||"").split("|")[0]+" als VERKOCHT markeren? Er wordt niets naar de klant gestuurd."))return;
+      const adres=prompt("Afleveradres (optioneel, voor de rit en route)","")||"";const tijdslot=adres?(prompt("Tijdslot (optioneel), bijv. za 10:00-11:00","")||""):"";
+      const r=await api("/taken/robin/auto-verkocht","POST",{url:keuze.url,auto:keuze.titel,adres,tijdslot});
+      toast2("Verkocht: "+r.resultaat.auto+". Afleveren, papierwerk en opvolging staan klaar.");try{VR=null}catch(x){}if(typeof render==="function")render();return}
+    if(a==="rit"){const soort=confirm("Ophalen? (OK = ophalen, Annuleren = afleveren)")?"ophalen":"afleveren";const auto=prompt("Welke auto?");if(!auto)return;const adres=prompt("Adres, bijv. Kampweg 27, Swifterbant");if(!adres)return;
+      const tijdslot=prompt("Tijdslot, bijv. 15:30-16:30","")||"";const voor=prompt("Voor welke medewerker?","")||"";
+      await api("/taken/robin/rit","POST",{auto,adres,soort,tijdslot,voor});await laadV();vdBlok();toast2("Rit klaargezet met route en foto-checklist");return}
+  }catch(x){toast2(x.message)}
+}
+/* ---------- kop ---------- */
+function kopLabel(){const b=document.querySelector("header.top .brand div");if(b&&!document.getElementById("rb-rol")){const s=document.createElement("small");s.id="rb-rol";s.className="rb-rol";s.textContent="Robin · Beheer";b.insertBefore(s,b.firstChild)}}
+/* ---------- render-haak ---------- */
+const _r=render;
+render=function(){
+  if(seg===KLANTEN_SEG){
+    seg=8;try{_r.apply(this,arguments)}finally{seg=KLANTEN_SEG}
+    const f=document.querySelector(".filters"),br=document.querySelector(".bronnen"),k=document.getElementById("kpis");
+    if(f)f.style.display="none";if(br)br.style.display="none";if(k)k.innerHTML="";
+    klanten();Promise.all([laadV(),laadT()]).then(()=>{if(seg===KLANTEN_SEG)klanten()});
+    return;
+  }
+  const f=document.querySelector(".filters");if(f)f.style.display="";
+  const out=_r.apply(this,arguments);
+  kopLabel();
+  if(seg===VD){vdBlok();setTimeout(vdBlok,400);laadV().then(()=>{if(seg===VD)vdBlok()})}
+  if(seg===VR_SEG){setTimeout(vrBlok,50);setTimeout(vrBlok,800);laadV().then(()=>{if(seg===VR_SEG)vrBlok()})}
+  return out;
+};
+/* verse voorraad live van de server (elk uur bijgewerkt), i.p.v. de laatst gepubliceerde kopie */
+if(LIVE)api("/taken/robin/voorraad").then(j=>{if(j&&j.autos){try{VR=j}catch(x){}if(seg===VR_SEG)render()}}).catch(()=>{});
+})();

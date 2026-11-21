@@ -159,6 +159,10 @@ function kaart(t){
   if(t.voortgang!=="bezig")act+=`<button class="tk-btn sec" data-bezig="${esc(t.id)}">Bezig</button>`;
   act+=`<button class="tk-btn prim" data-klaar="${esc(t.id)}">Klaar + notitie</button>`;
   const chips=(t.voortgang==="bezig"?`<span class="tk-chip bezig">Bezig${t.bezig_door?" · "+esc(t.bezig_door):""}</span>`:"")+(t.prio==="hoog"?`<span class="tk-chip hoog">Hoog</span>`:"");
+  /* TAKEN_EXTRA_V1: checklist per taak (afvinken per punt) + terugkerend-label */
+  if(t.checklist&&t.checklist.length){const k=t.checklist.filter(c=>c.klaar).length;extra+=`<div class="tk-meta">☑️ Checklist ${k}/${t.checklist.length}</div><div class="tk-cl">${t.checklist.map((c,i)=>`<button type="button" class="tk-btn sec" style="display:block;width:100%;text-align:left;margin:3px 0" data-clv="${esc(t.id)}" data-i="${i}">${c.klaar?"✅":"⬜"} ${esc(c.tekst)}</button>`).join("")}</div>`}
+  if(t.terugkerend_id)extra+=`<div class="tk-meta">🔁 Terugkerende taak</div>`;
+  act+=`<button class="tk-btn sec" data-cl="${esc(t.id)}">☑️ Checklist</button>`;
   if(t.notities&&t.notities.length)extra+=t.notities.slice(-3).map(n=>`<div class="tk-meta">🗒 ${esc(n.tekst)}${n.door?" ("+esc(n.door)+")":""}</div>`).join("");
   if(t.fotos&&t.fotos.length)extra+=`<div class="tk-meta"><button type="button" class="tk-link" data-fotos="${esc(t.id)}">📷 ${t.fotos.length} foto${t.fotos.length>1?"'s":""} bekijken</button></div><div class="tk-fotos" id="f-${esc(t.id)}"></div>`;
   const form=`<div class="tk-notitie" id="n-${esc(t.id)}">
@@ -260,7 +264,7 @@ function tekenLijst(){
     ${(TAKEN.gebruikers||[]).map(gebruikerLabel).join(" · ")}</div>`;
   cards.innerHTML=`<div class="tk-wrap">
     <div class="tk-warn"><b>Openbare site · live van de server</b>${esc(TAKEN.waarschuwing||"Telefoonnummers van bedrijven zijn zichtbaar op deze site. Alleen zakelijke nummers.")}</div>
-    <div class="tk-filters">${filters}</div>${sub}${vragenHtml}${lijst}${medBlok}</div>`;
+    ${seintjeBlok()}<div class="tk-filters">${filters}</div>${sub}${vragenHtml}${lijst}${tkrBlok()}${medBlok}</div>`;
   bind();
 }
 
@@ -322,6 +326,35 @@ function bind(){
   document.querySelectorAll("[data-mic]").forEach(b=>b.onclick=()=>inspreken(b.dataset.mic));
   document.querySelectorAll("[data-ant]").forEach(b=>b.onclick=()=>antwoord(b.dataset.ant,b.dataset.soort));
   document.querySelectorAll("[data-toew]").forEach(s=>s.onchange=()=>toewijzen(s.dataset.toew,s.value));
+  document.querySelectorAll("[data-clv]").forEach(b=>b.onclick=()=>clVink(b.dataset.clv,b.dataset.i));
+  document.querySelectorAll("[data-cl]").forEach(b=>b.onclick=()=>clZet(b.dataset.cl));
+  document.querySelectorAll("[data-tkr-stop]").forEach(b=>b.onclick=()=>tkrStop(b.dataset.tkrStop));
+  const tn=document.getElementById("tkr-nieuw");if(tn)tn.onclick=tkrNieuw;
+}
+/* TAKEN_EXTRA_V1: checklist en terugkerende taken (alleen Robins ingang; medewerkers vinken af op hun eigen pagina) */
+async function clVink(id,i){try{await api("/taken/"+id+"/checklist/"+i,"POST",{});TAKEN=await api("/taken");tekenLijst()}catch(e){alert(e.message)}}
+async function clZet(id){
+  const t=(TAKEN.taken||[]).find(x=>x.id===id);const nu=((t&&t.checklist)||[]).map(c=>c.tekst).join("; ");
+  const p=prompt("Checklist-punten, gescheiden door ; (leeg = checklist weg)",nu);if(p===null)return;
+  try{await api("/taken/"+id+"/checklist","POST",{punten:p});TAKEN=await api("/taken");tekenLijst()}catch(e){alert(e.message)}
+}
+async function tkrNieuw(){
+  const titel=prompt("Terugkerende taak, bijv. Showroom stofzuigen");if(!titel)return;
+  const ritme=prompt("Hoe vaak? Bijv. elke dag, elke werkdag, elke maandag, elke maand op de 1e","elke maandag");if(!ritme)return;
+  const voor=prompt("Voor wie? (leeg = niet toegewezen)","")||"";
+  const cl=prompt("Checklist (optioneel), punten gescheiden door ;","")||"";
+  try{await api("/taken/terugkerend","POST",{titel,ritme,voor,checklist:cl});TAKEN=await api("/taken");tekenLijst()}catch(e){alert(e.message)}
+}
+async function tkrStop(id){if(!confirm("Deze terugkerende taak stoppen? Bestaande taken blijven staan."))return;try{await api("/taken/terugkerend/"+id+"/stop","POST",{});TAKEN=await api("/taken");tekenLijst()}catch(e){alert(e.message)}}
+function tkrBlok(){
+  const R=(TAKEN.terugkerend||[]).filter(r=>r.actief);
+  return `<div class="tk-med"><b>🔁 Terugkerende taken</b> <button class="tk-btn sec" id="tkr-nieuw">+ Nieuw</button><br>${R.length?R.map(r=>`${esc(r.titel)} · ${esc(r.ritme_tekst)}${r.voor?" · "+esc(r.voor):""}${(r.checklist||[]).length?" · ☑️ "+r.checklist.length:""} <button type="button" class="tk-link" data-tkr-stop="${esc(r.id)}">stoppen</button>`).join("<br>"):"Nog geen. Ze worden elke ochtend vanzelf als gewone taak klaargezet."}</div>`;
+}
+function seintjeBlok(){
+  const s=TAKEN.seintje_te_laat,v=TAKEN.seintje_stadagen;let h="";
+  if(s&&s.items&&s.items.length)h+=`<div class="tk-warn"><b>🔔 ${esc(s.tekst)}</b>${s.items.slice(0,8).map(x=>`<br>${esc(x.titel)} · ${esc(x.voor)} · uiterlijk ${esc(dag(x.deadline))}`).join("")}</div>`;
+  if(v&&v.items&&v.items.length)h+=`<div class="tk-warn"><b>🔔 ${esc(v.tekst)}</b>${v.items.slice(0,8).map(x=>`<br>${esc(x.titel)} · ${x.dagen} dagen`).join("")}</div>`;
+  return h;
 }
 
 async function antwoord(id,soort){

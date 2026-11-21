@@ -13,9 +13,10 @@ const nul=()=>Math.max(0,segVan("brns"));
 /* route -> seg; t = paginatitel; m = groep in Meer (leeg = in de balk) */
 const R={
   vandaag:{s:()=>VD,t:""},
-  kansen:{s:nul,t:""},
   taken:{s:()=>TAKEN_SEG,t:""},
+  klanten:{s:()=>26,t:""},
   voorraad:{s:()=>12,t:""},
+  kansen:{s:nul,t:"Kansen (inkoop)",m:"Inkoop",ic:"🚘",l:"Kansen (inkoop)"},
   taxatie:{s:()=>13,t:"Taxatie",m:"Werk",ic:"🧮"},
   "mijn-taxaties":{s:()=>13,t:"Taxatie",m:"Werk",ic:"🗂️",l:"Mijn taxaties",na:()=>{const b=document.getElementById("txmijn");if(b)b.scrollIntoView({block:"start"})}},
   historie:{actie:"historie",m:"Werk",ic:"🔎",l:"Historie (kenteken of link)"},
@@ -41,7 +42,7 @@ const R={
 /* oude hash-links -> nieuwe route (redirect, t615u) */
 const OUD={inkoop:"vandaag",bedrijf:"taken","wacht-op-robin":"vandaag",wacht:"vandaag","voorraad-bedrijf":"bedrijfsvoorraad",
   prijstrends:"markt",inkoopkansen:"kansen",start:"vandaag",taxaties:"taxatie",profiel:"profiel"};
-const BALK=[["vandaag","Vandaag","☀️"],["kansen","Kansen","🚘"],["taken","Taken","✅"],["voorraad","Voorraad","📦"],["meer","Meer","☰"]];
+const BALK=[["vandaag","Vandaag","☀️"],["taken","Taken","✅"],["klanten","Klanten","👥"],["voorraad","Voorraad","📦"],["meer","Meer","☰"]];  /* ROBIN_V2: Kansen (inkoop) naar Meer */
 const SPECIAAL=/^(deal-|taxatie-|historie|instellingen$)/;
 let WACHT_N=0;
 
@@ -51,7 +52,7 @@ function routeVanSeg(s){
   for(const k of Object.keys(R)){const r=R[k];if(r.s&&k!=="mijn-taxaties"&&r.s()===s)return k}
   return null;
 }
-function balkVanRoute(k){return ["vandaag","kansen","taken","voorraad"].includes(k)?k:"meer"}
+function balkVanRoute(k){return ["vandaag","taken","klanten","voorraad"].includes(k)?k:"meer"}
 function hashNaam(){return decodeURIComponent((location.hash||"").replace(/^#/,""))}
 
 function zetSeg(k){

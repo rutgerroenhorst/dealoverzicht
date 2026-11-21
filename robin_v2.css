@@ -1,0 +1,13 @@
+/* ROBIN_V2: Robin · Beheer */
+.rb-rol{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.75;font-weight:700}
+.rb-snel{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0 12px}
+.rb-snel button{appearance:none;border:1px solid var(--line,#2a2f3a);background:var(--card,#171a21);color:inherit;border-radius:14px;min-height:66px;font:inherit;font-size:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.rb-snel button span{font-size:11px;font-weight:600}
+.rb-rit{border:1px solid var(--line,#2a2f3a);border-radius:12px;padding:10px;margin:0 0 8px}
+.rb-rit .btn{margin:6px 6px 0 0}
+.rb-brief{white-space:pre-wrap;font:inherit;font-size:13px;background:rgba(127,127,127,.1);border-radius:10px;padding:8px;margin:6px 0 0}
+.rb-vr{margin:0 0 12px}.rb-vr .row{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 6px}
+.rb-con{display:flex;justify-content:space-between;gap:10px;align-items:center;border-top:1px solid var(--line,#2a2f3a);padding:8px 0}
+.rb-con:first-of-type{border-top:0}.rb-con .row{display:flex;gap:6px;flex:none}
+.rb-kl h3{margin:16px 2px 8px}
+.rb-kl .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
