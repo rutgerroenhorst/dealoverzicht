@@ -1,11 +1,11 @@
 {
- "bijgewerkt": "2026-11-20 11:58",
+ "bijgewerkt": "2026-11-21 07:40",
  "dagen": 60,
- "deals": 374,
+ "deals": 373,
  "per_bron": {
   "AutoScout24": 301,
   "AutoTrack": 40,
-  "Marktplaats": 33
+  "Marktplaats": 32
  },
  "per_model": [
   {
@@ -36,6 +36,15 @@
    }
   },
   {
+   "model": "Land Rover Defender",
+   "deals": 15,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 10,
+    "Marktplaats": 5
+   }
+  },
+  {
    "model": "Mercedes-Benz G",
    "deals": 15,
    "beste": "AutoScout24",
@@ -49,15 +58,6 @@
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 13
-   }
-  },
-  {
-   "model": "Land Rover Defender",
-   "deals": 13,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 8,
-    "Marktplaats": 5
    }
   },
   {
@@ -86,10 +86,19 @@
   },
   {
    "model": "BMW 330",
-   "deals": 7,
+   "deals": 8,
    "beste": "AutoScout24",
    "verdeling": {
-    "AutoScout24": 7
+    "AutoScout24": 8
+   }
+  },
+  {
+   "model": "Porsche 911",
+   "deals": 6,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 4,
+    "Marktplaats": 2
    }
   },
   {
@@ -110,30 +119,12 @@
    }
   },
   {
-   "model": "Porsche 911",
-   "deals": 5,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 3,
-    "Marktplaats": 2
-   }
-  },
-  {
    "model": "Porsche Macan",
    "deals": 4,
    "beste": "AutoTrack",
    "verdeling": {
     "AutoTrack": 2,
     "Marktplaats": 2
-   }
-  },
-  {
-   "model": "Ferrari 488",
-   "deals": 3,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "Marktplaats": 1,
-    "AutoScout24": 2
    }
   },
   {
@@ -145,11 +136,12 @@
    }
   },
   {
-   "model": "Ferrari California",
-   "deals": 3,
-   "beste": "AutoScout24",
+   "model": "Ferrari 488",
+   "deals": 2,
+   "beste": "Marktplaats",
    "verdeling": {
-    "AutoScout24": 3
+    "Marktplaats": 1,
+    "AutoScout24": 1
    }
   },
   {
@@ -177,14 +169,6 @@
    }
   },
   {
-   "model": "Ferrari 458",
-   "deals": 2,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 2
-   }
-  },
-  {
    "model": "Citroen C1",
    "deals": 2,
    "beste": "Marktplaats",
@@ -198,15 +182,6 @@
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 2
-   }
-  },
-  {
-   "model": "Fiat Panda",
-   "deals": 2,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 1,
-    "Marktplaats": 1
    }
   },
   {
@@ -234,11 +209,27 @@
    }
   },
   {
+   "model": "Ferrari California",
+   "deals": 2,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 2
+   }
+  },
+  {
    "model": "Lamborghini Murciélago",
    "deals": 2,
    "beste": "AutoScout24",
    "verdeling": {
     "AutoScout24": 2
+   }
+  },
+  {
+   "model": "Lamborghini URUS",
+   "deals": 1,
+   "beste": "Marktplaats",
+   "verdeling": {
+    "Marktplaats": 1
    }
   },
   {
@@ -295,6 +286,14 @@
    "beste": "AutoTrack",
    "verdeling": {
     "AutoTrack": 1
+   }
+  },
+  {
+   "model": "Ferrari 458",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
    }
   },
   {
@@ -355,6 +354,14 @@
   },
   {
    "model": "Lotus Exige",
+   "deals": 1,
+   "beste": "AutoScout24",
+   "verdeling": {
+    "AutoScout24": 1
+   }
+  },
+  {
+   "model": "Fiat Panda",
    "deals": 1,
    "beste": "AutoScout24",
    "verdeling": {
@@ -483,14 +490,6 @@
   },
   {
    "model": "Porsche 918",
-   "deals": 1,
-   "beste": "AutoScout24",
-   "verdeling": {
-    "AutoScout24": 1
-   }
-  },
-  {
-   "model": "Ferrari Roma",
    "deals": 1,
    "beste": "AutoScout24",
    "verdeling": {
