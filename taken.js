@@ -160,7 +160,7 @@ function kaart(t){
   act+=`<button class="tk-btn prim" data-klaar="${esc(t.id)}">Klaar + notitie</button>`;
   const chips=(t.voortgang==="bezig"?`<span class="tk-chip bezig">Bezig${t.bezig_door?" · "+esc(t.bezig_door):""}</span>`:"")+(t.prio==="hoog"?`<span class="tk-chip hoog">Hoog</span>`:"");
   if(t.notities&&t.notities.length)extra+=t.notities.slice(-3).map(n=>`<div class="tk-meta">🗒 ${esc(n.tekst)}${n.door?" ("+esc(n.door)+")":""}</div>`).join("");
-  if(t.fotos&&t.fotos.length)extra+=`<div class="tk-meta">📷 ${t.fotos.length} foto${t.fotos.length>1?"'s":""}</div>`;
+  if(t.fotos&&t.fotos.length)extra+=`<div class="tk-meta"><button type="button" class="tk-link" data-fotos="${esc(t.id)}">📷 ${t.fotos.length} foto${t.fotos.length>1?"'s":""} bekijken</button></div><div class="tk-fotos" id="f-${esc(t.id)}"></div>`;
   const form=`<div class="tk-notitie" id="n-${esc(t.id)}">
     <textarea id="nt-${esc(t.id)}" placeholder="Korte notitie (wordt in het dossier bewaard)"></textarea>
     <div class="tk-row"><button type="button" class="tk-btn tk-mic" data-mic="${esc(t.id)}" title="Inspreken">🎤</button>
@@ -317,6 +317,7 @@ function bind(){
   document.querySelectorAll("[data-ann]").forEach(b=>b.onclick=()=>{const el=document.getElementById("n-"+b.dataset.ann);if(el)el.classList.remove("on")});
   document.querySelectorAll("[data-ok]").forEach(b=>b.onclick=()=>klaar(b.dataset.ok));
   document.querySelectorAll("[data-bezig]").forEach(b=>b.onclick=()=>bezig(b.dataset.bezig));
+  document.querySelectorAll("[data-fotos]").forEach(b=>b.onclick=()=>fotos(b.dataset.fotos));
   document.querySelectorAll("[data-nr]").forEach(b=>b.onclick=()=>nummerAanpassen(b.dataset.nr));
   document.querySelectorAll("[data-mic]").forEach(b=>b.onclick=()=>inspreken(b.dataset.mic));
   document.querySelectorAll("[data-ant]").forEach(b=>b.onclick=()=>antwoord(b.dataset.ant,b.dataset.soort));
@@ -347,6 +348,8 @@ async function toewijzen(id,voor){
   }catch(e){alert(e.message)}
 }
 
+async function fotos(id){const el=document.getElementById("f-"+id);if(!el)return;if(el.innerHTML){el.innerHTML="";return}
+  el.textContent="Laden…";try{const r=await api("/taken/"+id+"/fotos");el.innerHTML=(r.fotos||[]).map(f=>f.src&&/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(f.src)?`<img src="${f.src}" alt="foto${f.door?" van "+esc(f.door):""}" loading="lazy">`:`<span class="tk-meta">(foto niet meer beschikbaar)</span>`).join("")}catch(e){el.textContent="Foto's laden lukte niet: "+e.message}}
 async function bezig(id){try{await api("/taken/"+id+"/status","POST",{status:"bezig"});TAKEN=await api("/taken");tekenLijst()}catch(e){alert(e.message)}}
 async function klaar(id){
   const notitie=(document.getElementById("nt-"+id)||{}).value||"";

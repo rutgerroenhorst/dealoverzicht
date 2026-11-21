@@ -43,3 +43,7 @@
 .tk-chip.bezig{background:#e7f0ff;color:#1d4ed8}
 .tk-chip.hoog{background:#fde8e8;color:#b91c1c}
 .tk-vg{margin:2px 0 8px}
+
+.tk-link{background:none;border:0;padding:0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
+.tk-fotos{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.tk-fotos img{width:96px;height:96px;object-fit:cover;border-radius:8px}
