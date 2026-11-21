@@ -24,8 +24,10 @@ function matchModel(merk,hb,keys){
   const mk=normMerk(merk),ht=tokens(hb);let best="",score=-1,pref=mk+"|";
   (keys||[]).forEach(k=>{if(!k.startsWith(pref))return;const md=k.slice(pref.length),mdt=tokens(md.replace(/-/g," "));if(mdt.length&&mdt.every(t=>ht.includes(t))){const sc=mdt.length*100+md.length;if(sc>score){best=md;score=sc;}}});
   if(!best){const pr=predModel(merk,hb);if(pr&&(keys||[]).indexOf(mk+"|"+pr)>=0)best=pr;}
-  return best;
+  return familie(mk,best,keys);
 }
+// Mercedes 'C 200' -> familie 'c' als die groep bestaat (niet 'c200'/'c-200'); AMG (c63, c-43-amg) blijft apart.
+function familie(mk,md,keys){if(!md||mk.indexOf("mercedes")!==0||md.indexOf("amg")>=0)return md;const m=/^([a-z]{1,3})-?(\d{3})[a-z]{0,2}$/.exec(md);if(!m)return md;if((keys||[]).indexOf(mk+"|"+m[1])>=0)return m[1];return md;}
 function trimIn(naam,tekst){return (" "+fold(tekst).replace(/-/g," ")+" ").indexOf(" "+fold(naam).replace(/-/g," ")+" ")>=0;}
 function uitvoeringen(merk,model,titels,rdwHb){
   const mk=normMerk(merk),md=(model||"").trim(),key=mk+"|"+md,seen={},out=[];

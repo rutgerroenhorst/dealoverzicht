@@ -156,7 +156,11 @@ function kaart(t){
   }
   const meds=(TAKEN.gebruikers||[]).filter(u=>u.werkt_op!=="site");
   const toew=`<label class="tk-toew">Toewijzen <select data-toew="${esc(t.id)}"><option value="">Niet toegewezen</option>${meds.map(u=>`<option value="${esc(u.naam)}" ${t.voor===u.naam?"selected":""}>${esc(u.naam)}</option>`).join("")}</select></label>`;
+  if(t.voortgang!=="bezig")act+=`<button class="tk-btn sec" data-bezig="${esc(t.id)}">Bezig</button>`;
   act+=`<button class="tk-btn prim" data-klaar="${esc(t.id)}">Klaar + notitie</button>`;
+  const chips=(t.voortgang==="bezig"?`<span class="tk-chip bezig">Bezig${t.bezig_door?" · "+esc(t.bezig_door):""}</span>`:"")+(t.prio==="hoog"?`<span class="tk-chip hoog">Hoog</span>`:"");
+  if(t.notities&&t.notities.length)extra+=t.notities.slice(-3).map(n=>`<div class="tk-meta">🗒 ${esc(n.tekst)}${n.door?" ("+esc(n.door)+")":""}</div>`).join("");
+  if(t.fotos&&t.fotos.length)extra+=`<div class="tk-meta">📷 ${t.fotos.length} foto${t.fotos.length>1?"'s":""}</div>`;
   const form=`<div class="tk-notitie" id="n-${esc(t.id)}">
     <textarea id="nt-${esc(t.id)}" placeholder="Korte notitie (wordt in het dossier bewaard)"></textarea>
     <div class="tk-row"><button type="button" class="tk-btn tk-mic" data-mic="${esc(t.id)}" title="Inspreken">🎤</button>
@@ -165,7 +169,7 @@ function kaart(t){
     <div class="tk-row"><button class="tk-btn prim" data-ok="${esc(t.id)}">Opslaan en afvinken</button>
     <button class="tk-btn sec" data-ann="${esc(t.id)}">Annuleren</button></div>
   </div>`;
-  return `<article class="tk-card${late}" data-id="${esc(t.id)}"><h3>${esc(t.titel)}</h3>
+  return `<article class="tk-card${late}" data-id="${esc(t.id)}"><h3>${esc(t.titel)} ${chips}</h3>
     <div class="tk-meta">${meta}</div>${extra}${toew}<div class="tk-acties">${act}</div>${form}</article>`;
 }
 
@@ -312,6 +316,7 @@ function bind(){
   document.querySelectorAll("[data-klaar]").forEach(b=>b.onclick=()=>{const id=b.dataset.klaar,el=document.getElementById("n-"+id);if(el)el.classList.add("on")});
   document.querySelectorAll("[data-ann]").forEach(b=>b.onclick=()=>{const el=document.getElementById("n-"+b.dataset.ann);if(el)el.classList.remove("on")});
   document.querySelectorAll("[data-ok]").forEach(b=>b.onclick=()=>klaar(b.dataset.ok));
+  document.querySelectorAll("[data-bezig]").forEach(b=>b.onclick=()=>bezig(b.dataset.bezig));
   document.querySelectorAll("[data-nr]").forEach(b=>b.onclick=()=>nummerAanpassen(b.dataset.nr));
   document.querySelectorAll("[data-mic]").forEach(b=>b.onclick=()=>inspreken(b.dataset.mic));
   document.querySelectorAll("[data-ant]").forEach(b=>b.onclick=()=>antwoord(b.dataset.ant,b.dataset.soort));
@@ -342,6 +347,7 @@ async function toewijzen(id,voor){
   }catch(e){alert(e.message)}
 }
 
+async function bezig(id){try{await api("/taken/"+id+"/status","POST",{status:"bezig"});TAKEN=await api("/taken");tekenLijst()}catch(e){alert(e.message)}}
 async function klaar(id){
   const notitie=(document.getElementById("nt-"+id)||{}).value||"";
   const vervolg=(document.getElementById("nv-"+id)||{}).value||"";
@@ -418,7 +424,8 @@ function takenVandaagBlok(){
     if(!el){el=document.createElement("section");el.id="tk-vandaag";el.className="vb";w.insertAdjacentElement("afterend",el)}
     const rij=t=>`<li class="vr"><div class="vr-m"><div class="vr-t">${esc(t.titel)}${t.auto?" · "+esc(t.auto):""}</div><div class="vr-s">${t.deadline?"uiterlijk "+esc(dag(t.deadline)):""}${t.voor?" · "+esc(t.voor):""}${isTeLaat(t)?" · te laat":""}</div></div></li>`;
     const lijst=[...laat.map(rij),...vandaagT.map(rij)].join("")||"";
-    el.innerHTML=`<h3>Te doen vandaag <span class="cnt">${vandaagT.length+laat.length}</span></h3>
+    const vg=TAKEN.voortgang&&TAKEN.voortgang.totaal,vgTxt=vg?`<div class="meta tk-vg">Vandaag: ${vg.klaar_vandaag} klaar · ${vg.bezig} bezig · ${vg.open} open${vg.te_laat?" · "+vg.te_laat+" te laat":""}${Object.keys(TAKEN.voortgang.personen||{}).length>1?`<br>${Object.entries(TAKEN.voortgang.personen).map(([w,p])=>esc(w)+": "+p.klaar_vandaag+" klaar, "+p.bezig+" bezig, "+p.open+" open").join("<br>")}`:""}</div>`:"";
+    el.innerHTML=`<h3>Te doen vandaag <span class="cnt">${vandaagT.length+laat.length}</span></h3>${vgTxt}
       ${lijst?`<ul class="vl">${lijst}</ul>`:`<div class="meta">Niets met deadline vandaag.</div>`}
       <div class="meta"><button type="button" class="btn sm ghost" data-gotab="19" data-ga-route="taken">Open Taken</button></div>`;
     w.innerHTML=vr.length?`<h3>Wacht op jou (Robin) <span class="cnt">${vr.length}</span></h3>${vr.map(vraagKaart).join("")}`:`<h3>Wacht op jou (Robin)</h3><div class="meta">Geen vragen voor jou.</div>`;

@@ -37,3 +37,9 @@
 .tk-toew{display:flex;align-items:center;gap:8px;font-size:13px;margin:6px 0}
 .tk-toew select{font:inherit;font-size:13px;padding:6px 8px;border-radius:8px;border:1px solid var(--lijn,#ccc);background:inherit;color:inherit}
 #tk-wacht-vd .tk-card{margin-top:8px}
+
+/* TAKEN_V2 */
+.tk-chip{display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border-radius:10px;margin-left:6px;vertical-align:middle}
+.tk-chip.bezig{background:#e7f0ff;color:#1d4ed8}
+.tk-chip.hoog{background:#fde8e8;color:#b91c1c}
+.tk-vg{margin:2px 0 8px}
