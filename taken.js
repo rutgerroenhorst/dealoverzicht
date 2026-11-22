@@ -12,12 +12,13 @@ const tok=()=>localStorage["inst_token_"+((typeof KL!=="undefined"&&KL.slug)||"b
 function hdr(){const h={"Content-Type":"application/json"};/* geen Cache-Control-kop: niet toegestaan door CORS (preflight faalde), fetch gebruikt al cache:no-store */if(tok())h.Authorization="Bearer "+tok();else if(OPEN)h["X-Klant"]="brns";return h}
 async function api(p,method,body){
   if(!LIVE) throw Object.assign(Error("Taken komen live van de server; deze pagina is een lokale test."),{offline:true});
-  const r=await fetch(API+p,{method:method||"GET",headers:hdr(),body:body?JSON.stringify(body):undefined,cache:"no-store"});
+  let r;try{r=await fetch(API+p,{method:method||"GET",headers:hdr(),body:body?JSON.stringify(body):undefined,cache:"no-store"})}catch(x){throw Object.assign(Error("Geen verbinding. Er is niets opgeslagen; probeer het zo opnieuw."),{net:true})} /* AZ_FIX */
   const j=await r.json().catch(()=>({}));
   if(!r.ok) throw Object.assign(Error(j.fout||r.statusText||"Fout"),{j});
   return j;
 }
 let TAKEN=null, FILT="open", MED="", AUTO="", DEEL="inkoop", poll=null;
+const CK="tk_concept_v1",BEZIG_MET={}; /* AZ_FIX1/2 */
 
 function gebruikerLabel(u){
   if(!u)return "";
@@ -265,6 +266,7 @@ function startPoll(){
   if(poll)return;
   poll=setInterval(()=>{
     if(document.hidden)return;
+    if(tkBezig())return; /* AZ_FIX1: nooit hertekenen terwijl Robin iets invult */
     if(seg===TAKEN_SEG||seg===VD||seg===VR_SEG||seg===AUTO_SEG||seg===WACHT_SEG)
       laadEnTeken(true);
   },5000);
@@ -292,8 +294,8 @@ function tekenLijst(){
     ${(TAKEN.gebruikers||[]).map(gebruikerLabel).join(" · ")}</div>`;
   cards.innerHTML=`<div class="tk-wrap">
     <div class="tk-warn"><b>Openbare site · live van de server</b>${esc(TAKEN.waarschuwing||"Telefoonnummers van bedrijven zijn zichtbaar op deze site. Alleen zakelijke nummers.")}</div>
-    ${seintjeBlok()}<div class="tk-filters">${filters}</div>${sub}${vragenHtml}${lijst}${tkrBlok()}${medBlok}</div>`;
-  bind();
+    ${seintjeBlok()}${nieuwBlok(meds)}<div class="tk-filters">${filters}</div>${sub}${vragenHtml}${lijst}${tkrBlok()}${medBlok}</div>`;
+  bind();conceptTerug();
 }
 
 function tekenVoorraad(){
@@ -347,7 +349,8 @@ function bind(){
   if(au)au.onchange=()=>{AUTO=au.value;tekenLijst()};
   document.querySelectorAll("[data-ics]").forEach(b=>b.onclick=()=>{const t=((TAKEN&&TAKEN.taken)||[]).find(x=>x.id===b.dataset.ics);if(t)tkIcs(t)});
   document.querySelectorAll("[data-klaar]").forEach(b=>b.onclick=()=>{const id=b.dataset.klaar,el=document.getElementById("n-"+id);if(el)el.classList.add("on")});
-  document.querySelectorAll("[data-ann]").forEach(b=>b.onclick=()=>{const el=document.getElementById("n-"+b.dataset.ann);if(el)el.classList.remove("on")});
+  document.querySelectorAll("[data-ann]").forEach(b=>b.onclick=()=>{const el=document.getElementById("n-"+b.dataset.ann);if(el)el.classList.remove("on");conceptWeg(b.dataset.ann)});
+  const tkn=document.getElementById("tkn-ok");if(tkn)tkn.onclick=tkNieuw;
   document.querySelectorAll("[data-ok]").forEach(b=>b.onclick=()=>klaar(b.dataset.ok));
   document.querySelectorAll("[data-bezig]").forEach(b=>b.onclick=()=>bezig(b.dataset.bezig));
   document.querySelectorAll("[data-fotos]").forEach(b=>b.onclick=()=>fotos(b.dataset.fotos));
@@ -396,11 +399,15 @@ async function antwoord(id,soort){
     body.antwoord=((document.getElementById("na-"+id)||{}).value||"").trim();
     if(!body.antwoord){alert("Typ eerst een korte notitie.");return}
   }
+  if(BEZIG_MET["a"+id])return; /* AZ_FIX2: dubbel tikken = één antwoord (en één bericht aan de medewerker) */
+  BEZIG_MET["a"+id]=1;
   try{
     await api("/taken/vragen/"+id+"/antwoord","POST",body);
+    conceptZet("na-"+id,"");
     TAKEN=await api("/taken");tekenLijst();
     if(seg===VD)takenVandaagBlok();
-  }catch(e){alert(e.message)}
+  }catch(e){alert(tkFout(e))}
+  finally{delete BEZIG_MET["a"+id]}
 }
 
 async function toewijzen(id,voor){
@@ -412,15 +419,61 @@ async function toewijzen(id,voor){
 
 async function fotos(id){const el=document.getElementById("f-"+id);if(!el)return;if(el.innerHTML){el.innerHTML="";return}
   el.textContent="Laden…";try{const r=await api("/taken/"+id+"/fotos");el.innerHTML=(r.fotos||[]).map(f=>f.src&&/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(f.src)?`<img src="${f.src}" alt="foto${f.door?" van "+esc(f.door):""}" loading="lazy">`:`<span class="tk-meta">(foto niet meer beschikbaar)</span>`).join("")}catch(e){el.textContent="Foto's laden lukte niet: "+e.message}}
-async function bezig(id){try{await api("/taken/"+id+"/status","POST",{status:"bezig"});TAKEN=await api("/taken");tekenLijst()}catch(e){alert(e.message)}}
+async function bezig(id){if(BEZIG_MET["b"+id])return;BEZIG_MET["b"+id]=1;setTimeout(()=>delete BEZIG_MET["b"+id],4000);try{await api("/taken/"+id+"/status","POST",{status:"bezig"});TAKEN=await api("/taken");tekenLijst()}catch(e){alert(e.message)}}
 async function klaar(id){
+  if(BEZIG_MET["k"+id])return; /* AZ_FIX2: dubbel tikken = één keer opslaan */
   const notitie=(document.getElementById("nt-"+id)||{}).value||"";
   const vervolg=(document.getElementById("nv-"+id)||{}).value||"";
   const vraag=(document.getElementById("nq-"+id)||{}).value||"";
+  BEZIG_MET["k"+id]=1;const knop=document.querySelector(`[data-ok="${id}"]`);if(knop){knop.disabled=true;knop.textContent="Opslaan…"}
   try{
     await api("/taken/"+id+"/klaar","POST",{notitie,vervolg,vraag_robin:vraag});
-    TAKEN=await api("/taken");tekenLijst();
-  }catch(e){alert(e.message)}
+    conceptWeg(id);TAKEN=await api("/taken");tekenLijst();
+  }catch(e){alert(tkFout(e))}
+  finally{delete BEZIG_MET["k"+id];const k2=document.querySelector(`[data-ok="${id}"]`);if(k2&&k2.disabled){k2.disabled=false;k2.textContent="Opslaan en afvinken"}}
+}
+/* AZ_FIX1: concepten (half ingevulde notitie, vervolgtaak, vraag, antwoord, nieuwe taak) blijven bewaard,
+   ook bij herladen of de app sluiten. Weg na opslaan of Annuleren. */
+function conceptAlles(){try{return JSON.parse(localStorage[CK]||"{}")||{}}catch(e){return {}}}
+function conceptZet(veld,waarde){const c=conceptAlles();if(waarde&&String(waarde).trim())c[veld]={v:String(waarde).slice(0,4000),t:Date.now()};else delete c[veld];try{localStorage[CK]=JSON.stringify(c)}catch(e){}}
+function conceptWeg(id){const c=conceptAlles();["nt-","nv-","nq-","na-"].forEach(p=>delete c[p+id]);try{localStorage[CK]=JSON.stringify(c)}catch(e){}}
+function conceptTerug(){
+  const c=conceptAlles(),oud=Date.now()-14*864e5;let weg=false;
+  Object.keys(c).forEach(k=>{if(!c[k]||c[k].t<oud){delete c[k];weg=true;return}
+    const el=document.getElementById(k);if(!el)return;if(!el.value)el.value=c[k].v;
+    const m=k.match(/^n[tvq]-(.+)$/);if(m){const f=document.getElementById("n-"+m[1]);if(f)f.classList.add("on")}});
+  if(weg)try{localStorage[CK]=JSON.stringify(c)}catch(e){}
+}
+function tkBezig(){
+  const a=document.activeElement;
+  if(a&&(a.tagName==="TEXTAREA"||(a.tagName==="INPUT"&&a.type!=="button")||a.tagName==="SELECT")&&a.closest&&a.closest("#cards"))return true;
+  if(document.querySelector("#cards .tk-notitie.on"))return true;
+  return Object.keys(BEZIG_MET).length>0;
+}
+function tkFout(e){const m=(e&&e.message)||"";return (e&&e.net)||/fetch|network|netwerk|load failed/i.test(m)?"Geen verbinding. Er is nog niets opgeslagen; je tekst blijft bewaard. Probeer het zo opnieuw.":(m||"Er ging iets mis. Probeer het opnieuw.")}
+document.addEventListener("change",e=>{const t=e.target;if(t&&(t.id==="tkn-voor"||t.id==="tkn-dl"))conceptZet(t.id,t.value)});
+document.addEventListener("input",e=>{const t=e.target;if(t&&t.id&&/^(nt|nv|nq|na|tkn)-/.test(t.id)&&t.closest&&t.closest("#cards"))conceptZet(t.id,t.value)});
+/* AZ_FIX3: Robin kan op de site zelf een gewone taak aanmaken (de knop Taak opende alleen deze lijst) */
+function nieuwBlok(meds){
+  return `<div class="tk-card tk-nieuw"><h3>➕ Nieuwe taak</h3>
+    <input id="tkn-titel" placeholder="Wat moet er gebeuren? Bijv. Banden bestellen voor de M5" maxlength="300" style="width:100%;box-sizing:border-box">
+    <div class="tk-row"><select id="tkn-voor"><option value="">Niet toegewezen</option>${meds.map(n=>`<option>${esc(n)}</option>`).join("")}</select>
+    <label class="tk-meta">Uiterlijk <input id="tkn-dl" type="date"></label></div>
+    <div class="tk-row"><button type="button" class="tk-btn prim" id="tkn-ok">Taak toevoegen</button></div></div>`;
+}
+async function tkNieuw(){
+  if(BEZIG_MET.nieuw)return;
+  const ti=document.getElementById("tkn-titel"),titel=((ti&&ti.value)||"").trim();
+  if(!titel){alert("Typ eerst wat er moet gebeuren.");if(ti)ti.focus();return}
+  const voor=(document.getElementById("tkn-voor")||{}).value||"",deadline=(document.getElementById("tkn-dl")||{}).value||"";
+  BEZIG_MET.nieuw=1;const b=document.getElementById("tkn-ok");if(b){b.disabled=true;b.textContent="Opslaan…"}
+  try{const it={titel,soort:"taak"};if(voor)it.voor=voor;if(deadline)it.deadline=deadline;
+    const r=await api("/taken","POST",{items:[it],bron:"robin-site"});
+    if(!(r.opgeslagen||[]).length)throw new Error("De taak is niet opgeslagen. Probeer het opnieuw.");
+    ["tkn-titel","tkn-voor","tkn-dl"].forEach(k=>conceptZet(k,""));delete BEZIG_MET.nieuw;
+    TAKEN=await api("/taken");tekenLijst();if(typeof toast==="function")try{toast("Taak toegevoegd")}catch(e){}
+  }catch(e){alert(tkFout(e))}
+  finally{delete BEZIG_MET.nieuw;const b2=document.getElementById("tkn-ok");if(b2){b2.disabled=false;b2.textContent="Taak toevoegen"}}
 }
 
 async function nummerAanpassen(id){

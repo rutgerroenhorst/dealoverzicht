@@ -17,7 +17,7 @@ const tok=()=>localStorage["inst_token_"+((typeof KL!=="undefined"&&KL.slug)||"b
 function hdr(){const h={"Content-Type":"application/json"};if(tok())h.Authorization="Bearer "+tok();else h["X-Klant"]="brns";return h}
 async function api(p,method,body){
   if(!LIVE)throw Error("Deze knop werkt op de live site.");
-  const r=await fetch(API+p,{method:method||"GET",headers:hdr(),body:body?JSON.stringify(body):undefined,cache:"no-store"});
+  let r;try{r=await fetch(API+p,{method:method||"GET",headers:hdr(),body:body?JSON.stringify(body):undefined,cache:"no-store"})}catch(x){throw Error("Geen verbinding. Er is niets opgeslagen; probeer het zo opnieuw.")} /* AZ_FIX: Nederlandse melding zonder verbinding */
   const j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.reden||j.fout||"Mislukt");return j;
 }
 const apple=a=>"https://maps.apple.com/?saddr="+encodeURIComponent(VAN)+"&daddr="+encodeURIComponent(a)+"&dirflg=d";
@@ -111,7 +111,7 @@ function dosBlok(){
   el.querySelectorAll("[data-not]").forEach(b=>b.onclick=async()=>{const t=prompt("Notitie bij deze klant");if(!t)return;try{await api("/taken/robin/klant/"+b.dataset.not+"/notitie","POST",{tekst:t});await laadDos();dosBlok();toast2("Notitie opgeslagen (ook in Telegram)")}catch(x){toast2(x.message)}});
   el.querySelectorAll("[data-dos]").forEach(b=>b.onclick=async()=>{
     if(b.dataset.dos==="kent"){const k=prompt("Kenteken, bijv. GB-XL-12");if(k)tijdlijn("kenteken/"+k.replace(/[^A-Za-z0-9]/g,""));return}
-    const naam=prompt("Naam klant");if(!naam)return;const tel=prompt("Telefoon (optioneel)","")||"";const wens=prompt("Zoekt / wil (optioneel)","")||"";const kenteken=prompt("Kenteken (optioneel)","")||"";
+    const naam=prompt("Naam klant");if(!naam||!naam.trim())return;const tel=prompt("Telefoon (optioneel)","");if(tel===null)return;const wens=prompt("Zoekt / wil (optioneel)","");if(wens===null)return;const kenteken=prompt("Kenteken (optioneel)","");if(kenteken===null)return; /* AZ_FIX9: Annuleren = niets opslaan */
     try{await api("/taken/robin/klant","POST",{naam,tel,wens,kenteken});await laadDos();dosBlok();toast2("Klant opgeslagen — staat ook in Telegram")}catch(x){toast2(x.message)}});
 }
 async function tijdlijn(pad){
@@ -151,7 +151,8 @@ async function actie(a){
       await api("/taken/robin/briefing","POST",{aan});await laadV();vdBlok();toast2(aan?"Ochtendbriefing staat aan":"Ochtendbriefing staat uit");return}
     if(a==="binnen"){let kenteken="",voorstel="";
       const rd=await kentekenRdw(true);if(rd&&rd.ok){kenteken=rd.kenteken;voorstel=[rd.merk,rd.model].filter(Boolean).join(" ")}
-      const auto=prompt("Welke auto is binnen?"+(rd&&rd.ok?"\n(RDW: "+voorstel+", APK tot "+(rd.apk_tot||"onbekend")+")":""),voorstel);if(!auto)return;if(!kenteken)kenteken=prompt("Kenteken (optioneel)","")||"";const voor=prompt("Voor welke medewerker? (leeg = niet toegewezen)","")||"";
+      else if(rd&&rd.kenteken)kenteken=rd.kenteken; /* AZ_FIX7: getypt kenteken bewaren, ook als de RDW niet antwoordt */
+      const auto=prompt("Welke auto is binnen?"+(rd&&rd.ok?"\n(RDW: "+voorstel+", APK tot "+(rd.apk_tot||"onbekend")+")":(rd&&!rd.ok&&rd.kenteken?"\n(Kenteken "+rd.kenteken+" bewaard. "+(rd.reden||"RDW gaf geen gegevens.")+")":"")),voorstel);if(!auto)return;if(!kenteken)kenteken=prompt("Kenteken (optioneel)","")||"";const voor=prompt("Voor welke medewerker? (leeg = niet toegewezen)","")||"";
       const r=await api("/taken/robin/auto-binnen","POST",{auto,kenteken,voor});toast2(((r.resultaat||[]).length)+" taken klaargezet: klaarmaken, foto's, advertentieconcept, verkoopkaart");return}
     if(a==="verkocht"){let A=((typeof VR!=="undefined"&&VR&&VR.autos)||[]).slice(0,60);if(!A.length){try{A=((await api("/taken/robin/voorraad")).autos||[]).slice(0,60)}catch(x){}}
       let keuze=null;if(A.length){const n=prompt("Welke auto is verkocht? Typ het nummer:\n"+A.map((x,i)=>(i+1)+". "+String(x.titel||"").split("|")[0]).join("\n"));if(!n)return;keuze=A[(+n)-1];if(!keuze){toast2("Onbekend nummer");return}}
