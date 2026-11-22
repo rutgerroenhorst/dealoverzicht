@@ -29,3 +29,21 @@
 .rb-fout{color:var(--bad,#c33);min-height:1.2em;font-size:14px;margin:4px 0}
 .rb-knoppen{justify-content:flex-end;margin-top:8px}.rb-bev .meta{margin:6px 0}
 .rb-ovin [hidden]{display:none!important}
+
+/* LICHT_V1 (t654u, iPhone in donkere modus): Robins site is altijd licht. Veel kaarten hebben een vaste witte achtergrond,
+   dus donkere modus gaf lichte tekst op wit. Vaste lichte kleuren voor alles, ook invoer-, keuze- en datumvelden. */
+:root,:root[data-thema],:root[data-thema=donker],:root[data-thema=licht]{--bg:#f5f6f8;--card:#fff;--ink:#14161a;--mute:#5d6470;--line:#e3e6eb;--chip:#eef0f3;--acc:#2563eb;--ok:#16a34a;--okbg:#e8f7ee;--warn:#c2410c;--warnbg:#fff1e6;--bad:#dc2626;--badbg:#fdecec;color-scheme:light only}
+@media (prefers-color-scheme:dark){
+:root,:root[data-thema],:root[data-thema=donker],:root[data-thema=licht]{--bg:#f5f6f8;--card:#fff;--ink:#14161a;--mute:#5d6470;--line:#e3e6eb;--chip:#eef0f3;--acc:#2563eb;--ok:#16a34a;--okbg:#e8f7ee;--warn:#c2410c;--warnbg:#fff1e6;--bad:#dc2626;--badbg:#fdecec;color-scheme:light only}
+.fbanner{background:#fff6d6;color:#5a4300;border-color:#f0d27a}
+.fbanner.na{background:#eef2f7;color:#22303f;border-color:#c9d3e0}
+.kmo{background:#fff1d6;color:#8a5a00;border-color:#f0c060}
+.kjl .lnd{color:#1d4ed8}
+.tabs button.on{color:var(--brand,var(--acc))}
+}
+html,body{background:var(--bg);color:var(--ink)}
+input,select,textarea{color-scheme:light;background-color:#fff;color:#14161a;border-color:var(--line)}
+input::placeholder,textarea::placeholder{color:#7a828e}
+#thema{display:none!important}
+/* LICHT_V1: kop dekkend, zodat een melding die onder de kop doorschuift niet half doorschijnt */
+.top{background:var(--bg)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
