@@ -129,6 +129,32 @@ function filterItems(data){
   return {taken:L,vragen:[]};
 }
 
+const TK_VAN="De Giessen 1, Dronten";
+function tkTijd(t){const d=String(t.deadline||"").slice(0,10)||new Date(Date.now()+864e5).toISOString().slice(0,10);
+  const m=String(t.tijdslot||"").match(/(\d{1,2})[:.](\d{2})(?:\s*[-–]\s*(\d{1,2})[:.](\d{2}))?/);
+  const p=x=>String(x).padStart(2,"0"),dd=d.replace(/-/g,"");
+  const sh=m?p(m[1])+p(m[2]):"0900",eh=m&&m[3]?p(m[3])+p(m[4]):(m?p((+m[1]+1)%24)+p(m[2]):"1000");
+  return {s:dd+"T"+sh+"00",e:dd+"T"+eh+"00"}}
+function tkWa(t){const C=(typeof window.ROBIN_V2_CONCEPTEN==="object"&&window.ROBIN_V2_CONCEPTEN)||{
+  terugbellen:"Hoi, je had gebeld over een auto. Wanneer komt het je uit dat ik even terugbel? Groet, Robin – BRNS Exclusief",
+  afspraak:"Hoi, hierbij de bevestiging van onze afspraak bij BRNS Exclusief, De Giessen 1 in Dronten. Tot dan! Groet, Robin",
+  auto_klaar:"Hoi, goed nieuws: de auto staat klaar. Wanneer kom je hem ophalen? Groet, Robin – BRNS Exclusief",
+  opvolging:"Hoi, hoe bevalt de auto? Als er iets is hoor ik het graag. Groet, Robin – BRNS Exclusief"};
+  const x=t.titel||"";return /opvolging/i.test(x)?C.opvolging:/afleveren|klaar ?zetten|staat klaar/i.test(x)?C.auto_klaar:/afspraak|proefrit|bezichtig/i.test(x)?C.afspraak:C.terugbellen}
+function snelActies(t,heeftRoute){
+  const T=tkTijd(t),loc=t.adres||"";
+  const g="https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(t.titel||"Taak")+"&dates="+T.s+"/"+T.e+"&ctz=Europe/Amsterdam"+(loc?"&location="+encodeURIComponent(loc):"")+"&details="+encodeURIComponent((t.auto?"Auto: "+t.auto:"")+"");
+  let h=`<a class="tk-btn sec" href="${esc(g)}" target="_blank" rel="noopener">📅 Google Agenda</a><button type="button" class="tk-btn sec" data-ics="${esc(t.id)}">📅 iPhone-agenda</button>`;
+  if(loc&&!heeftRoute)h+=`<a class="tk-btn sec" href="${esc("https://maps.apple.com/?saddr="+encodeURIComponent(TK_VAN)+"&daddr="+encodeURIComponent(loc)+"&dirflg=d")}" target="_blank" rel="noopener">🗺 Route</a>`;
+  const k=t.klant_dossier||{},txt=tkWa(t);
+  if(k.tel)h+=`<a class="tk-btn sec" href="tel:${esc(k.tel)}">📞 Bel ${esc(k.naam||"")}</a>`;
+  else if(k.heeft_tel)h+=`<span class="tk-meta">📞 ${esc(k.naam||"klant")}: nummer bekend (log in om te bellen)</span>`;
+  h+=`<a class="tk-btn sec" href="${esc("https://wa.me/"+(k.wa?encodeURIComponent(k.wa):"")+"?text="+encodeURIComponent(txt))}" target="_blank" rel="noopener">💬 WhatsApp${k.wa?"":"-concept"}</a>`;
+  return h}
+function tkIcs(t){const T=tkTijd(t),z=s=>String(s||"").replace(/([,;\\])/g,"\\$1").replace(/\n/g," ");
+  const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//BRNS//Taken//NL","BEGIN:VEVENT","UID:"+t.id+"@brns","DTSTAMP:"+new Date().toISOString().replace(/[-:]/g,"").slice(0,15)+"Z",
+    "DTSTART;TZID=Europe/Amsterdam:"+T.s,"DTEND;TZID=Europe/Amsterdam:"+T.e,"SUMMARY:"+z(t.titel),t.adres?"LOCATION:"+z(t.adres):"","END:VEVENT","END:VCALENDAR"].filter(Boolean).join("\r\n");
+  const u=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));const a=document.createElement("a");a.href=u;a.download="taak.ics";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},1500)}
 function kaart(t){
   const late=isTeLaat(t)?" tk-late":"";
   const meta=[t.auto?`Auto: ${esc(t.auto)}`:"",t.voor?`Voor: ${esc(t.voor)}`:"",t.deadline?`Uiterlijk ${esc(dag(t.deadline))}`:"",t.plaats?esc(t.plaats):""].filter(Boolean).join(" · ");
@@ -163,6 +189,8 @@ function kaart(t){
   if(t.checklist&&t.checklist.length){const k=t.checklist.filter(c=>c.klaar).length;extra+=`<div class="tk-meta">☑️ Checklist ${k}/${t.checklist.length}</div><div class="tk-cl">${t.checklist.map((c,i)=>`<button type="button" class="tk-btn sec" style="display:block;width:100%;text-align:left;margin:3px 0" data-clv="${esc(t.id)}" data-i="${i}">${c.klaar?"✅":"⬜"} ${esc(c.tekst)}</button>`).join("")}</div>`}
   if(t.terugkerend_id)extra+=`<div class="tk-meta">🔁 Terugkerende taak</div>`;
   act+=`<button class="tk-btn sec" data-cl="${esc(t.id)}">☑️ Checklist</button>`;
+  /* DOSSIER_V1 punt 4: agenda, route, bellen en WhatsApp direct vanuit de taak (verstuurt niets; Robin tikt zelf) */
+  act+=snelActies(t,!!r);
   if(t.notities&&t.notities.length)extra+=t.notities.slice(-3).map(n=>`<div class="tk-meta">🗒 ${esc(n.tekst)}${n.door?" ("+esc(n.door)+")":""}</div>`).join("");
   if(t.fotos&&t.fotos.length)extra+=`<div class="tk-meta"><button type="button" class="tk-link" data-fotos="${esc(t.id)}">📷 ${t.fotos.length} foto${t.fotos.length>1?"'s":""} bekijken</button></div><div class="tk-fotos" id="f-${esc(t.id)}"></div>`;
   const form=`<div class="tk-notitie" id="n-${esc(t.id)}">
@@ -317,6 +345,7 @@ function bind(){
   const med=document.getElementById("tk-med"),au=document.getElementById("tk-auto");
   if(med)med.onchange=()=>{MED=med.value;tekenLijst()};
   if(au)au.onchange=()=>{AUTO=au.value;tekenLijst()};
+  document.querySelectorAll("[data-ics]").forEach(b=>b.onclick=()=>{const t=((TAKEN&&TAKEN.taken)||[]).find(x=>x.id===b.dataset.ics);if(t)tkIcs(t)});
   document.querySelectorAll("[data-klaar]").forEach(b=>b.onclick=()=>{const id=b.dataset.klaar,el=document.getElementById("n-"+id);if(el)el.classList.add("on")});
   document.querySelectorAll("[data-ann]").forEach(b=>b.onclick=()=>{const el=document.getElementById("n-"+b.dataset.ann);if(el)el.classList.remove("on")});
   document.querySelectorAll("[data-ok]").forEach(b=>b.onclick=()=>klaar(b.dataset.ok));
