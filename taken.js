@@ -131,11 +131,16 @@ function filterItems(data){
 }
 
 const TK_VAN="De Giessen 1, Dronten";
-function tkTijd(t){const d=String(t.deadline||"").slice(0,10)||new Date(Date.now()+864e5).toISOString().slice(0,10);
+function tkTijd(t){ /* AZ_FIX5: lokale datum, geen onmogelijke tijden, einde nooit voor begin */
+  const p=x=>String(x).padStart(2,"0"),mo=new Date(Date.now()+864e5),morgen=mo.getFullYear()+"-"+p(mo.getMonth()+1)+"-"+p(mo.getDate());
+  const d=/^\d{4}-\d{2}-\d{2}/.test(String(t.deadline||""))?String(t.deadline).slice(0,10):morgen,dd=d.replace(/-/g,"");
   const m=String(t.tijdslot||"").match(/(\d{1,2})[:.](\d{2})(?:\s*[-–]\s*(\d{1,2})[:.](\d{2}))?/);
-  const p=x=>String(x).padStart(2,"0"),dd=d.replace(/-/g,"");
-  const sh=m?p(m[1])+p(m[2]):"0900",eh=m&&m[3]?p(m[3])+p(m[4]):(m?p((+m[1]+1)%24)+p(m[2]):"1000");
-  return {s:dd+"T"+sh+"00",e:dd+"T"+eh+"00"}}
+  const ok=(h,mi)=>+h<24&&+mi<60;
+  let s=[9,0];if(m&&ok(m[1],m[2]))s=[+m[1],+m[2]];
+  let e=(m&&m[3]&&ok(m[3],m[4]))?[+m[3],+m[4]]:[s[0]+1,s[1]];
+  if(e[0]*60+e[1]<=s[0]*60+s[1])e=[s[0]+1,s[1]];
+  if(e[0]>23)e=[23,59];
+  return {s:dd+"T"+p(s[0])+p(s[1])+"00",e:dd+"T"+p(e[0])+p(e[1])+"00"}}
 function tkWa(t){const C=(typeof window.ROBIN_V2_CONCEPTEN==="object"&&window.ROBIN_V2_CONCEPTEN)||{
   terugbellen:"Hoi, je had gebeld over een auto. Wanneer komt het je uit dat ik even terugbel? Groet, Robin – BRNS Exclusief",
   afspraak:"Hoi, hierbij de bevestiging van onze afspraak bij BRNS Exclusief, De Giessen 1 in Dronten. Tot dan! Groet, Robin",
