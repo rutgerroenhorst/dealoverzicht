@@ -47,3 +47,5 @@
 .tk-link{background:none;border:0;padding:0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
 .tk-fotos{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .tk-fotos img{width:96px;height:96px;object-fit:cover;border-radius:8px}
+/* ROBIN_V2 0b: kaarten niet breder dan het scherm (grid-item mag krimpen) */
+.cards>.tk-wrap{min-width:0;max-width:100%;box-sizing:border-box}
