@@ -104,9 +104,10 @@ function dosBlok(){
      ${(k.autos||[]).map(a=>`<div class="meta">🚗 ${e(a.kenteken)} ${e(a.omschr||"")}${a.apk_tot?" · APK tot "+e(a.apk_tot):""}</div>`).join("")}
      ${(k.notities||[]).slice(-2).map(n=>`<div class="meta">• ${e(n)}</div>`).join("")}
      <div class="row">${DOS.prive?telKn(k,C.terugbellen):(k.heeft_tel?'<span class="meta">📞 nummer bekend (log in om te bellen)</span>':"")}
-     <button type="button" class="btn sm ghost" data-tl="klant/${e(k.id)}">🕘 Tijdlijn</button><button type="button" class="btn sm ghost" data-not="${e(k.id)}">✏️ Notitie</button></div></div></article>`).join("")||'<div class="meta">Nog geen klanten. Voeg er een toe, of zeg in Telegram: “klant Jan 06… zoekt een Golf”.</div>'}`;
+     <button type="button" class="btn sm ghost" data-tl="klant/${e(k.id)}">🕘 Tijdlijn</button><button type="button" class="btn sm ghost" data-not="${e(k.id)}">✏️ Notitie</button><button type="button" class="btn sm ghost" data-rdw="${e(k.id)}">🔖 Kenteken (RDW)</button></div></div></article>`).join("")||'<div class="meta">Nog geen klanten. Voeg er een toe, of zeg in Telegram: “klant Jan 06… zoekt een Golf”.</div>'}`;
   const qi=document.getElementById("rb-dosq");if(qi)qi.oninput=()=>{DOSQ=qi.value;const p=qi.selectionStart;dosBlok();const n=document.getElementById("rb-dosq");if(n){n.focus();try{n.setSelectionRange(p,p)}catch(x){}}};
   el.querySelectorAll("[data-tl]").forEach(b=>b.onclick=()=>tijdlijn(b.dataset.tl));
+  el.querySelectorAll("[data-rdw]").forEach(b=>b.onclick=async()=>{const r=await kentekenRdw(true,b.dataset.rdw);if(r&&r.ok){await laadDos();dosBlok()}});
   el.querySelectorAll("[data-not]").forEach(b=>b.onclick=async()=>{const t=prompt("Notitie bij deze klant");if(!t)return;try{await api("/taken/robin/klant/"+b.dataset.not+"/notitie","POST",{tekst:t});await laadDos();dosBlok();toast2("Notitie opgeslagen (ook in Telegram)")}catch(x){toast2(x.message)}});
   el.querySelectorAll("[data-dos]").forEach(b=>b.onclick=async()=>{
     if(b.dataset.dos==="kent"){const k=prompt("Kenteken, bijv. GB-XL-12");if(k)tijdlijn("kenteken/"+k.replace(/[^A-Za-z0-9]/g,""));return}
@@ -124,6 +125,21 @@ async function tijdlijn(pad){
   const oud=document.getElementById("rb-tl");if(oud)oud.remove();document.body.appendChild(ov);
 }
 window.ROBIN_V2.tijdlijn=tijdlijn;
+/* ---------- KENTEKEN_RDW_V1 (punt 2): foto van kenteken/kentekenkaart of getypt -> RDW (merk, model, APK) ---------- */
+function kiesFoto(){return new Promise(res=>{const i=document.createElement("input");i.type="file";i.accept="image/*";i.setAttribute("capture","environment");
+  i.onchange=()=>{const f=i.files&&i.files[0];if(!f){res(null);return}const img=new Image(),u=URL.createObjectURL(f);
+    img.onload=()=>{const m=1600,sc=Math.min(1,m/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);res(c.toDataURL("image/jpeg",0.82))};img.onerror=()=>res(null);img.src=u};i.click()})}
+async function kentekenRdw(vraag,klant_id){
+  const keuze=vraag?confirm("Kenteken-foto maken (plaat of kentekenkaart)?\nOK = foto, Annuleren = kenteken typen of overslaan"):true;
+  let body=null;
+  if(keuze){toast2("Foto kiezen…");const f=await kiesFoto();if(!f)return null;toast2("Kenteken lezen en RDW opvragen…");body={foto:f}}
+  else{const k=prompt("Kenteken (leeg = overslaan)","");if(!k)return null;body={kenteken:k}}
+  if(klant_id)body.klant_id=klant_id;
+  try{const r=await api("/taken/robin/kenteken","POST",body);
+    if(r.ok)toast2("RDW: "+[r.merk,r.model].filter(Boolean).join(" ")+" · APK tot "+(r.apk_tot||"onbekend")+" · eigenaren: onbekend (niet in RDW open data)");
+    else toast2(r.reden||"Niet gevonden");return r}catch(x){toast2(x.message);return null}}
+window.ROBIN_V2.kentekenRdw=kentekenRdw;
 /* ---------- acties ---------- */
 async function actie(a){
   try{
@@ -133,7 +149,9 @@ async function actie(a){
     if(a==="bellen"||a==="whatsapp"){if(window.NAV)NAV.ga("klanten");return}
     if(a==="briefing"){const aan=!(V&&V.briefing_aan);if(aan&&!confirm("Ochtendbriefing om 08:00 aanzetten? Hij verschijnt alleen hier op je site; er wordt niets verstuurd."))return;
       await api("/taken/robin/briefing","POST",{aan});await laadV();vdBlok();toast2(aan?"Ochtendbriefing staat aan":"Ochtendbriefing staat uit");return}
-    if(a==="binnen"){const auto=prompt("Welke auto is binnen? Bijv. BMW M3 Competition");if(!auto)return;const kenteken=prompt("Kenteken (optioneel)","")||"";const voor=prompt("Voor welke medewerker? (leeg = niet toegewezen)","")||"";
+    if(a==="binnen"){let kenteken="",voorstel="";
+      const rd=await kentekenRdw(true);if(rd&&rd.ok){kenteken=rd.kenteken;voorstel=[rd.merk,rd.model].filter(Boolean).join(" ")}
+      const auto=prompt("Welke auto is binnen?"+(rd&&rd.ok?"\n(RDW: "+voorstel+", APK tot "+(rd.apk_tot||"onbekend")+")":""),voorstel);if(!auto)return;if(!kenteken)kenteken=prompt("Kenteken (optioneel)","")||"";const voor=prompt("Voor welke medewerker? (leeg = niet toegewezen)","")||"";
       const r=await api("/taken/robin/auto-binnen","POST",{auto,kenteken,voor});toast2(((r.resultaat||[]).length)+" taken klaargezet: klaarmaken, foto's, advertentieconcept, verkoopkaart");return}
     if(a==="verkocht"){let A=((typeof VR!=="undefined"&&VR&&VR.autos)||[]).slice(0,60);if(!A.length){try{A=((await api("/taken/robin/voorraad")).autos||[]).slice(0,60)}catch(x){}}
       let keuze=null;if(A.length){const n=prompt("Welke auto is verkocht? Typ het nummer:\n"+A.map((x,i)=>(i+1)+". "+String(x.titel||"").split("|")[0]).join("\n"));if(!n)return;keuze=A[(+n)-1];if(!keuze){toast2("Onbekend nummer");return}}
