@@ -188,8 +188,9 @@ function kaart(t){
   }
   const meds=(TAKEN.gebruikers||[]).filter(u=>u.werkt_op!=="site");
   const toew=`<label class="tk-toew">Toewijzen <select data-toew="${esc(t.id)}"><option value="">Niet toegewezen</option>${meds.map(u=>`<option value="${esc(u.naam)}" ${t.voor===u.naam?"selected":""}>${esc(u.naam)}</option>`).join("")}</select></label>`;
-  if(t.voortgang!=="bezig")act+=`<button class="tk-btn sec" data-bezig="${esc(t.id)}">Bezig</button>`;
-  act+=`<button class="tk-btn prim" data-klaar="${esc(t.id)}">Klaar + notitie</button>`;
+  if(t.status==="klaar")act+=`<button class="tk-btn sec" data-heropen="${esc(t.id)}">↩️ Heropenen</button>`; /* HEROPEN_V1 */
+  else{if(t.voortgang!=="bezig")act+=`<button class="tk-btn sec" data-bezig="${esc(t.id)}">Bezig</button>`;
+  act+=`<button class="tk-btn prim" data-klaar="${esc(t.id)}">Klaar + notitie</button>`;}
   const chips=(t.voortgang==="bezig"?`<span class="tk-chip bezig">Bezig${t.bezig_door?" · "+esc(t.bezig_door):""}</span>`:"")+(t.prio==="hoog"?`<span class="tk-chip hoog">Hoog</span>`:"");
   /* TAKEN_EXTRA_V1: checklist per taak (afvinken per punt) + terugkerend-label */
   if(t.checklist&&t.checklist.length){const k=t.checklist.filter(c=>c.klaar).length;extra+=`<div class="tk-meta">☑️ Checklist ${k}/${t.checklist.length}</div><div class="tk-cl">${t.checklist.map((c,i)=>`<button type="button" class="tk-btn sec" style="display:block;width:100%;text-align:left;margin:3px 0" data-clv="${esc(t.id)}" data-i="${i}">${c.klaar?"✅":"⬜"} ${esc(c.tekst)}</button>`).join("")}</div>`}
@@ -358,6 +359,7 @@ function bind(){
   const tkn=document.getElementById("tkn-ok");if(tkn)tkn.onclick=tkNieuw;
   document.querySelectorAll("[data-ok]").forEach(b=>b.onclick=()=>klaar(b.dataset.ok));
   document.querySelectorAll("[data-bezig]").forEach(b=>b.onclick=()=>bezig(b.dataset.bezig));
+  document.querySelectorAll("[data-heropen]").forEach(b=>b.onclick=()=>heropen(b.dataset.heropen));
   document.querySelectorAll("[data-fotos]").forEach(b=>b.onclick=()=>fotos(b.dataset.fotos));
   document.querySelectorAll("[data-nr]").forEach(b=>b.onclick=()=>nummerAanpassen(b.dataset.nr));
   document.querySelectorAll("[data-mic]").forEach(b=>b.onclick=()=>inspreken(b.dataset.mic));
@@ -427,16 +429,26 @@ async function fotos(id){const el=document.getElementById("f-"+id);if(!el)return
 async function bezig(id){if(BEZIG_MET["b"+id])return;BEZIG_MET["b"+id]=1;setTimeout(()=>delete BEZIG_MET["b"+id],4000);try{await api("/taken/"+id+"/status","POST",{status:"bezig"});TAKEN=await api("/taken");tekenLijst()}catch(e){alert(e.message)}}
 async function klaar(id){
   if(BEZIG_MET["k"+id])return; /* AZ_FIX2: dubbel tikken = één keer opslaan */
+  const tk=((TAKEN&&TAKEN.taken)||[]).find(x=>x.id===id),open=((tk&&tk.checklist)||[]).filter(c=>!c.klaar); /* HEROPEN_V1: open checklist? eerst vragen */
+  if(open.length&&!confirm("Nog "+open.length+(open.length===1?" punt":" punten")+" open:\n"+open.slice(0,6).map(c=>"• "+c.tekst).join("\n")+(open.length>6?"\n…":"")+"\n\nToch klaar?"))return;
   const notitie=(document.getElementById("nt-"+id)||{}).value||"";
   const vervolg=(document.getElementById("nv-"+id)||{}).value||"";
   const vraag=(document.getElementById("nq-"+id)||{}).value||"";
   BEZIG_MET["k"+id]=1;const knop=document.querySelector(`[data-ok="${id}"]`);if(knop){knop.disabled=true;knop.textContent="Opslaan…"}
   try{
     await api("/taken/"+id+"/klaar","POST",{notitie,vervolg,vraag_robin:vraag});
-    conceptWeg(id);TAKEN=await api("/taken");tekenLijst();
+    conceptWeg(id);TAKEN=await api("/taken");tekenLijst();ongedaanBalk(id,tk?tk.titel:"Taak");
   }catch(e){alert(tkFout(e))}
   finally{delete BEZIG_MET["k"+id];const k2=document.querySelector(`[data-ok="${id}"]`);if(k2&&k2.disabled){k2.disabled=false;k2.textContent="Opslaan en afvinken"}}
 }
+/* HEROPEN_V1 (t654u punt 4): 15 s 'Ongedaan maken' na afvinken; daarna via filter Klaar > Heropenen */
+function ongedaanBalk(id,titel){let b=document.getElementById("tk-ongedaan");if(b)b.remove();b=document.createElement("div");b.id="tk-ongedaan";b.setAttribute("role","status");
+  b.style.cssText="position:fixed;left:10px;right:10px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:9998;background:#1d2a22;color:#fff;border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;justify-content:space-between;box-shadow:0 4px 16px rgba(0,0,0,.3)";
+  b.innerHTML=`<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">✅ Afgevinkt: ${esc(titel)}</span><button class="tk-btn prim" style="flex:none">Ongedaan maken</button>`;
+  b.querySelector("button").onclick=()=>{b.remove();heropen(id)};document.body.appendChild(b);setTimeout(()=>{if(b.isConnected)b.remove()},15000)}
+async function heropen(id){if(BEZIG_MET["h"+id])return;BEZIG_MET["h"+id]=1;
+  try{const r=await api("/taken/"+id+"/status","POST",{status:"open",door:"Robin"});TAKEN=await api("/taken");tekenLijst();
+    alert("Taak staat weer open."+(r&&r.vervolg_weg?" De automatische vervolgtaak is ook weer weggehaald.":""))}catch(e){alert(tkFout(e))}finally{delete BEZIG_MET["h"+id]}}
 /* AZ_FIX1: concepten (half ingevulde notitie, vervolgtaak, vraag, antwoord, nieuwe taak) blijven bewaard,
    ook bij herladen of de app sluiten. Weg na opslaan of Annuleren. */
 function conceptAlles(){try{return JSON.parse(localStorage[CK]||"{}")||{}}catch(e){return {}}}
