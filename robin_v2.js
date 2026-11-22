@@ -79,9 +79,51 @@ function klanten(){
    ${Object.keys(CLAB).map(k=>`<div class="rb-con"><div><b>${CLAB[k]}</b><div class="meta">${e(C[k])}</div></div><div class="row"><a class="btn sm" href="${e(wa(C[k]))}" target="_blank" rel="noopener">WhatsApp</a><button type="button" class="btn sm ghost" data-kop="${k}">Kopieer</button></div></div>`).join("")}</div></article>
    <h3>📞 Terugbellen <span class="cnt">${bel.length}</span></h3>${bel.map(kaart).join("")||'<div class="meta">Geen terugbel-taken.</div>'}
    <h3>🤝 Opvolging na verkoop <span class="cnt">${opv.length}</span></h3>${opv.map(kaart).join("")||'<div class="meta">Geen opvolging open. Wordt klaargezet bij "Auto verkocht".</div>'}
-   <div class="meta">🔒 Privénummers en klantnamen staan niet op deze openbare site. Die blijven in Telegram/je telefoon.</div></div>`;
+   <div id="rb-dos"></div>
+   <div class="meta">🔒 Zonder inlog staan er geen telefoonnummers of adressen op deze site (namen ingekort). Ingelogd als Robin zie je ze wel.</div></div>`;
+  dosBlok();
   c.querySelectorAll("[data-kop]").forEach(b=>b.onclick=()=>{try{navigator.clipboard.writeText(C[b.dataset.kop]);toast2("Tekst gekopieerd")}catch(x){prompt("Kopieer:",C[b.dataset.kop])}});
 }
+/* ---------- DOSSIER_V1: één klantenlijst voor Telegram en site + tijdlijn per klant/kenteken ---------- */
+let DOS=null,DOSQ="";
+async function laadDos(){try{DOS=await api("/taken/robin/klanten")}catch(x){DOS={fout:x.message,klanten:[]}}return DOS}
+function telKn(k,tekst){if(!k.tel)return "";const w=k.wa?`https://wa.me/${encodeURIComponent(k.wa)}?text=${encodeURIComponent(tekst)}`:"";
+  return `<a class="btn sm" href="tel:${e(k.tel)}">📞 Bel</a>${w?`<a class="btn sm" href="${e(w)}" target="_blank" rel="noopener">💬 WhatsApp</a>`:""}`}
+function dosBlok(){
+  const el=document.getElementById("rb-dos");if(!el)return;
+  if(!DOS){el.innerHTML='<div class="meta">Klanten laden…</div>';laadDos().then(()=>{if(seg===KLANTEN_SEG)dosBlok()});return}
+  const C=Object.assign({},CONCEPTEN_STD,(V&&V.concepten)||{});
+  const q=DOSQ.trim().toLowerCase();
+  const L=(DOS.klanten||[]).filter(k=>!q||[k.naam,k.wens,k.kenteken].join(" ").toLowerCase().includes(q));
+  el.innerHTML=`<h3>👥 Klanten <span class="cnt">${(DOS.klanten||[]).length}</span></h3>
+   <div class="meta">Eén lijst: wat je in Telegram (Assistent) of hier invoert, staat meteen op beide plekken.</div>
+   <div class="row rb-dosrij"><input id="rb-dosq" type="search" placeholder="Zoek naam, wens of kenteken" value="${e(DOSQ)}"><button type="button" class="btn sm" data-dos="nieuw">➕ Klant</button><button type="button" class="btn sm ghost" data-dos="kent">🕘 Kenteken</button></div>
+   ${DOS.fout?`<div class="meta">⚠️ ${e(DOS.fout)}</div>`:""}
+   ${L.slice(0,60).map(k=>`<article class="card"><div class="body"><b>${e(k.naam)}</b> <span class="meta">· ${e(k.bron)}${k.sinds?" · sinds "+e(k.sinds):""}</span>
+     <div class="meta">${k.wens?"Zoekt: "+e(k.wens):""}${k.kenteken?" · 🔖 "+e(k.kenteken):""}</div>
+     ${(k.autos||[]).map(a=>`<div class="meta">🚗 ${e(a.kenteken)} ${e(a.omschr||"")}${a.apk_tot?" · APK tot "+e(a.apk_tot):""}</div>`).join("")}
+     ${(k.notities||[]).slice(-2).map(n=>`<div class="meta">• ${e(n)}</div>`).join("")}
+     <div class="row">${DOS.prive?telKn(k,C.terugbellen):(k.heeft_tel?'<span class="meta">📞 nummer bekend (log in om te bellen)</span>':"")}
+     <button type="button" class="btn sm ghost" data-tl="klant/${e(k.id)}">🕘 Tijdlijn</button><button type="button" class="btn sm ghost" data-not="${e(k.id)}">✏️ Notitie</button></div></div></article>`).join("")||'<div class="meta">Nog geen klanten. Voeg er een toe, of zeg in Telegram: “klant Jan 06… zoekt een Golf”.</div>'}`;
+  const qi=document.getElementById("rb-dosq");if(qi)qi.oninput=()=>{DOSQ=qi.value;const p=qi.selectionStart;dosBlok();const n=document.getElementById("rb-dosq");if(n){n.focus();try{n.setSelectionRange(p,p)}catch(x){}}};
+  el.querySelectorAll("[data-tl]").forEach(b=>b.onclick=()=>tijdlijn(b.dataset.tl));
+  el.querySelectorAll("[data-not]").forEach(b=>b.onclick=async()=>{const t=prompt("Notitie bij deze klant");if(!t)return;try{await api("/taken/robin/klant/"+b.dataset.not+"/notitie","POST",{tekst:t});await laadDos();dosBlok();toast2("Notitie opgeslagen (ook in Telegram)")}catch(x){toast2(x.message)}});
+  el.querySelectorAll("[data-dos]").forEach(b=>b.onclick=async()=>{
+    if(b.dataset.dos==="kent"){const k=prompt("Kenteken, bijv. GB-XL-12");if(k)tijdlijn("kenteken/"+k.replace(/[^A-Za-z0-9]/g,""));return}
+    const naam=prompt("Naam klant");if(!naam)return;const tel=prompt("Telefoon (optioneel)","")||"";const wens=prompt("Zoekt / wil (optioneel)","")||"";const kenteken=prompt("Kenteken (optioneel)","")||"";
+    try{await api("/taken/robin/klant","POST",{naam,tel,wens,kenteken});await laadDos();dosBlok();toast2("Klant opgeslagen — staat ook in Telegram")}catch(x){toast2(x.message)}});
+}
+async function tijdlijn(pad){
+  let r;try{r=await api("/taken/robin/tijdlijn/"+pad)}catch(x){toast2(x.message);return}
+  const ICO={klant:"👤",wens:"🔎",notitie:"✏️",taak:"📝",klaar:"✅",voorraad:"🚗",prijs:"💶",verkocht:"🎉",proefrit:"🛣"};
+  const ov=document.createElement("div");ov.className="rb-ov";ov.id="rb-tl";
+  const kop=(r.kop&&r.kop.klant&&r.kop.klant.naam)||(r.kop&&r.kop.kenteken)||"Tijdlijn";
+  ov.innerHTML=`<div class="rb-ovin"><div class="row"><b>🕘 ${e(kop)}</b><button type="button" class="btn sm ghost" data-x>Sluiten</button></div>
+   ${(r.items||[]).map(i=>`<div class="rb-tli"><span>${ICO[i.soort]||"•"}</span><div><div>${e(i.tekst)}</div><div class="meta">${e(String(i.datum||"datum onbekend").replace("T"," ").slice(0,16))}</div></div></div>`).join("")||'<div class="meta">Nog niets gevonden voor dit dossier.</div>'}</div>`;
+  ov.onclick=ev=>{if(ev.target===ov||ev.target.hasAttribute("data-x"))ov.remove()};
+  const oud=document.getElementById("rb-tl");if(oud)oud.remove();document.body.appendChild(ov);
+}
+window.ROBIN_V2.tijdlijn=tijdlijn;
 /* ---------- acties ---------- */
 async function actie(a){
   try{
