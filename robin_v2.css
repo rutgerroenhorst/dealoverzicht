@@ -17,3 +17,15 @@
 .rb-ovin{background:var(--card,#fff);color:inherit;width:100%;max-width:560px;max-height:85vh;overflow:auto;border-radius:16px 16px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom))}
 .rb-ovin>.row{justify-content:space-between;align-items:center;margin-bottom:8px}
 .rb-tli{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line,#eee)}.rb-tli>span{width:22px;text-align:center}
+/* KEUZE_SHEET_V1 (t654u punt 2/3): rit-keuze en verkocht-lijst */
+.rb-ovin .row{display:flex;gap:8px}
+.rb-keus{display:flex;gap:8px;margin:4px 0 10px}
+.rb-k{flex:1;min-height:56px;font:inherit;font-size:17px;font-weight:600;border-radius:12px;border:2px solid var(--line,#ccd);background:transparent;color:inherit}
+.rb-k.aan{border-color:var(--acc,#2a7);background:rgba(40,170,120,.15)}
+.rb-f{display:block;margin:8px 0;font-size:14px}
+.rb-f input,.rb-f select,.rb-zoek{display:block;width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:10px;margin-top:4px;border-radius:10px;border:1px solid var(--line,#ccd);background:transparent;color:inherit}
+.rb-lijst{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.rb-li{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:10px 12px;min-height:48px;border-radius:10px;border:1px solid var(--line,#ccd);background:transparent;color:inherit;font:inherit;font-size:15px}
+.rb-fout{color:var(--bad,#c33);min-height:1.2em;font-size:14px;margin:4px 0}
+.rb-knoppen{justify-content:flex-end;margin-top:8px}.rb-bev .meta{margin:6px 0}
+.rb-ovin [hidden]{display:none!important}

@@ -110,8 +110,8 @@ function dosBlok(){
   el.querySelectorAll("[data-rdw]").forEach(b=>b.onclick=async()=>{const r=await kentekenRdw(true,b.dataset.rdw);if(r&&r.ok){await laadDos();dosBlok()}});
   el.querySelectorAll("[data-not]").forEach(b=>b.onclick=async()=>{const t=prompt("Notitie bij deze klant");if(!t)return;try{await api("/taken/robin/klant/"+b.dataset.not+"/notitie","POST",{tekst:t});await laadDos();dosBlok();toast2("Notitie opgeslagen (ook in Telegram)")}catch(x){toast2(x.message)}});
   el.querySelectorAll("[data-dos]").forEach(b=>b.onclick=async()=>{
-    if(b.dataset.dos==="kent"){const k=prompt("Kenteken, bijv. GB-XL-12");if(k)tijdlijn("kenteken/"+k.replace(/[^A-Za-z0-9]/g,""));return}
-    const naam=prompt("Naam klant");if(!naam||!naam.trim())return;const tel=prompt("Telefoon (optioneel)","");if(tel===null)return;const wens=prompt("Zoekt / wil (optioneel)","");if(wens===null)return;const kenteken=prompt("Kenteken (optioneel)","");if(kenteken===null)return; /* AZ_FIX9: Annuleren = niets opslaan */
+    if(b.dataset.dos==="kent"){const k=kentekenVraag("Kenteken, bijv. GB-XL-12");if(k)tijdlijn("kenteken/"+k);return}
+    const naam=prompt("Naam klant");if(!naam||!naam.trim())return;const tel=prompt("Telefoon (optioneel)","");if(tel===null)return;const wens=prompt("Zoekt / wil (optioneel)","");if(wens===null)return;const kenteken=kentekenVraag("Kenteken (optioneel)");if(kenteken===null)return; /* AZ_FIX9: Annuleren = niets opslaan */
     try{await api("/taken/robin/klant","POST",{naam,tel,wens,kenteken});await laadDos();dosBlok();toast2("Klant opgeslagen — staat ook in Telegram")}catch(x){toast2(x.message)}});
 }
 async function tijdlijn(pad){
@@ -134,12 +134,58 @@ async function kentekenRdw(vraag,klant_id){
   const keuze=vraag?confirm("Kenteken-foto maken (plaat of kentekenkaart)?\nOK = foto, Annuleren = kenteken typen of overslaan"):true;
   let body=null;
   if(keuze){toast2("Foto kiezen…");const f=await kiesFoto();if(!f)return null;toast2("Kenteken lezen en RDW opvragen…");body={foto:f}}
-  else{const k=prompt("Kenteken (leeg = overslaan)","");if(!k)return null;body={kenteken:k}}
+  else{const k=kentekenVraag("Kenteken, bijv. GB-XL-12\n(leeg laten = overslaan, Annuleren = stoppen)");if(k===null)return null;if(!k)return {overslaan:true}; /* KENTEKEN_NL_V1 */
+    if(!kentekenCheck(k).ok)return {ok:false,kenteken:k,reden:"Buitenlands/bijzonder kenteken: geen RDW-opvraag."};body={kenteken:k}}
   if(klant_id)body.klant_id=klant_id;
   try{const r=await api("/taken/robin/kenteken","POST",body);
     if(r.ok)toast2("RDW: "+[r.merk,r.model].filter(Boolean).join(" ")+" · APK tot "+(r.apk_tot||"onbekend")+" · eigenaren: onbekend (niet in RDW open data)");
     else toast2(r.reden||"Niet gevonden");return r}catch(x){toast2(x.message);return null}}
 window.ROBIN_V2.kentekenRdw=kentekenRdw;
+/* ---------- KENTEKEN_NL_V1 (t654u punt 5): zelfde regels als pipeline/kenteken_nl.py ---------- */
+const KSC=["LLDDDD","DDDDLL","DDLLDD","LLDDLL","LLLLDD","DDLLLL","DDLLLD","DLLLDD","LLDDDL","LDDDLL","LLLDDL","LDDLLL","DLLDDD","DDDLLD"];
+const KGR=[[2,2,2],[2,2,2],[2,2,2],[2,2,2],[2,2,2],[2,2,2],[2,3,1],[1,3,2],[2,3,1],[1,3,2],[3,2,1],[1,2,3],[1,2,3],[3,2,1]];
+function kentekenCheck(k){const n=String(k||"").toUpperCase().replace(/[^A-Z0-9]/g,"");if(!n)return{ok:false,norm:"",mooi:"",reden:"Geen kenteken ingevuld."};
+  const pat=n.replace(/[A-Z]/g,"L").replace(/[0-9]/g,"D"),i=n.length===6?KSC.indexOf(pat):-1;
+  if(i<0)return{ok:false,norm:n,mooi:n,reden:"\u201c"+String(k).trim().slice(0,20)+"\u201d is geen gewoon Nederlands kenteken."};
+  let p=0;return{ok:true,norm:n,mooi:KGR[i].map(l=>{const s=n.substr(p,l);p+=l;return s}).join("-"),sidecode:i+1}}
+/* null = gestopt, "" = leeg gelaten, anders zonder streepjes in hoofdletters. Buitenlands/onbekend: waarschuwen, met bevestiging toestaan */
+function kentekenVraag(label,start){let v=start||"";for(;;){const k=prompt(label,v);if(k===null)return null;if(!k.trim())return "";const c=kentekenCheck(k);if(c.ok)return c.norm;
+  if(confirm(c.reden+"\n\nBuitenlands of bijzonder kenteken?\nOK = toch gebruiken ("+c.norm+")\nAnnuleren = opnieuw typen"))return c.norm;v=k}}
+window.ROBIN_V2.kentekenCheck=kentekenCheck;
+/* ---------- KEUZE_SHEET_V1 (t654u punt 2 en 3): duidelijke knoppen; Annuleren = stoppen, niets opgeslagen ---------- */
+function sheet(html,bind){return new Promise(res=>{const ov=document.createElement("div");ov.className="rb-ov";ov.id="rb-sheet";
+  ov.innerHTML=`<div class="rb-ovin">${html}</div>`;let klaar=false;const af=v=>{if(klaar)return;klaar=true;ov.remove();res(v)};
+  ov.onclick=ev=>{if(ev.target===ov)af(null)};const o=document.getElementById("rb-sheet");if(o)o.remove();document.body.appendChild(ov);
+  ov.querySelectorAll("[data-x]").forEach(b=>b.onclick=()=>af(null));bind(ov,af)})}
+async function ritSheet(){let meds=[];try{meds=((await api("/taken")).gebruikers||[]).map(u=>u.naam).filter(Boolean)}catch(x){}
+  return sheet(`<div class="row"><b>🚚 Rit plannen</b><button type="button" class="btn sm ghost" data-x>Annuleren</button></div>
+   <div class="rb-keus" role="group" aria-label="Soort rit"><button type="button" class="rb-k" data-s="ophalen" aria-pressed="false">🚚 Ophalen</button><button type="button" class="rb-k" data-s="afleveren" aria-pressed="false">🏁 Afleveren</button></div>
+   <label class="rb-f">Auto<input id="rs-auto" autocomplete="off" placeholder="bijv. VW Golf GB-XL-12"></label>
+   <label class="rb-f">Adres<input id="rs-adres" autocomplete="off" placeholder="bijv. Kampweg 27, Swifterbant"></label>
+   <label class="rb-f">Tijdslot (optioneel)<input id="rs-tijd" autocomplete="off" placeholder="bijv. 15:30-16:30"></label>
+   <label class="rb-f">Voor (optioneel)<select id="rs-voor"><option value="">Niet toegewezen</option>${meds.map(n=>`<option>${e(n)}</option>`).join("")}</select></label>
+   <div class="rb-fout" id="rs-fout" role="alert"></div>
+   <div class="row rb-knoppen"><button type="button" class="btn ghost" data-x>Annuleren</button><button type="button" class="btn" id="rs-ok">Rit opslaan</button></div>`,(ov,af)=>{
+    let soort="";ov.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{soort=b.dataset.s;ov.querySelectorAll("[data-s]").forEach(x=>{x.classList.toggle("aan",x===b);x.setAttribute("aria-pressed",String(x===b))});ov.querySelector("#rs-fout").textContent=""});
+    ov.querySelector("#rs-ok").onclick=()=>{const v=s=>ov.querySelector(s).value.trim(),f=ov.querySelector("#rs-fout");
+      if(!soort){f.textContent="Kies eerst: Ophalen of Afleveren.";return}if(!v("#rs-auto")){f.textContent="Welke auto?";return}if(!v("#rs-adres")){f.textContent="Vul het adres in.";return}
+      af({soort,auto:v("#rs-auto"),adres:v("#rs-adres"),tijdslot:v("#rs-tijd"),voor:ov.querySelector("#rs-voor").value})}})}
+function verkochtSheet(A){const nm=x=>String(x.titel||"").split("|")[0].trim(),pr=x=>x.prijs>0?"€ "+Number(x.prijs).toLocaleString("nl-NL"):"prijs onbekend";
+  const h=x=>(nm(x)+" "+(x.merk||"")+" "+(x.model||"")+" "+(x.jaar||"")+" "+(x.brandstof||"")).toLowerCase();
+  return sheet(`<div class="row"><b>🎉 Welke auto is verkocht?</b><button type="button" class="btn sm ghost" data-x>Annuleren</button></div>
+   <input id="vk-zoek" class="rb-zoek" type="search" placeholder="Zoek op merk, model of jaar" autocomplete="off" aria-label="Zoek auto">
+   <div id="vk-lijst" class="rb-lijst"></div><div id="vk-bev" hidden></div>`,(ov,af)=>{
+    const L=ov.querySelector("#vk-lijst"),Z=ov.querySelector("#vk-zoek"),B=ov.querySelector("#vk-bev");
+    const toon=()=>{const q=Z.value.toLowerCase().split(/\s+/).filter(Boolean);const M=A.map((x,i)=>[x,i]).filter(([x])=>q.every(w=>h(x).includes(w)));
+      L.innerHTML=M.map(([x,i])=>`<button type="button" class="rb-li" data-i="${i}"><b>${e(nm(x))}</b><span class="meta">${e([x.jaar,x.km>0?Number(x.km).toLocaleString("nl-NL")+" km":"",pr(x)].filter(Boolean).join(" · "))}</span></button>`).join("")||'<div class="meta">Geen auto gevonden. Probeer een ander woord.</div>';
+      L.querySelectorAll("[data-i]").forEach(b=>b.onclick=()=>kies(A[+b.dataset.i]))};
+    const kies=x=>{L.hidden=true;Z.hidden=true;B.hidden=false;
+      B.innerHTML=`<div class="rb-bev"><div><b>${e(nm(x))}</b> als <b>VERKOCHT</b> markeren?</div><div class="meta">Hij gaat uit de voorraad. Afleveren, papierwerk en opvolging worden klaargezet. Er wordt niets naar de klant gestuurd.</div>
+       <label class="rb-f">Afleveradres (optioneel)<input id="vk-adres" autocomplete="off"></label><label class="rb-f">Tijdslot (optioneel)<input id="vk-tijd" autocomplete="off" placeholder="bijv. za 10:00-11:00"></label>
+       <div class="row rb-knoppen"><button type="button" class="btn ghost" id="vk-terug">Andere auto</button><button type="button" class="btn" id="vk-ok">Ja, verkocht</button></div></div>`;
+      B.querySelector("#vk-terug").onclick=()=>{B.hidden=true;L.hidden=false;Z.hidden=false};
+      B.querySelector("#vk-ok").onclick=()=>af({auto:x,adres:B.querySelector("#vk-adres").value.trim(),tijdslot:B.querySelector("#vk-tijd").value.trim()})};
+    Z.oninput=toon;toon()})}
 /* ---------- acties ---------- */
 async function actie(a){
   try{
@@ -150,20 +196,21 @@ async function actie(a){
     if(a==="briefing"){const aan=!(V&&V.briefing_aan);if(aan&&!confirm("Ochtendbriefing om 08:00 aanzetten? Hij verschijnt alleen hier op je site; er wordt niets verstuurd."))return;
       await api("/taken/robin/briefing","POST",{aan});await laadV();vdBlok();toast2(aan?"Ochtendbriefing staat aan":"Ochtendbriefing staat uit");return}
     if(a==="binnen"){let kenteken="",voorstel="";
-      const rd=await kentekenRdw(true);if(rd&&rd.ok){kenteken=rd.kenteken;voorstel=[rd.merk,rd.model].filter(Boolean).join(" ")}
-      else if(rd&&rd.kenteken)kenteken=rd.kenteken; /* AZ_FIX7: getypt kenteken bewaren, ook als de RDW niet antwoordt */
-      const auto=prompt("Welke auto is binnen?"+(rd&&rd.ok?"\n(RDW: "+voorstel+", APK tot "+(rd.apk_tot||"onbekend")+")":(rd&&!rd.ok&&rd.kenteken?"\n(Kenteken "+rd.kenteken+" bewaard. "+(rd.reden||"RDW gaf geen gegevens.")+")":"")),voorstel);if(!auto)return;if(!kenteken)kenteken=prompt("Kenteken (optioneel)","")||"";const voor=prompt("Voor welke medewerker? (leeg = niet toegewezen)","")||"";
-      const r=await api("/taken/robin/auto-binnen","POST",{auto,kenteken,voor});toast2(((r.resultaat||[]).length)+" taken klaargezet: klaarmaken, foto's, advertentieconcept, verkoopkaart");return}
-    if(a==="verkocht"){let A=((typeof VR!=="undefined"&&VR&&VR.autos)||[]).slice(0,60);if(!A.length){try{A=((await api("/taken/robin/voorraad")).autos||[]).slice(0,60)}catch(x){}}
-      let keuze=null;if(A.length){const n=prompt("Welke auto is verkocht? Typ het nummer:\n"+A.map((x,i)=>(i+1)+". "+String(x.titel||"").split("|")[0]).join("\n"));if(!n)return;keuze=A[(+n)-1];if(!keuze){toast2("Onbekend nummer");return}}
-      else{const t=prompt("Welke auto is verkocht? (titel zoals op de site)");if(!t)return;keuze={titel:t}}
-      if(!confirm(String(keuze.titel||"").split("|")[0]+" als VERKOCHT markeren? Er wordt niets naar de klant gestuurd."))return;
-      const adres=prompt("Afleveradres (optioneel, voor de rit en route)","")||"";const tijdslot=adres?(prompt("Tijdslot (optioneel), bijv. za 10:00-11:00","")||""):"";
-      const r=await api("/taken/robin/auto-verkocht","POST",{url:keuze.url,auto:keuze.titel,adres,tijdslot});
+      const rd=await kentekenRdw(true);if(rd===null)return; /* Annuleren = stoppen */
+      if(rd.ok){kenteken=rd.kenteken;voorstel=[rd.merk,rd.model].filter(Boolean).join(" ")}
+      else if(rd.kenteken)kenteken=kentekenCheck(rd.kenteken).norm; /* AZ_FIX7: getypt kenteken bewaren, ook als de RDW niet antwoordt */
+      const auto=prompt("Welke auto is binnen?"+(rd.ok?"\n(RDW: "+voorstel+", APK tot "+(rd.apk_tot||"onbekend")+")":(rd.kenteken?"\n(Kenteken "+kentekenCheck(rd.kenteken).mooi+" bewaard. "+(rd.reden||"RDW gaf geen gegevens.")+")":"")),voorstel);if(!auto||!auto.trim())return;
+      const voor=prompt("Voor welke medewerker? (leeg = niet toegewezen)","");if(voor===null)return;
+      const r=await api("/taken/robin/auto-binnen","POST",{auto,kenteken,voor,bevestigd:!!kenteken&&!kentekenCheck(kenteken).ok});
+      const n=(r.resultaat||[]).length,km=kenteken?kentekenCheck(kenteken).mooi:"";
+      toast2(n>=4?"4 taken klaargezet: klaarmaken, foto's, advertentieconcept, verkoopkaart":n===0?"Voor "+(km||"deze auto")+" staan de taken al open. Niets dubbel gemaakt.":n+" nieuwe taken klaargezet; de rest stond al open"+(km?" voor "+km:"")+".");return}
+    if(a==="verkocht"){let A=((typeof VR!=="undefined"&&VR&&VR.autos)||[]).slice();if(!A.length){try{A=((await api("/taken/robin/voorraad")).autos||[]).slice()}catch(x){}}
+      if(!A.length){toast2("De voorraadlijst is nu niet te laden. Er is niets gewijzigd; probeer het zo opnieuw.");return}
+      const v=await verkochtSheet(A);if(!v)return; /* VERKOCHT_LIJST_V1: tikken + bevestigen; Annuleren = niets */
+      const r=await api("/taken/robin/auto-verkocht","POST",{url:v.auto.url,id:v.auto.id,auto:v.auto.titel,adres:v.adres,tijdslot:v.tijdslot,bevestigd:true});
       toast2("Verkocht: "+r.resultaat.auto+". Afleveren, papierwerk en opvolging staan klaar.");try{VR=null}catch(x){}if(typeof render==="function")render();return}
-    if(a==="rit"){const soort=confirm("Ophalen? (OK = ophalen, Annuleren = afleveren)")?"ophalen":"afleveren";const auto=prompt("Welke auto?");if(!auto)return;const adres=prompt("Adres, bijv. Kampweg 27, Swifterbant");if(!adres)return;
-      const tijdslot=prompt("Tijdslot, bijv. 15:30-16:30","")||"";const voor=prompt("Voor welke medewerker?","")||"";
-      await api("/taken/robin/rit","POST",{auto,adres,soort,tijdslot,voor});await laadV();vdBlok();toast2("Rit klaargezet met route en foto-checklist");return}
+    if(a==="rit"){const v=await ritSheet();if(!v)return; /* RIT_KEUZE_V1 */
+      await api("/taken/robin/rit","POST",v);await laadV();vdBlok();toast2((v.soort==="afleveren"?"Afleveren":"Ophalen")+" klaargezet met route en checklist");return}
   }catch(x){toast2(x.message)}
 }
 /* ---------- kop ---------- */
