@@ -133,7 +133,7 @@ function verrijk(){
 }
 window.HISTORIE={open,zoek};
 let wacht=null;new MutationObserver(()=>{if(wacht)return;wacht=setTimeout(()=>{wacht=null;verrijk()},150)}).observe(document.documentElement,{childList:true,subtree:true});
-function hash(){const m=location.hash.match(/^#historie(?:=(.+))?$/);if(m)open(decodeURIComponent(m[1]||""))}
+function hash(){const m=location.hash.match(/^#historie(?:=(.+))?$/);if(m&&(!BEDRIJF||m[1]))open(decodeURIComponent(m[1]||""))} /* HISTORIE_TAB_V2: Team-tab #historie opent niet meer vanzelf het zoekvenster */
 addEventListener("hashchange",hash);
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>{verrijk();hash()});else{verrijk();hash()}
 })();
