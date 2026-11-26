@@ -47,7 +47,7 @@ function vdBlok(){
     <button type="button" data-rb="taak">➕<span>Taak</span></button><button type="button" data-rb="binnen">🚗<span>Auto binnen</span></button>
     <button type="button" data-rb="verkocht">✅<span>Verkocht</span></button><button type="button" data-rb="rit">🚚<span>Rit plannen</span></button>
     <button type="button" data-rb="bellen">📞<span>Terugbellen</span></button><button type="button" data-rb="whatsapp">💬<span>WhatsApp</span></button>
-    <button type="button" data-rb="taxatie">🧮<span>Taxatie</span></button><button type="button" data-rb="voorraad">📦<span>Voorraad</span></button></div>
+    <button type="button" data-rb="taxatie">🧮<span>Taxatie</span></button><button type="button" data-rb="voorraad">📦<span>Voorraad</span></button><button type="button" data-rb="papier">🧾<span>Papierwerk RDW/BPM</span></button></div>
     ${r.length?`<h3>Ritten <span class="cnt">${r.length}</span></h3>`+r.map(t=>`<div class="rb-rit"><b>${t.rit==="afleveren"?"Afleveren":"Ophalen"}: ${e(t.auto||t.titel)}</b><div class="meta">📍 ${e(t.adres)}${t.tijdslot?" · 🕒 "+e(t.tijdslot):""}${t.voor?" · "+e(t.voor):""}</div><div>${routeKn(t.adres)}</div></div>`).join(""):""}
     <div class="meta">📦 Voorraad: ${vr.te_koop!=null?e(vr.te_koop)+" te koop":"onbekend"} · bijgewerkt ${e(vr.bijgewerkt||"onbekend")}${w&&w.nieuw!=null?` · ${w.nieuw} nieuw, ${w.prijs_gewijzigd||0} prijs gewijzigd, ${w.niet_meer_zichtbaar||0} niet meer zichtbaar`:""}</div>
     <div class="meta">☀️ Ochtendbriefing 08:00: <b>${V&&V.briefing_aan?"AAN":"UIT"}</b> <button type="button" class="btn sm ghost" data-rb="briefing">${V&&V.briefing_aan?"Uitzetten":"Aanzetten"}</button>${V&&V.briefing?`<pre class="rb-brief">${e(V.briefing.tekst)}</pre>`:""}</div>`;
@@ -209,6 +209,7 @@ async function actie(a){
       const v=await verkochtSheet(A);if(!v)return; /* VERKOCHT_LIJST_V1: tikken + bevestigen; Annuleren = niets */
       const r=await api("/taken/robin/auto-verkocht","POST",{url:v.auto.url,id:v.auto.id,auto:v.auto.titel,adres:v.adres,tijdslot:v.tijdslot,bevestigd:true});
       toast2("Verkocht: "+r.resultaat.auto+". Afleveren, papierwerk en opvolging staan klaar.");try{VR=null}catch(x){}if(typeof render==="function")render();return}
+    if(window.RB3&&window.RB3.actie&&["papier","proefrit","klantvraag","week"].includes(a))return window.RB3.actie(a); /* ROBIN_V3 */
     if(a==="rit"){const v=await ritSheet();if(!v)return; /* RIT_KEUZE_V1 */
       await api("/taken/robin/rit","POST",v);await laadV();vdBlok();toast2((v.soort==="afleveren"?"Afleveren":"Ophalen")+" klaargezet met route en checklist");return}
   }catch(x){toast2(x.message)}
@@ -234,4 +235,101 @@ render=function(){
 };
 /* verse voorraad live van de server (elk uur bijgewerkt), i.p.v. de laatst gepubliceerde kopie */
 if(LIVE)api("/taken/robin/voorraad").then(j=>{if(j&&j.autos){try{VR=j}catch(x){}if(seg===VR_SEG)render()}}).catch(()=>{});
+window.RB={api,e,sheet,toast2,kentekenCheck,kentekenVraag,kiesFoto,laadV,laadT,routeKn,wa,LIVE}; /* ROBIN_V3 gebruikt deze hulpjes */
+})();
+
+/* ROBIN_V3 (t657u/t658u/t659u): tijdwinst voor Robin, alles in één scherm. Niets wordt verstuurd; Robin opent WhatsApp/RDW zelf. */
+(function(){"use strict";
+if(typeof KL!=="undefined"&&KL.slug&&KL.slug!=="brns")return;
+if(!window.RB)return;
+const R=window.RB,e=R.e,VRS=12;
+let SIG=null,SIGT=0,ALLEEN=false;
+async function laadSig(){if(SIG&&Date.now()-SIGT<120000)return SIG;try{SIG=await R.api("/taken/robin/v3/signalen");SIGT=Date.now()}catch(x){}return SIG}
+function kopieer(t,ok){const k=()=>R.toast2(ok||"Gekopieerd");if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(k,()=>{prompt("Kopieer:",t)});else prompt("Kopieer:",t)}
+window.RB3={kopieer};
+/* ---------- SIGNALEN_V1 (feature 4) + PRIJS_DELEN_V1 (feature 6) op de voorraadkaarten ---------- */
+function deco(){
+  if(typeof seg==="undefined"||seg!==VRS)return;const c=document.getElementById("cards");if(!c||typeof VR==="undefined"||!VR||!VR.autos)return;
+  const S=(SIG&&SIG.per_auto)||{};let n=0;
+  VR.autos.forEach(a=>{const id=typeof vrId==="function"?vrId(a.url):"";const k=id&&document.getElementById("voorraad-"+id);if(!k)return;
+    const L=S[String(a.id||a.url)]||[];if(L.length)n++;
+    let b=k.querySelector(".rb3");if(!b){b=document.createElement("div");b.className="rb3";const body=k.querySelector(".body")||k;body.appendChild(b)}
+    const h=`<div class="rb3-sig">${L.map(x=>`<span class="rb3-l ${e(x.niveau)}">${x.code==="lang"?"⏳":x.code==="foto"?"📷":x.code==="prijs"?"€":"🔢"} ${e(x.label)}</span>`).join("")}</div>
+      <div class="rb3-kn"><button type="button" class="btn sm" data-r3="deel" data-id="${e(a.id)}">💬 Prijs delen</button><button type="button" class="btn sm ghost" data-r3="proefrit" data-id="${e(a.id)}">🔑 Proefrit</button><button type="button" class="btn sm ghost" data-r3="klantvraag" data-id="${e(a.id)}">📞 Klantvraag</button><button type="button" class="btn sm ghost" data-r3="papier" data-id="${e(a.id)}">🧾 Papierwerk</button></div>`;
+    if(b.dataset.h!==h){b.innerHTML=h;b.dataset.h=h;b.querySelectorAll("[data-r3]").forEach(x=>x.onclick=()=>actie3(x.dataset.r3,x.dataset.id))}
+    k.style.display=ALLEEN&&!L.length?"none":"";});
+  let t=document.getElementById("rb3-sigtop");const vr=document.getElementById("rb-vr");
+  if(!t&&vr){t=document.createElement("div");t.id="rb3-sigtop";t.className="meta rb3-top";vr.appendChild(t)}
+  if(t&&SIG){const T=SIG.telling||{};const h=`<b>Signalen:</b> ⏳ ${T.lang||0} lang staand (${SIG.drempel_dagen}+ dagen in onze meting) · 📷 ${T.foto||0} zonder foto · € ${T.prijs||0} zonder prijs · 🔢 ${T.km||0} zonder km-stand <button type="button" class="btn sm ghost" id="rb3-alleen">${ALLEEN?"Toon alle auto's":"Toon alleen met signaal ("+n+")"}</button>`;
+    if(t.dataset.h!==h){t.innerHTML=h;t.dataset.h=h;const bt=document.getElementById("rb3-alleen");if(bt)bt.onclick=()=>{ALLEEN=!ALLEEN;deco()}}}
+}
+function autoVan(id){return ((typeof VR!=="undefined"&&VR&&VR.autos)||[]).find(a=>String(a.id)===String(id))}
+async function deelSheet(id){
+  let r;try{r=await R.api("/taken/robin/v3/deel/"+encodeURIComponent(id),"POST",{})}catch(x){R.toast2(x.message);return}
+  await R.sheet(`<div class="rb3-rij"><h3>💬 Prijs delen</h3><button type="button" class="btn sm ghost" data-x>Sluiten</button></div>
+    <div class="meta">Concept voor WhatsApp. Jij kiest zelf de klant en verstuurt; er gaat niets automatisch.</div>
+    <textarea id="rb3-tekst" rows="6" style="width:100%">${e(r.tekst)}</textarea>
+    <div class="rb3-rij"><a class="btn prim" id="rb3-wa" href="${e(r.wa)}" target="_blank" rel="noopener">💬 Open WhatsApp</a>
+    <button type="button" class="btn" id="rb3-kt">📋 Kopieer tekst</button><button type="button" class="btn ghost" id="rb3-kl">🔗 Kopieer link</button></div>`,(ov,af)=>{
+    const ta=ov.querySelector("#rb3-tekst"),w=ov.querySelector("#rb3-wa");ta.oninput=()=>{w.href=R.wa(ta.value)};
+    ov.querySelector("#rb3-kt").onclick=()=>kopieer(ta.value,"Tekst gekopieerd");ov.querySelector("#rb3-kl").onclick=()=>kopieer(r.url,"Link gekopieerd")});
+}
+async function actie3(a,id){
+  if(a==="deel")return deelSheet(id);
+  if(a==="papier")return papier(id?autoVan(id):null);
+  if(a==="proefrit"&&window.RB3.proefrit)return window.RB3.proefrit(autoVan(id));
+  if(a==="klantvraag"&&window.RB3.klantvraag)return window.RB3.klantvraag(autoVan(id));
+  R.toast2("Deze knop komt in de volgende stap.");
+}
+/* ---------- KLAARZET_V1 (t659u): officiële pagina + gegevens om te kopiëren + checklist. Inloggen doet Robin zelf. ---------- */
+const KZ={import:"🇪🇺 Import aanmelden (RDW) + BPM",voorraad:"📥 Inkoop: in bedrijfsvoorraad (RDW)",tenaam:"🧾 Verkoop: op naam klant (RDW)"};
+const KZV={import:[["vin","VIN / chassisnummer"],["merk","Merk"],["model","Model / uitvoering"],["det","Datum eerste toelating (dd-mm-jjjj)"],["co2","CO₂ (g/km)"],["norm","CO₂-meetmethode"],["brandstof","Brandstof"],["km","Km-stand"],["kleur","Kleur"],["land","Land van herkomst"],["keur","Verwachte keuringsdatum (leeg = over 14 dagen)"]],
+  voorraad:[["kenteken","Kenteken"],["merk","Merk"],["model","Model"],["km","Km-stand (teller)"],["apk_tot","APK tot"]],
+  tenaam:[["kenteken","Kenteken"],["merk","Merk"],["model","Model"],["km","Km-stand bij aflevering"],["koper","Naam koper"]]};
+async function papier(auto){
+  const soort=await R.sheet(`<div class="rb3-rij"><h3>🧾 Papierwerk</h3><button type="button" class="btn sm ghost" data-x>Annuleren</button></div>
+    <div class="meta">Kies wat je gaat doen. Je krijgt de juiste officiële pagina, je gegevens klaar om te kopiëren en een checklist. Inloggen (eHerkenning of RDW-certificaat) doe je zelf; wij bewaren geen inlog.</div>
+    ${Object.keys(KZ).map(k=>`<button type="button" class="btn" style="display:block;width:100%;margin:8px 0;text-align:left" data-k="${k}">${KZ[k]}</button>`).join("")}`,(ov,af)=>ov.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>af(b.dataset.k)));
+  if(!soort)return;
+  const pre={};if(auto){const t=String(auto.titel||"").split("|")[0].trim().split(" ");pre.merk=auto.merk||t[0]||"";pre.model=auto.model||t.slice(1).join(" ");pre.km=auto.km&&/[1-9]/.test(auto.km)?String(auto.km).replace(/\s*km$/i,""):"";}
+  const v=await R.sheet(`<div class="rb3-rij"><h3>${KZ[soort]}</h3><button type="button" class="btn sm ghost" data-x>Annuleren</button></div><div class="rb3-form">
+    ${KZV[soort].map(([k,l])=>k==="norm"?`<label>${e(l)}</label><select data-v="norm"><option value="">Weet ik niet</option><option>WLTP</option><option>NEDC</option></select>`:k==="brandstof"?`<label>${e(l)}</label><select data-v="brandstof"><option value="">Kies</option>${["Benzine","Diesel","Hybride benzine","Plug-in hybride","Elektrisch"].map(x=>`<option>${x}</option>`).join("")}</select>`:`<label>${e(l)}</label><input data-v="${k}" value="${e(pre[k]||"")}" ${k==="co2"||k==="km"?'inputmode="numeric"':""} autocomplete="off">`).join("")}
+    ${soort!=="import"?`<button type="button" class="btn sm ghost" id="rb3-rdw" style="margin-top:8px">🔎 Merk, model en APK uit RDW (kenteken)</button>`:""}
+    </div><div class="rb3-rij" style="margin-top:12px"><button type="button" class="btn prim" id="rb3-ok">Toon gegevens en links</button></div>`,(ov,af)=>{
+    const lees=()=>{const o={};ov.querySelectorAll("[data-v]").forEach(i=>o[i.dataset.v]=i.value.trim());return o};
+    const b=ov.querySelector("#rb3-rdw");if(b)b.onclick=async()=>{const k=ov.querySelector('[data-v=kenteken]').value;if(!k.trim()){R.toast2("Vul eerst het kenteken in.");return}
+      b.disabled=true;b.textContent="RDW zoeken…";try{const r=await R.api("/taken/robin/kenteken","POST",{kenteken:k});if(r.ok){[["merk",r.merk],["model",r.model],["apk_tot",r.apk_tot]].forEach(([f,w])=>{const i=ov.querySelector(`[data-v=${f}]`);if(i&&w)i.value=w});b.textContent="✅ RDW-gegevens ingevuld"}else{b.textContent="RDW gaf geen gegevens: "+(r.reden||"onbekend")}}catch(x){b.textContent=x.message}b.disabled=false};
+    ov.querySelector("#rb3-ok").onclick=()=>af(lees())});
+  if(!v)return;
+  let r;try{r=await R.api("/taken/robin/v3/klaarzet","POST",{soort,velden:v})}catch(x){R.toast2(x.message);return}
+  toonKlaarzet(r,{soort,velden:v});
+}
+function fmtEur(n){return n==null?"onbekend":"€ "+Number(n).toLocaleString("nl-NL")}
+async function toonKlaarzet(r,bewaarData){
+  const veld=(l,w)=>`<div class="rb3-veld"><div class="w"><small>${e(l)}</small><b>${w==null||w===""?"<i>onbekend</i>":e(w)}</b></div>${w==null||w===""?"":`<button type="button" class="btn sm" data-kop="${e(w)}">📋 Kopieer</button>`}</div>`;
+  const B=r.bpm;const st=r.checklist_status||[];
+  await R.sheet(`<div class="rb3-rij"><h3>${e(r.titel)}</h3><button type="button" class="btn sm ghost" data-x>Sluiten</button></div>
+    <div class="meta">${e(r.uitleg)}</div>
+    ${(r.waarschuwingen||[]).map(w=>`<div class="rb3-waarsch">⚠️ ${e(w)}</div>`).join("")}
+    <h3>Officiële pagina's</h3>${r.links.map(l=>`<a class="btn rb3-link" href="${e(l.url)}" target="_blank" rel="noopener">🔗 ${e(l.label)}</a>`).join("")}
+    <h3>Gegevens om te kopiëren</h3>${r.velden.map(x=>veld(x.label,x.waarde)).join("")}
+    ${B?`<h3>BPM (berekend)</h3>${B.rest_bpm!=null?veld("Te betalen BPM (rest-BPM)",String(B.rest_bpm))+veld("Bruto BPM",B.bruto!=null?String(B.bruto):null)+veld("Afschrijvingspercentage (forfaitaire tabel)",B.afschrijving_pct!=null?String(B.afschrijving_pct).replace(".",","):null)+veld("Leeftijd in maanden",B.maanden!=null?String(B.maanden):null)+veld("Uitgerekend voor keuringsdatum",B.keurdatum):""}
+      <div class="meta">${e(B.let_op||"")}${B.rest_bpm!=null?` Rest-BPM ${fmtEur(B.rest_bpm)}, zekerheid: ${e(B.zekerheid||"onbekend")}.`:""}</div>${(B.stappen||[]).length?`<details><summary>Hoe berekend</summary><ul>${B.stappen.map(x=>`<li>${e(x)}</li>`).join("")}</ul></details>`:""}`:""}
+    <h3>Checklist</h3><div class="rb3-ck">${r.checklist.map((c,i)=>`<label><input type="checkbox" disabled ${st[i]&&st[i].klaar?"checked":""}> <span>${e(c)}</span></label>`).join("")}</div>
+    <div class="meta">${r.taak_id?"Afvinken doe je bij de taak op Taken.":"Bewaar dit als taak voor jezelf; dan kun je de punten afvinken op Taken."}</div>
+    ${r.taak_id?"":`<div class="rb3-rij"><button type="button" class="btn prim" id="rb3-bw">💾 Bewaar als taak met checklist</button></div>`}`,(ov,af)=>{
+    ov.querySelectorAll("[data-kop]").forEach(b=>b.onclick=()=>kopieer(b.dataset.kop,"Gekopieerd: "+b.dataset.kop.slice(0,30)));
+    const bw=ov.querySelector("#rb3-bw");if(bw)bw.onclick=async()=>{bw.disabled=true;try{await R.api("/taken/robin/v3/klaarzet","POST",{...bewaarData,bewaar:true});R.toast2("Taak gemaakt met checklist (alleen voor jou).");af(true);await R.laadT();if(typeof render==="function"&&typeof seg!=="undefined"&&seg===19)render()}catch(x){R.toast2(x.message);bw.disabled=false}}});
+}
+/* knop "Gegevens en links" bij klaarzet-taken op Taken */
+const KZPRE=/^(Import aanmelden|In bedrijfsvoorraad|Op naam zetten): /;
+function kzTaken(){document.querySelectorAll("article.tk-card[data-id]").forEach(k=>{const h=k.querySelector("h3");if(!h||!KZPRE.test(h.textContent.trim())||k.querySelector(".rb3-kz"))return;
+  const b=document.createElement("button");b.type="button";b.className="btn sm rb3-kz";b.textContent="🧾 Gegevens en links";b.onclick=async()=>{try{toonKlaarzet(await R.api("/taken/robin/v3/klaarzet/"+encodeURIComponent(k.dataset.id)))}catch(x){R.toast2(x.message)}};h.insertAdjacentElement("afterend",b)})}
+const mo2=new MutationObserver(()=>{clearTimeout(mo2.t);mo2.t=setTimeout(kzTaken,150)});
+const st2=()=>{mo2.observe(document.body,{childList:true,subtree:true});kzTaken()};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",st2);else st2();
+window.RB3.actie=actie3;
+const _r=render;
+render=function(){const o=_r.apply(this,arguments);if(typeof seg!=="undefined"&&seg===VRS){setTimeout(deco,80);setTimeout(deco,900);laadSig().then(deco)}return o};
+const mo=new MutationObserver(()=>{if(typeof seg!=="undefined"&&seg===VRS){clearTimeout(mo.t);mo.t=setTimeout(deco,120)}});
+const st=()=>{const c=document.getElementById("cards");if(c)mo.observe(c,{childList:true})};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",st);else st();
 })();

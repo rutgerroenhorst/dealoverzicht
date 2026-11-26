@@ -47,3 +47,22 @@ input::placeholder,textarea::placeholder{color:#7a828e}
 #thema{display:none!important}
 /* LICHT_V1: kop dekkend, zodat een melding die onder de kop doorschuift niet half doorschijnt */
 .top{background:var(--bg)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+
+/* ROBIN_V3: signalen en snelknoppen op voorraadkaarten (licht vast) */
+.rb3{margin-top:8px;border-top:1px solid var(--line);padding-top:8px}
+.rb3-sig{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.rb3-l{font-size:13px;font-weight:600;border-radius:999px;padding:3px 9px;border:1px solid}
+.rb3-l.oranje{background:#fff1e6;color:#9a3412;border-color:#fdba74}
+.rb3-l.rood{background:#fdecec;color:#991b1b;border-color:#fca5a5}
+.rb3-kn{display:flex;flex-wrap:wrap;gap:6px}
+.rb3-top{margin-top:6px}
+.rb3-veld{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;background:#fff}
+.rb3-veld .w{flex:1;min-width:0}.rb3-veld .w small{display:block;color:#5d6470;font-size:12px}.rb3-veld .w b{word-break:break-all}
+.rb3-ck label{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--line)}
+.rb3-ck input{width:22px;height:22px;flex:none}
+.rb3-link{display:block;margin:6px 0}
+.rb3-form label{display:block;margin:8px 0 2px;font-size:14px;color:#14161a}
+.rb3-form input,.rb3-form select,.rb3-form textarea{width:100%;box-sizing:border-box;font-size:16px;padding:10px;border:1px solid var(--line);border-radius:10px}
+.rb3-waarsch{background:#fff6d6;border:1px solid #f0d27a;color:#5a4300;border-radius:10px;padding:8px 10px;margin:6px 0;font-size:14px}
+.rb3-rij{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:6px 0}
+.rb3-rij h3{margin:0}
