@@ -46,8 +46,8 @@ function vdBlok(){
   b.innerHTML=`<h3>Snelle knoppen</h3><div class="rb-snel">
     <button type="button" data-rb="taak">➕<span>Taak</span></button><button type="button" data-rb="binnen">🚗<span>Auto binnen</span></button>
     <button type="button" data-rb="verkocht">✅<span>Verkocht</span></button><button type="button" data-rb="rit">🚚<span>Rit plannen</span></button>
-    <button type="button" data-rb="bellen">📞<span>Terugbellen</span></button><button type="button" data-rb="whatsapp">💬<span>WhatsApp</span></button>
-    <button type="button" data-rb="taxatie">🧮<span>Taxatie</span></button><button type="button" data-rb="voorraad">📦<span>Voorraad</span></button><button type="button" data-rb="papier">🧾<span>Papierwerk RDW/BPM</span></button></div>
+    <button type="button" data-rb="klantvraag">📞<span>Klant terugbellen</span></button><button type="button" data-rb="proefrit">🔑<span>Proefrit</span></button><button type="button" data-rb="whatsapp">💬<span>WhatsApp</span></button>
+    <button type="button" data-rb="taxatie">🧮<span>Taxatie</span></button><button type="button" data-rb="voorraad">📦<span>Voorraad</span></button><button type="button" data-rb="papier">🧾<span>Papierwerk RDW/BPM</span></button><button type="button" data-rb="week">📊<span>Week</span></button></div>
     ${r.length?`<h3>Ritten <span class="cnt">${r.length}</span></h3>`+r.map(t=>`<div class="rb-rit"><b>${t.rit==="afleveren"?"Afleveren":"Ophalen"}: ${e(t.auto||t.titel)}</b><div class="meta">📍 ${e(t.adres)}${t.tijdslot?" · 🕒 "+e(t.tijdslot):""}${t.voor?" · "+e(t.voor):""}</div><div>${routeKn(t.adres)}</div></div>`).join(""):""}
     <div class="meta">📦 Voorraad: ${vr.te_koop!=null?e(vr.te_koop)+" te koop":"onbekend"} · bijgewerkt ${e(vr.bijgewerkt||"onbekend")}${w&&w.nieuw!=null?` · ${w.nieuw} nieuw, ${w.prijs_gewijzigd||0} prijs gewijzigd, ${w.niet_meer_zichtbaar||0} niet meer zichtbaar`:""}</div>
     <div class="meta">☀️ Ochtendbriefing 08:00: <b>${V&&V.briefing_aan?"AAN":"UIT"}</b> <button type="button" class="btn sm ghost" data-rb="briefing">${V&&V.briefing_aan?"Uitzetten":"Aanzetten"}</button>${V&&V.briefing?`<pre class="rb-brief">${e(V.briefing.tekst)}</pre>`:""}</div>`;
@@ -277,8 +277,9 @@ async function deelSheet(id){
 async function actie3(a,id){
   if(a==="deel")return deelSheet(id);
   if(a==="papier")return papier(id?autoVan(id):null);
-  if(a==="proefrit"&&window.RB3.proefrit)return window.RB3.proefrit(autoVan(id));
-  if(a==="klantvraag"&&window.RB3.klantvraag)return window.RB3.klantvraag(autoVan(id));
+  if(a==="proefrit")return proefrit(id?autoVan(id):null);
+  if(a==="klantvraag")return klantvraag(id?autoVan(id):null);
+  if(a==="week")return weekSheet();
   R.toast2("Deze knop komt in de volgende stap.");
 }
 /* ---------- KLAARZET_V1 (t659u): officiële pagina + gegevens om te kopiëren + checklist. Inloggen doet Robin zelf. ---------- */
@@ -327,9 +328,114 @@ function kzTaken(){document.querySelectorAll("article.tk-card[data-id]").forEach
   const b=document.createElement("button");b.type="button";b.className="btn sm rb3-kz";b.textContent="🧾 Gegevens en links";b.onclick=async()=>{try{toonKlaarzet(await R.api("/taken/robin/v3/klaarzet/"+encodeURIComponent(k.dataset.id)))}catch(x){R.toast2(x.message)}};h.insertAdjacentElement("afterend",b)})}
 const mo2=new MutationObserver(()=>{clearTimeout(mo2.t);mo2.t=setTimeout(kzTaken,150)});
 const st2=()=>{mo2.observe(document.body,{childList:true,subtree:true});kzTaken()};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",st2);else st2();
+/* ---------- KLANTVRAAG_V1 (feature 2) en PROEFRIT_V1 (feature 1) ---------- */
+const telKey=id=>"rb3_tel_"+id;
+function waNr(t){let d=String(t||"").replace(/[^\d+]/g,"");if(d.startsWith("+"))d=d.slice(1);else if(d.startsWith("00"))d=d.slice(2);else if(d.startsWith("0"))d="31"+d.slice(1);return d.length>=10?d:""}
+function autoKeuze(sel){const A=((typeof VR!=="undefined"&&VR&&VR.autos)||[]);return `<select data-v="auto_id"><option value="">${A.length?"Kies de auto":"Voorraad laden…"}</option>${A.map(a=>`<option value="${e(a.id)}" ${sel&&String(sel.id)===String(a.id)?"selected":""}>${e(String(a.titel||"").split("|")[0].trim().slice(0,60))}${a.prijs>0?" · € "+Number(a.prijs).toLocaleString("nl-NL"):""}</option>`).join("")}<option value="__anders">Andere auto (typ hieronder)</option></select><input data-v="auto" placeholder="Andere auto (optioneel)" autocomplete="off">`}
+async function zorgVR(){if(typeof VR!=="undefined"&&VR&&VR.autos)return;try{const j=await R.api("/taken/robin/voorraad");if(j&&j.autos){try{VR=j}catch(x){}}}catch(x){}}
+const pad2=n=>String(n).padStart(2,"0");
+const lok=d=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+async function klantvraag(auto){
+  await zorgVR();const nu=new Date(),m9=new Date(nu);m9.setDate(m9.getDate()+1);m9.setHours(9,0,0,0);const v16=new Date(nu);v16.setHours(16,0,0,0);const u1=new Date(nu.getTime()+3600e3);
+  const keuzes=[["Over 1 uur",u1],...(v16>nu?[["Vandaag 16:00",v16]]:[]),["Morgen 9:00",m9]];
+  const v=await R.sheet(`<div class="rb3-rij"><h3>📞 Klant terugbellen</h3><button type="button" class="btn sm ghost" data-x>Annuleren</button></div>
+    <div class="meta">Klant vraagt naar een auto en je kunt nu niet? Dit maakt een terugbel-taak met tijd, zet het in het klantdossier en maakt een WhatsApp-concept klaar. Er wordt niets verstuurd.</div>
+    <div class="rb3-form"><label>Over welke auto</label>${autoKeuze(auto)}<label>Naam klant</label><input data-v="naam" autocomplete="off"><label>Telefoon</label><input data-v="tel" type="tel" inputmode="tel" autocomplete="off" placeholder="06…">
+    <label>Wat vraagt de klant? (optioneel)</label><input data-v="vraag" autocomplete="off" placeholder="bijv. inruil, financiering, proefrit"><label>Wanneer terugbellen</label>
+    <div class="rb3-rij">${keuzes.map(([l,d])=>`<button type="button" class="btn sm" data-w="${lok(d)}">${l}</button>`).join("")}</div><input type="datetime-local" data-v="wanneer" value="${lok(u1)}"></div>
+    <div class="rb3-rij" style="margin-top:12px"><button type="button" class="btn prim" id="rb3-ok">Terugbel-taak maken</button></div>`,(ov,af)=>{
+    ov.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>{ov.querySelector("[data-v=wanneer]").value=b.dataset.w;ov.querySelectorAll("[data-w]").forEach(x=>x.classList.toggle("prim",x===b))});
+    ov.querySelector("#rb3-ok").onclick=()=>{const o={};ov.querySelectorAll("[data-v]").forEach(i=>o[i.dataset.v]=i.value.trim());if(o.naam.length<2){R.toast2("Vul de naam in.");return}if(o.auto_id==="__anders")o.auto_id="";af(o)}});
+  if(!v)return;
+  let r;try{r=await R.api("/taken/robin/v3/terugbellen","POST",v)}catch(x){R.toast2(x.message);return}
+  if(v.tel)try{localStorage[telKey(r.taak_id)]=v.tel}catch(x){}
+  R.toast2("Terugbel-taak gemaakt"+(r.wanneer?" voor "+r.wanneer.replace("T"," "):"")+(r.dossier_fout?" (dossier: "+r.dossier_fout+")":""));
+  await belSheet({id:r.taak_id,auto_id:v.auto_id,titel:"Terugbellen: "+v.naam});vdBlok3();
+}
+async function belSheet(t){
+  const tel=(()=>{try{return localStorage[telKey(t.id)]||""}catch(x){return ""}})();let tekst="Hoi, je had gevraagd naar een auto bij BRNS Exclusief. Wanneer komt het je uit dat ik even bel? Groet, Robin";
+  if(t.auto_id){try{const d=await R.api("/taken/robin/v3/deel/"+encodeURIComponent(t.auto_id),"POST",{});tekst=d.tekst}catch(x){}}
+  const n=waNr(tel),wa=n?`https://wa.me/${n}?text=${encodeURIComponent(tekst)}`:R.wa(tekst);
+  await R.sheet(`<div class="rb3-rij"><h3>📞 ${e(t.titel||"Terugbellen")}</h3><button type="button" class="btn sm ghost" data-x>Sluiten</button></div>
+    ${tel?"":`<div class="meta">Het nummer staat alleen in het klantdossier (Telegram) en op de telefoon waarop het is ingevoerd, niet op deze openbare site.</div>`}
+    <div class="rb3-rij">${tel?`<a class="btn prim" href="tel:${e(tel.replace(/[^\d+]/g,""))}">📞 Bel ${e(tel)}</a>`:""}<a class="btn" href="${e(wa)}" target="_blank" rel="noopener">💬 WhatsApp-concept</a>
+    <button type="button" class="btn ghost" id="rb3-gebeld">✅ Gebeld</button></div><textarea rows="5" style="width:100%" readonly>${e(tekst)}</textarea>`,(ov,af)=>{
+    ov.querySelector("#rb3-gebeld").onclick=async()=>{try{await R.api("/taken/"+encodeURIComponent(t.id)+"/klaar","POST",{notitie:"Gebeld"});try{delete localStorage[telKey(t.id)]}catch(x){}R.toast2("Afgevinkt: gebeld");af(true);vdBlok3()}catch(x){R.toast2(x.message)}}});
+}
+async function proefrit(auto){
+  await zorgVR();const nu=new Date(),e30=new Date(nu.getTime()+1800e3);let foto=null;
+  const v=await R.sheet(`<div class="rb3-rij"><h3>🔑 Proefrit</h3><button type="button" class="btn sm ghost" data-x>Annuleren</button></div>
+    <div class="rb3-form"><label>Auto</label>${autoKeuze(auto)}<label>Naam bestuurder</label><input data-v="naam" autocomplete="off"><label>Telefoon</label><input data-v="tel" type="tel" inputmode="tel" autocomplete="off" placeholder="06…">
+    <label>Rijbewijs</label><button type="button" class="btn" id="rb3-rb">📷 Foto van rijbewijs maken</button><div class="meta" id="rb3-rbst">Nog geen foto. De foto wordt privé bewaard (niet zichtbaar op de site of in de Team-app) en na ${30} dagen gewist.</div>
+    <div class="rb3-rij"><div style="flex:1"><label>Start</label><input type="time" data-v="start" value="${pad2(nu.getHours())}:${pad2(nu.getMinutes())}"></div><div style="flex:1"><label>Terug om</label><input type="time" data-v="eind" value="${pad2(e30.getHours())}:${pad2(e30.getMinutes())}"></div></div></div>
+    <div class="rb3-rij" style="margin-top:12px"><button type="button" class="btn prim" id="rb3-ok">Proefrit starten</button></div>`,(ov,af)=>{
+    ov.querySelector("#rb3-rb").onclick=async()=>{const f=await R.kiesFoto();if(f){foto=f;ov.querySelector("#rb3-rbst").textContent="✅ Rijbewijsfoto klaar (wordt privé bewaard).";}};
+    ov.querySelector("#rb3-ok").onclick=()=>{const o={};ov.querySelectorAll("[data-v]").forEach(i=>o[i.dataset.v]=i.value.trim());if(o.naam.length<2){R.toast2("Vul de naam in.");return}if(o.auto_id==="__anders")o.auto_id="";if(!o.auto_id&&!o.auto){R.toast2("Kies de auto.");return}
+      if(!foto&&!confirm("Zonder foto van het rijbewijs starten?"))return;if(o.eind&&o.start&&o.eind<o.start){R.toast2("Terug-tijd ligt vóór de start.");return}af(o)}});
+  if(!v)return;
+  try{const r=await R.api("/taken/robin/v3/proefrit","POST",{...v,rijbewijs:foto||undefined});if(v.tel)try{localStorage[telKey(r.proefrit.id)]=v.tel}catch(x){}
+    R.toast2("Proefrit gestart: "+r.proefrit.auto+", terug om "+String(r.proefrit.eind).slice(11,16));vdBlok3()}catch(x){R.toast2(x.message)}
+}
+async function terug(id){const km=prompt("Proefrit terug. Km-stand nu? (optioneel, leeg laten mag)","");if(km===null)return;
+  try{await R.api("/taken/robin/v3/proefrit/"+encodeURIComponent(id)+"/terug","POST",{km});try{delete localStorage[telKey(id)]}catch(x){}R.toast2("Proefrit afgerond");vdBlok3()}catch(x){R.toast2(x.message)}}
+let V3=null;
+async function vdBlok3(){
+  if(typeof seg==="undefined"||seg!==20)return;try{V3=await R.api("/taken/robin/v3/vandaag")}catch(x){return}
+  const host=document.getElementById("rb-vd");if(!host)return;let b=document.getElementById("rb3-vd");if(!b){b=document.createElement("div");b.id="rb3-vd";host.insertAdjacentElement("afterend",b)}
+  const P=V3.proefritten||[],TB=V3.terugbellen||[];const tm=s=>String(s||"").slice(11,16),dg=s=>{const d=String(s||"").slice(0,10);const v=new Date().toISOString().slice(0,10);return d===v?"vandaag":d.slice(8,10)+"-"+d.slice(5,7)};
+  b.className=P.length||TB.length?"vb rb":"";
+  b.innerHTML=(P.length?`<h3>🔑 Proefrit loopt <span class="cnt">${P.length}</span></h3>`+P.map(p=>`<div class="rb-rit"><b>${e(p.auto)}</b> · ${e(p.klant||"")}<div class="meta">${tm(p.start)}–${tm(p.eind)}${p.te_laat?' · <b style="color:#991b1b">te laat terug</b>':""} · ${p.rijbewijs_gezien?"rijbewijs ✓":"geen rijbewijsfoto"}</div><button type="button" class="btn sm" data-terug="${e(p.id)}">✅ Terug</button></div>`).join(""):"")+
+    (TB.length?`<h3>📞 Terugbellen <span class="cnt">${TB.length}</span></h3>`+TB.map(t=>`<div class="rb-rit"><b>${e(t.titel)}</b><div class="meta">🕒 ${dg(t.wanneer)} ${tm(t.wanneer)}${t.te_laat?' · <b style="color:#991b1b">te laat</b>':""}${t.vraag?" · "+e(t.vraag):""}</div><button type="button" class="btn sm" data-bel="${e(t.id)}">📞 Bellen / WhatsApp</button></div>`).join(""):"");
+  b.querySelectorAll("[data-terug]").forEach(x=>x.onclick=()=>terug(x.dataset.terug));
+  b.querySelectorAll("[data-bel]").forEach(x=>x.onclick=()=>{const t=TB.find(y=>y.id===x.dataset.bel);belSheet(t)});
+}
+/* ---------- WEEK_V1 (feature 3): weekoverzicht in de app. Onbekend is niet 0. ---------- */
+async function weekSheet(){
+  let w;try{w=await R.api("/taken/robin/v3/week")}catch(x){R.toast2(x.message);return}
+  const d=s=>s?String(s).slice(8,10)+"-"+String(s).slice(5,7):"?";
+  const lijst=(L,f,leeg)=>L&&L.length?`<ul class="rb3-wk">${L.map(f).join("")}</ul>`:`<div class="meta">${leeg}</div>`;
+  const sg=(w.voorraad||{}).signalen||{};
+  await R.sheet(`<div class="rb3-rij"><h3>📊 Jouw week</h3><button type="button" class="btn sm ghost" data-x>Sluiten</button></div>
+    <div class="meta">${d(w.van)} t/m ${d(w.tot)} · gemeten sinds ${e(w.gemeten_sinds)}</div>
+    <div class="rb3-kpi"><div><b>${w.verkocht_knop.length}</b><span>verkocht (jouw knop)</span></div><div><b>${w.van_site_af.length}</b><span>van de site af</span></div><div><b>${w.binnen?w.binnen.length:"onbekend"}</b><span>nieuw binnen</span></div>
+      <div><b>onbekend</b><span>omzet</span></div><div><b>onbekend</b><span>marge</span></div><div><b>${w.proefritten}</b><span>proefritten</span></div></div>
+    <div class="meta">${e(w.omzet_uitleg)}</div>
+    <h4>✅ Verkocht</h4>${lijst(w.verkocht_knop,x=>`<li>${e(x.titel)} <span class="meta">${d(x.op)}</span></li>`,"Niets via de knop ‘Verkocht’.")}
+    <h4>🚪 Van de site af</h4>${lijst(w.van_site_af,x=>`<li>${e(x.titel)} <span class="meta">${d(x.op)} · ${x.dagen!=null?e(x.dagen)+" dagen gestaan":"statijd onbekend"}</span></li>`,"Niets gemeten.")}
+    <h4>⏳ Lang staand (${w.voorraad.lang_n})</h4>${lijst(w.voorraad.lang_staand,x=>`<li>${e(x.titel)} <span class="meta">${e(x.dagen)} dagen</span></li>`,"Geen auto’s boven de drempel (geteld vanaf onze eerste meting).")}
+    <div class="meta">Signalen voorraad: ${sg.foto||0}× geen foto’s · ${sg.prijs||0}× geen prijs · ${sg.km||0}× geen km</div>
+    <h4>📌 Taken die blijven liggen (${w.taken_liggen_n})</h4>${lijst(w.taken_liggen,x=>`<li>${e(x.titel)} <span class="meta">${x.dagen_open!=null?e(x.dagen_open)+" dagen open":""}${x.voor?" · "+e(x.voor):""}</span></li>`,"Geen taken langer dan een week open.")}
+    <div class="meta">📞 Nog terugbellen: ${w.terugbellen_open}</div>
+    ${(w.opmerkingen||[]).map(x=>`<div class="rb3-waarsch">${e(x)}</div>`).join("")}`,()=>{});
+}
+/* ---------- AFLEVER_V1 (feature 5): afleverrapport + alles voor de overdracht in één scherm ---------- */
+const AFLPRE=/^\W*Afleveren\b/i;
+async function afleverSheet(id,titel){
+  let st;try{st=await R.api("/taken/robin/v3/aflever/"+encodeURIComponent(id))}catch(x){R.toast2(x.message);return}
+  const F=st.fotos||{};const klaar="Hoi, goed nieuws: de auto staat klaar. Wanneer kom je hem ophalen? Groet, Robin – BRNS Exclusief";
+  await R.sheet(`<div class="rb3-rij"><h3>📋 Afleverrapport</h3><button type="button" class="btn sm ghost" data-x>Sluiten</button></div><div class="meta">${e(titel)}</div>
+    <div class="rb3-form"><label>Km-stand bij aflevering</label><input data-v="km" inputmode="numeric" value="${st.km!=null?e(st.km):""}" placeholder="bijv. 80123">
+    <label>Schade of bijzonderheden</label><textarea data-v="schade" rows="2" placeholder="bijv. geen schade, of: kras achterbumper">${e(st.schade||"")}</textarea></div>
+    <div class="rb3-rij">${[["km","Km-teller"],["schade","Schade/rondom"],["overdracht","Overdracht"]].map(([k,l])=>`<button type="button" class="btn sm ghost" data-fs="${k}">📷 ${l} (<span>${F[k]||0}</span>)</button>`).join("")}</div>
+    <div class="meta" id="rb3-afst">${st.compleet?"✅ Compleet":"Nog nodig: "+e((st.ontbreekt||[]).join(", "))}</div>
+    <div class="rb3-rij"><button type="button" class="btn prim" id="rb3-aok">Opslaan</button><button type="button" class="btn" id="rb3-tn">🧾 Op naam zetten (RDW)</button><a class="btn ghost" href="${e(R.wa(klaar))}" target="_blank" rel="noopener">💬 "Auto staat klaar"</a></div>
+    <div class="meta">Foto's en km-stand komen bij de taak en in de tijdlijn van de auto. Medewerkers kunnen dit ook invullen in de Team-app.</div>`,(ov,af)=>{
+    const sst=ov.querySelector("#rb3-afst");const zet=r=>{sst.textContent=r.compleet?"✅ Compleet":"Nog nodig: "+(r.ontbreekt||[]).join(", ")};
+    ov.querySelectorAll("[data-fs]").forEach(b=>b.onclick=async()=>{const f=await R.kiesFoto();if(!f)return;sst.textContent="Foto opslaan…";
+      try{const r=await R.api("/taken/robin/v3/aflever/"+encodeURIComponent(id),"POST",{foto:f,foto_soort:b.dataset.fs});b.querySelector("span").textContent=r.fotos[b.dataset.fs];zet(r)}catch(x){sst.textContent=x.message}});
+    ov.querySelector("#rb3-aok").onclick=async()=>{const km=ov.querySelector("[data-v=km]").value.trim(),schade=ov.querySelector("[data-v=schade]").value.trim();
+      try{const r=await R.api("/taken/robin/v3/aflever/"+encodeURIComponent(id),"POST",{km,schade});zet(r);R.toast2(r.compleet?"Afleverrapport compleet":"Bewaard")}catch(x){R.toast2(x.message)}};
+    ov.querySelector("#rb3-tn").onclick=()=>{const km=ov.querySelector("[data-v=km]").value.trim();af(null);
+      const nm=String(titel).replace(AFLPRE,"").replace(/^[:\s]+/,"");const p=nm.split(" ");
+      R.api("/taken/robin/v3/klaarzet","POST",{soort:"tenaam",velden:{merk:p[0]||"",model:p.slice(1).join(" "),km}}).then(r=>toonKlaarzet(r,{soort:"tenaam",velden:{merk:p[0]||"",model:p.slice(1).join(" "),km}})).catch(x=>R.toast2(x.message))}});
+}
+function aflTaken(){document.querySelectorAll("article.tk-card[data-id]").forEach(k=>{const h=k.querySelector("h3");if(!h)return;const t=h.childNodes[0]?h.childNodes[0].textContent.trim():h.textContent.trim();
+  if(!AFLPRE.test(t)||k.querySelector(".rb3-afl"))return;const b=document.createElement("button");b.type="button";b.className="btn sm rb3-afl";b.textContent="📋 Afleverrapport";b.onclick=()=>afleverSheet(k.dataset.id,t);h.insertAdjacentElement("afterend",b)})}
+const mo3=new MutationObserver(()=>{clearTimeout(mo3.t);mo3.t=setTimeout(aflTaken,160)});
+const st3=()=>{mo3.observe(document.body,{childList:true,subtree:true});aflTaken()};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",st3);else st3();
 window.RB3.actie=actie3;
 const _r=render;
-render=function(){const o=_r.apply(this,arguments);if(typeof seg!=="undefined"&&seg===VRS){setTimeout(deco,80);setTimeout(deco,900);laadSig().then(deco)}return o};
+render=function(){const o=_r.apply(this,arguments);if(typeof seg!=="undefined"&&seg===20){setTimeout(vdBlok3,500)}if(typeof seg!=="undefined"&&seg===VRS){setTimeout(deco,80);setTimeout(deco,900);laadSig().then(deco)}return o};
 const mo=new MutationObserver(()=>{if(typeof seg!=="undefined"&&seg===VRS){clearTimeout(mo.t);mo.t=setTimeout(deco,120)}});
 const st=()=>{const c=document.getElementById("cards");if(c)mo.observe(c,{childList:true})};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",st);else st();
 })();
