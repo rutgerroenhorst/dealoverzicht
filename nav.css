@@ -41,3 +41,12 @@ html,body{overflow-x:clip;max-width:100%}
 .tk-filters,.tk-sub{min-width:0;max-width:100%}
 /* Taxeer-knop van de taxatie boven de balk */
 .txin-sticky{bottom:calc(62px + env(safe-area-inset-bottom))!important;padding-bottom:10px!important;z-index:45!important}
+/* BALK_V1 (t661u): tabbalk hapert/springt niet meer bij scrollen op de iPhone.
+   iOS Safari tekent een vaste balk met backdrop-filter (doorschijnend + blur) soms op de verkeerde plek tijdens
+   snel scrollen of als de lijst onder het scrollen langer wordt. Daarom: dekkende achtergrond, geen blur,
+   eigen tekenlaag (translateZ) en geen animaties op de balk zelf. */
+#nav-bar{background:var(--bg,#f6f7f9)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+ transform:translate3d(0,0,0);-webkit-transform:translate3d(0,0,0);will-change:transform;-webkit-backface-visibility:hidden;backface-visibility:hidden;
+ bottom:0!important;top:auto!important;contain:none}
+#nav-bar button.on .ic{transform:none}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
