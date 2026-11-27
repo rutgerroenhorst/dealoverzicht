@@ -386,9 +386,28 @@ async function vdBlok3(){
   b.className=P.length||TB.length?"vb rb":"";
   b.innerHTML=(P.length?`<h3>🔑 Proefrit loopt <span class="cnt">${P.length}</span></h3>`+P.map(p=>`<div class="rb-rit"><b>${e(p.auto)}</b> · ${e(p.klant||"")}<div class="meta">${tm(p.start)}–${tm(p.eind)}${p.te_laat?' · <b style="color:#991b1b">te laat terug</b>':""} · ${p.rijbewijs_gezien?"rijbewijs ✓":"geen rijbewijsfoto"}</div><button type="button" class="btn sm" data-terug="${e(p.id)}">✅ Terug</button></div>`).join(""):"")+
     (TB.length?`<h3>📞 Terugbellen <span class="cnt">${TB.length}</span></h3>`+TB.map(t=>`<div class="rb-rit"><b>${e(t.titel)}</b><div class="meta">🕒 ${dg(t.wanneer)} ${tm(t.wanneer)}${t.te_laat?' · <b style="color:#991b1b">te laat</b>':""}${t.vraag?" · "+e(t.vraag):""}</div><button type="button" class="btn sm" data-bel="${e(t.id)}">📞 Bellen / WhatsApp</button></div>`).join(""):"");
+  if(P.length)b.querySelector("h3").insertAdjacentHTML("afterend",'<button type="button" class="btn sm ghost rb3-prlink" data-prlijst>🔑 Alle proefritten (ook afgerond) →</button>');
+  b.querySelectorAll("[data-prlijst]").forEach(x=>x.onclick=naarProefritten);
   b.querySelectorAll("[data-terug]").forEach(x=>x.onclick=()=>terug(x.dataset.terug));
   b.querySelectorAll("[data-bel]").forEach(x=>x.onclick=()=>{const t=TB.find(y=>y.id===x.dataset.bel);belSheet(t)});
 }
+/* ---------- PROEFRIT_LIJST_V1 (t661u): alle proefritten terugvinden onder Klanten. Geen nummers of foto's. ---------- */
+let PRL=null;
+function naarProefritten(){if(window.NAV)NAV.ga("klanten");let n=0;const z=()=>{const el=document.getElementById("rb3-pr");if(el){el.scrollIntoView({block:"start"});return}if(++n<30)setTimeout(z,150)};setTimeout(z,150)}
+async function prBlok(vers){
+  if(typeof seg==="undefined"||seg!==26)return;const kl=document.querySelector("#cards .rb-kl");if(!kl)return;
+  let b=document.getElementById("rb3-pr");if(!b){b=document.createElement("div");b.id="rb3-pr";const c1=kl.querySelector("article.card");if(c1)c1.insertAdjacentElement("afterend",b);else kl.prepend(b)}
+  if(!PRL||vers){b.innerHTML='<h3>🔑 Proefritten</h3><div class="meta">Laden…</div>';try{PRL=await R.api("/taken/robin/v3/proefritten")}catch(x){b.innerHTML='<h3>🔑 Proefritten</h3><div class="meta">Niet te laden: '+e(x.message)+'</div>';return}}
+  const tm=s=>String(s||"").slice(11,16),dg=s=>{const d=String(s||"").slice(0,10);return d?d.slice(8,10)+"-"+d.slice(5,7):"?"};
+  const L=PRL.lopend||[],K=PRL.klaar||[];
+  b.innerHTML=`<h3>🔑 Proefritten <span class="cnt">${L.length+K.length}</span></h3>
+   ${L.length?`<h4>Loopt nu</h4>`+L.map(p=>`<div class="rb-rit"><b>${e(p.auto)}</b> · ${e(p.klant||"")}<div class="meta">${dg(p.start)} ${tm(p.start)}–${tm(p.eind)}${p.te_laat?' · <b style="color:#991b1b">te laat terug</b>':""} · ${p.rijbewijs_gezien?"rijbewijs ✓":"geen rijbewijsfoto"}</div><button type="button" class="btn sm" data-prterug="${e(p.id)}">✅ Terug</button></div>`).join(""):'<div class="meta">Er loopt nu geen proefrit.</div>'}
+   <h4>Geschiedenis</h4>${K.length?`<ul class="rb3-wk rb3-prh">`+K.map(p=>`<li><b>${e(p.auto)}</b> · ${e(p.klant||"")}<div class="meta">${dg(p.start)} ${tm(p.start)}–${tm(p.terug)}${p.km_na!=null?" · km na rit "+e(String(p.km_na).replace(/\B(?=(\d{3})+(?!\d))/g,".")):""}${p.op_tijd===false?" · later terug dan gepland":""}</div></li>`).join("")+`</ul>`:'<div class="meta">Nog geen afgeronde proefritten.</div>'}
+   <div class="meta">🔒 Telefoonnummers en rijbewijsfoto's staan niet op de site. Het rijbewijs wordt na 30 dagen gewist.</div>`;
+  b.querySelectorAll("[data-prterug]").forEach(x=>x.onclick=async()=>{await terug(x.dataset.prterug);prBlok(true)});
+}
+const moK=new MutationObserver(()=>{if(typeof seg!=="undefined"&&seg===26&&!document.getElementById("rb3-pr")){clearTimeout(moK.t);moK.t=setTimeout(()=>prBlok(true),120)}});
+const stK=()=>{const c=document.getElementById("cards");if(c)moK.observe(c,{childList:true,subtree:false})};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",stK);else stK();
 /* ---------- WEEK_V1 (feature 3): weekoverzicht in de app. Onbekend is niet 0. ---------- */
 async function weekSheet(){
   let w;try{w=await R.api("/taken/robin/v3/week")}catch(x){R.toast2(x.message);return}
