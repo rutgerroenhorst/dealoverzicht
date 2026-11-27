@@ -618,12 +618,12 @@ async function kopieer(t,knop){let ok=false;try{await navigator.clipboard.writeT
 const ST={gekoppeld:["✅","ok"],app:["📱","ok"],wacht:["⏳","wacht"],verlopen:["⌛","uit"],nieuw:["•","uit"]};
 function linkBlok(r){return `<div class="tl-res" id="tl-res"><b>✅ Link voor ${e(r.naam)} is klaar</b>
   <div class="meta">Eén keer te gebruiken · geldig tot ${e(r.geldig_tot_tekst)}</div>
-  <label class="rb-f">Bericht voor ${e(r.naam.split(" ")[0])}<textarea id="tl-tekst" rows="5">${e(r.whatsapp_tekst)}</textarea></label>
+  <label class="rb-f">Bericht voor ${e(r.naam.split(" ")[0])}<textarea id="tl-tekst" rows="7">${e(r.whatsapp_tekst)}</textarea></label>
   <div class="tl-kn"><a class="btn prim tl-wa" id="tl-wa" href="${e(r.whatsapp_url)}" target="_blank" rel="noopener">💬 WhatsApp</a><button type="button" class="btn" id="tl-kop">📋 Kopieer</button></div>
   <div class="meta">Er is niets verstuurd. ${e(r.naam.split(" ")[0])} tikt op de link, daarna in Telegram op <b>Start</b>, en is meteen gekoppeld.</div>
   <details class="tl-zonder"><summary>Geen Telegram?</summary><div class="meta">Maak een persoonlijke link naar de Team-app. Die toont nooit prijzen of bedragen. Werkt tot je een nieuwe link maakt of ${e(r.naam.split(" ")[0])} verwijdert.</div>
   <button type="button" class="btn" data-app="${e(r.id)}">📱 Link zonder Telegram</button><div id="tl-app"></div></details></div>`}
-function appBlok(r){return `<label class="rb-f">Bericht met Team-app-link<textarea id="tl-atekst" rows="5">${e(r.whatsapp_tekst)}</textarea></label>
+function appBlok(r){return `<label class="rb-f">Bericht met Team-app-link<textarea id="tl-atekst" rows="7">${e(r.whatsapp_tekst)}</textarea></label>
   <div class="tl-kn"><a class="btn prim tl-wa" href="${e(r.whatsapp_url)}" target="_blank" rel="noopener">💬 WhatsApp</a><button type="button" class="btn" id="tl-akop">📋 Kopieer</button></div>
   <div class="meta">Persoonlijk: deel hem alleen met deze medewerker.</div>`}
 function rijen(L){if(!L.length)return `<div class="meta">Nog geen medewerkers.</div>`;
