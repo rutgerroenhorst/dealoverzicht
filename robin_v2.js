@@ -49,7 +49,7 @@ function vdBlok(){
   const host=document.querySelector(".vandaag");if(!host)return;
   let b=document.getElementById("rb-vd");
   if(!b){b=document.createElement("section");b.id="rb-vd";b.className="vb rb"}
-  if(host.firstChild!==b)host.insertBefore(b,host.firstChild);
+  const ne=document.getElementById("rb3-eerst");if(ne&&ne.parentNode===host){if(ne.nextSibling!==b)host.insertBefore(b,ne.nextSibling)}else if(host.firstChild!==b)host.insertBefore(b,host.firstChild);
   const r=(V&&V.ritten)||[];
   const vr=(V&&V.voorraad)||{};const w=vr.wijzigingen||{};
   b.innerHTML=`<h3>Snelle knoppen</h3><div class="rb-snel">
@@ -253,6 +253,12 @@ if(typeof KL!=="undefined"&&KL.slug&&KL.slug!=="brns")return;
 if(!window.RB)return;
 const R=window.RB,e=R.e,VRS=12;
 let SIG=null,SIGT=0,ALLEEN=false;
+/* PRIJSVERLOOP_V1 (t662u A5): prijshistorie op de voorraadkaart (alleen Robins site) */
+let PV=null;async function laadPV(){if(PV)return PV;try{PV=await R.api("/taken/robin/v3/prijsverloop")}catch(x){}return PV}
+const eur=n=>"€ "+Number(n).toLocaleString("nl-NL"),dm=d=>String(d).slice(8,10)+"-"+String(d).slice(5,7);
+function pvRegel(v){if(!v||!v.wijzigingen)return ""; /* zonder wijziging toont de kaart al "Prijsverloop: geen wijziging" */
+  const vv=v.verschil,s=(vv<0?"−":"+")+eur(Math.abs(vv));
+  return `<div class="meta rb3-pv">📈 ${v.verloop.map(x=>`${eur(x.prijs)} <span>(${dm(x.datum)})</span>`).join(" → ")} · ${s} sinds ${dm(v.sinds)}</div>`}
 async function laadSig(){if(SIG&&Date.now()-SIGT<120000)return SIG;try{SIG=await R.api("/taken/robin/v3/signalen");SIGT=Date.now()}catch(x){}return SIG}
 function kopieer(t,ok){const k=()=>R.toast2(ok||"Gekopieerd");if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(k,()=>{prompt("Kopieer:",t)});else prompt("Kopieer:",t)}
 window.RB3={kopieer};
@@ -263,7 +269,9 @@ function deco(){
   VR.autos.forEach(a=>{const id=typeof vrId==="function"?vrId(a.url):"";const k=id&&document.getElementById("voorraad-"+id);if(!k)return;
     const L=S[String(a.id||a.url)]||[];if(L.length)n++;
     let b=k.querySelector(".rb3");if(!b){b=document.createElement("div");b.className="rb3";const body=k.querySelector(".body")||k;body.appendChild(b)}
-    const h=`<div class="rb3-sig">${L.map(x=>`<span class="rb3-l ${e(x.niveau)}">${x.code==="lang"?"⏳":x.code==="foto"?"📷":x.code==="prijs"?"€":"🔢"} ${e(x.label)}</span>`).join("")}</div>
+    const pv=PV&&PV.per_auto&&PV.per_auto[String(a.id)],lang=L.some(x=>x.code==="lang");
+    const h=`<div class="rb3-sig">${L.map(x=>`<span class="rb3-l ${e(x.niveau)}">${x.code==="lang"?"⏳":x.code==="foto"?"📷":x.code==="prijs"?"€":"🔢"} ${e(x.label)}</span>`).join("")}</div>${pvRegel(pv)}
+      ${lang?`<div class="rb3-kn"><button type="button" class="btn sm prim" data-r3="opfris" data-id="${e(a.id)}">🔄 Taak voor team: opfrissen</button></div>`:""}
       <div class="rb3-kn"><button type="button" class="btn sm" data-r3="deel" data-id="${e(a.id)}">💬 Prijs delen</button><button type="button" class="btn sm ghost" data-r3="proefrit" data-id="${e(a.id)}">🔑 Proefrit</button><button type="button" class="btn sm ghost" data-r3="klantvraag" data-id="${e(a.id)}">📞 Klantvraag</button><button type="button" class="btn sm ghost" data-r3="papier" data-id="${e(a.id)}">🧾 Papierwerk</button></div>`;
     if(b.dataset.h!==h){b.innerHTML=h;b.dataset.h=h;b.querySelectorAll("[data-r3]").forEach(x=>x.onclick=()=>actie3(x.dataset.r3,x.dataset.id))}
     k.style.display=ALLEEN&&!L.length?"none":"";});
@@ -289,6 +297,7 @@ async function actie3(a,id){
   if(a==="proefrit")return proefrit(id?autoVan(id):null);
   if(a==="klantvraag")return klantvraag(id?autoVan(id):null);
   if(a==="week")return weekSheet();
+  if(a==="opfris")return opfrisSheet(id);
   R.toast2("Deze knop komt in de volgende stap.");
 }
 /* ---------- KLAARZET_V1 (t659u): officiële pagina + gegevens om te kopiëren + checklist. Inloggen doet Robin zelf. ---------- */
@@ -402,7 +411,34 @@ async function terug(id){const km=prompt("Proefrit terug. Km-stand nu? (optionee
   try{const r=await R.api("/taken/robin/v3/proefrit/"+encodeURIComponent(id)+"/terug","POST",{km});try{delete localStorage[telKey(id)]}catch(x){}
     R.toast2(r.proefrit&&r.proefrit.opvolg_taak?"Proefrit afgerond. Opvolgtaak staat klaar voor morgen 10:00.":"Proefrit afgerond");vdBlok3()}catch(x){R.toast2(x.message)}}
 let V3=null;
-async function vdBlok3(){
+/* ---------- OPFRIS_V1 (t662u A5): lang staand -> taak voor het team, zonder bedragen ---------- */
+const OPFRIS=[["fotos","Nieuwe foto's maken (rondom + interieur)"],["poetsen","Auto wassen en poetsen"],["vooraan","Auto op een zichtbare plek zetten"],["advertentie","Advertentie nalopen: km-stand, opties, foto-volgorde"]];
+async function opfrisSheet(id){
+  await zorgVR();const a=autoVan(id);let meds=[];try{meds=((await R.api("/taken")).gebruikers||[]).map(u=>u.naam).filter(Boolean)}catch(x){}
+  const v=await R.sheet(`<div class="rb3-rij"><h3>🔄 Opfrissen${a?": "+e(String(a.titel).split("|")[0]):""}</h3><button type="button" class="btn sm ghost" data-x>Sluiten</button></div>
+    <div class="meta">Het team krijgt een taak met een checklist. Zonder prijzen of bedragen.</div>
+    ${OPFRIS.map(([k,l],i)=>`<label class="rb3-chk"><input type="checkbox" value="${k}" ${i<2?"checked":""}> ${e(l)}</label>`).join("")}
+    <label class="rb-f">Voor<select id="rb3-ofv"><option value="">Wie het eerst kan</option>${meds.filter(n=>!/^robin$/i.test(n)).map(n=>`<option>${e(n)}</option>`).join("")}</select></label>
+    <button type="button" class="btn prim" id="rb3-ofok">Taak maken</button>`,(ov,af)=>{ov.querySelector("#rb3-ofok").onclick=()=>af({wat:[...ov.querySelectorAll(".rb3-chk input:checked")].map(x=>x.value),voor:ov.querySelector("#rb3-ofv").value})});
+  if(!v)return;try{const r=await R.api("/taken/robin/v3/opfris/"+encodeURIComponent(id),"POST",v);R.toast2(r.bestond?"Er staat al een opfris-taak voor deze auto.":"Taak gemaakt voor "+(v.voor||"het team"));NE=null;vdEerst()}catch(x){R.toast2(x.message)}}
+/* ---------- NU_EERST_V1 (t662u A4): 'Wat nu eerst' bovenaan Vandaag ---------- */
+let NE=null;
+async function vdEerst(){
+  if(typeof seg==="undefined"||seg!==20)return;try{NE=await R.api("/taken/robin/v3/nu_eerst")}catch(x){return}
+  const host=document.querySelector(".vandaag");if(!host||seg!==20)return;let b=document.getElementById("rb3-eerst");
+  if(!b){b=document.createElement("section");b.id="rb3-eerst";b.className="vb rb rb3-eerst"}
+  if(host.firstChild!==b)host.insertBefore(b,host.firstChild);
+  if(!host._ne){host._ne=new MutationObserver(()=>{const x=document.getElementById("rb3-eerst");if(x&&x.parentNode===host&&host.firstChild!==x)host.insertBefore(x,host.firstChild)});host._ne.observe(host,{childList:true})}
+  const L=NE.items||[];
+  b.innerHTML=`<h3>👉 Wat nu eerst</h3>`+(L.length?L.map((x,i)=>`<div class="rb3-ne ${i===0?"top":""}"><div><b>${e(x.titel)}</b><div class="meta">${e(x.waarom||"")}</div></div><button type="button" class="btn sm ${i===0?"prim":""}" data-ne="${i}">${e(x.knop)}</button></div>`).join("")+(NE.meer?`<div class="meta">+ ${NE.meer} meer hieronder</div>`:""):`<div class="meta">✅ Niets dringends. Lekker bezig.</div>`);
+  b.querySelectorAll("[data-ne]").forEach(k=>k.onclick=async()=>{const x=L[+k.dataset.ne];
+    if(x.soort==="proefrit")return terug(x.id);
+    if(x.soort==="bel"){const t=((V3&&V3.terugbellen)||[]).find(y=>y.id===x.id)||{id:x.id,titel:x.titel};return belSheet(t)}
+    if(x.soort==="aflever")return afleverSheet(x.id,x.titel);
+    if(x.soort==="opfris")return opfrisSheet(x.id);
+    if(typeof NAV!=="undefined"&&NAV.ga)NAV.ga("taken");else location.hash="#taken"});
+}
+async function vdBlok3(){vdEerst();
   if(typeof seg==="undefined"||seg!==20)return;try{V3=await R.api("/taken/robin/v3/vandaag")}catch(x){return}
   const host=document.getElementById("rb-vd");if(!host)return;let b=document.getElementById("rb3-vd");if(!b){b=document.createElement("div");b.id="rb3-vd";host.insertAdjacentElement("afterend",b)}
   const P=V3.proefritten||[],TB=V3.terugbellen||[];const tm=s=>String(s||"").slice(11,16),dg=s=>{const d=String(s||"").slice(0,10);const v=new Date().toISOString().slice(0,10);return d===v?"vandaag":d.slice(8,10)+"-"+d.slice(5,7)};
@@ -536,7 +572,7 @@ const mo3=new MutationObserver(()=>{clearTimeout(mo3.t);mo3.t=setTimeout(aflTake
 const st3=()=>{mo3.observe(document.body,{childList:true,subtree:true});aflTaken()};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",st3);else st3();
 window.RB3.actie=actie3;
 const _r=render;
-render=function(){const o=_r.apply(this,arguments);if(typeof seg!=="undefined"&&seg===20){setTimeout(vdBlok3,500)}if(typeof seg!=="undefined"&&seg===VRS){setTimeout(deco,80);setTimeout(deco,900);laadSig().then(deco)}return o};
+render=function(){const o=_r.apply(this,arguments);if(typeof seg!=="undefined"&&seg===20){setTimeout(vdBlok3,500)}if(typeof seg!=="undefined"&&seg===VRS){setTimeout(deco,80);setTimeout(deco,900);laadSig().then(deco);laadPV().then(deco)}return o};
 const mo=new MutationObserver(()=>{if(typeof seg!=="undefined"&&seg===VRS){clearTimeout(mo.t);mo.t=setTimeout(deco,120)}});
 const st=()=>{const c=document.getElementById("cards");if(c)mo.observe(c,{childList:true})};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",st);else st();
 })();

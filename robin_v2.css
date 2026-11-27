@@ -86,3 +86,11 @@ input::placeholder,textarea::placeholder{color:#7a828e}
 /* INVULVELDEN_V1 */
 .rb3-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
 .rb3-voor{margin:8px 0 4px;padding:10px;border:1px solid var(--line,#e3e6ee);border-radius:12px}
+
+/* NU_EERST_V1 + OPFRIS_V1 + PRIJSVERLOOP_V1 */
+.rb3-eerst{border:2px solid #2563eb33}
+.rb3-ne{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line,#e3e6ee)}
+.rb3-ne:first-of-type{border-top:0}.rb3-ne>div{min-width:0;flex:1}.rb3-ne .btn{flex:none;min-height:44px}
+.rb3-ne.top b{font-size:1.05em}
+.rb3-chk{display:flex;gap:10px;align-items:center;padding:10px 0;font-size:16px}.rb3-chk input{width:22px;height:22px}
+.rb3-pv{margin-top:4px}.rb3-pv span{opacity:.7}
