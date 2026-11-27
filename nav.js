@@ -36,6 +36,7 @@ const R={
   kansenlijst:{s:()=>24,t:"Kansenlijst (mobile.de)",m:"Lijsten",ic:"🇩🇪"},
   profiel:{s:()=>9,t:"BRNS-profiel",m:"Lijsten",ic:"🏷️",k:()=>typeof P!=="undefined"&&!!P},
   uitleg:{s:()=>8,t:"Uitleg",m:"Systeem",ic:"ⓘ"},
+  medewerkers:{actie:"medewerkers",m:"Systeem",ic:"👤",l:"Medewerker toevoegen"},  /* TEAM_LINK_V1 (t665u) */
   instellingen:{actie:"instellingen",m:"Systeem",ic:"⚙️",l:"Instellingen"},
   weergave:{actie:"weergave",m:"Systeem",ic:"🌓",l:"Weergave"}
 };
@@ -84,6 +85,7 @@ function ga(k){
 function actie(a){
   sluitMeer();
   if(a==="historie"){if(window.HISTORIE&&HISTORIE.open)HISTORIE.open("");return}
+  if(a==="medewerkers"){if(window.RB_TEAM)RB_TEAM.open();return}
   if(a==="instellingen"){if(typeof window.openInstellingen==="function")openInstellingen();return}
   if(a==="weergave"){const b=document.getElementById("thema");if(b)b.click();teken();return}
 }

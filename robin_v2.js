@@ -607,3 +607,62 @@ render=function(){const o=_r.apply(this,arguments);if(typeof seg!=="undefined"&&
 const mo=new MutationObserver(()=>{if(typeof seg!=="undefined"&&seg===VRS){clearTimeout(mo.t);mo.t=setTimeout(deco,120)}});
 const st=()=>{const c=document.getElementById("cards");if(c)mo.observe(c,{childList:true})};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",st);else st();
 })();
+/* TEAM_LINK_V1 (t665u): 👤 Medewerker toevoegen — naam invullen, één link maken, zelf versturen via WhatsApp.
+   De site verstuurt niets. Lijst zonder chat-id, nummer of link; een nieuwe link staat alleen in dit venster. */
+(function(){
+"use strict";
+if(!window.RB)return;
+const R=window.RB,e=R.e;
+async function kopieer(t,knop){let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(x){try{const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();ok=document.execCommand("copy");a.remove()}catch(y){}}
+  if(knop){const o=knop.textContent;knop.textContent=ok?"✅ Gekopieerd":"Kopiëren lukte niet";setTimeout(()=>knop.textContent=o,1800)}}
+const ST={gekoppeld:["✅","ok"],app:["📱","ok"],wacht:["⏳","wacht"],verlopen:["⌛","uit"],nieuw:["•","uit"]};
+function linkBlok(r){return `<div class="tl-res" id="tl-res"><b>✅ Link voor ${e(r.naam)} is klaar</b>
+  <div class="meta">Eén keer te gebruiken · geldig tot ${e(r.geldig_tot_tekst)}</div>
+  <label class="rb-f">Bericht voor ${e(r.naam.split(" ")[0])}<textarea id="tl-tekst" rows="5">${e(r.whatsapp_tekst)}</textarea></label>
+  <div class="tl-kn"><a class="btn prim tl-wa" id="tl-wa" href="${e(r.whatsapp_url)}" target="_blank" rel="noopener">💬 WhatsApp</a><button type="button" class="btn" id="tl-kop">📋 Kopieer</button></div>
+  <div class="meta">Er is niets verstuurd. ${e(r.naam.split(" ")[0])} tikt op de link, daarna in Telegram op <b>Start</b>, en is meteen gekoppeld.</div>
+  <details class="tl-zonder"><summary>Geen Telegram?</summary><div class="meta">Maak een persoonlijke link naar de Team-app. Die toont nooit prijzen of bedragen. Werkt tot je een nieuwe link maakt of ${e(r.naam.split(" ")[0])} verwijdert.</div>
+  <button type="button" class="btn" data-app="${e(r.id)}">📱 Link zonder Telegram</button><div id="tl-app"></div></details></div>`}
+function appBlok(r){return `<label class="rb-f">Bericht met Team-app-link<textarea id="tl-atekst" rows="5">${e(r.whatsapp_tekst)}</textarea></label>
+  <div class="tl-kn"><a class="btn prim tl-wa" href="${e(r.whatsapp_url)}" target="_blank" rel="noopener">💬 WhatsApp</a><button type="button" class="btn" id="tl-akop">📋 Kopieer</button></div>
+  <div class="meta">Persoonlijk: deel hem alleen met deze medewerker.</div>`}
+function rijen(L){if(!L.length)return `<div class="meta">Nog geen medewerkers.</div>`;
+  return L.map(u=>{const s=ST[u.status]||ST.nieuw;return `<div class="tl-rij" data-id="${e(u.id)}"><div class="tl-naam"><b>${e(u.naam)}</b><div class="meta tl-st ${s[1]}">${s[0]} ${e(u.status_tekst)}</div></div>
+    <div class="tl-kn"><button type="button" class="btn sm" data-nl="${e(u.id)}">🔗 Nieuwe link</button><button type="button" class="btn sm ghost tl-weg" data-weg="${e(u.id)}">🗑️ Verwijderen</button></div></div>`}).join("")}
+async function open_(){
+  let L=[];try{L=(await R.api("/taken/team")).team||[]}catch(x){R.toast2(x.message);return}
+  await R.sheet(`<div class="rb3-rij"><h3>👤 Medewerker toevoegen</h3><button type="button" class="btn sm ghost" data-x>Sluiten</button></div>
+    <div class="meta">Vul de naam in. Je krijgt één link om zelf via WhatsApp te sturen.</div>
+    <label class="rb-f">Naam<input id="tl-naam" autocomplete="off" placeholder="bijv. Kees" maxlength="40"></label>
+    <button type="button" class="btn prim tl-groot" id="tl-maak">Maak link</button>
+    <div id="tl-uit"></div>
+    <h3 class="tl-kop">Medewerkers</h3><div id="tl-lijst">${rijen(L)}</div>`,(ov,af)=>{
+    const uit=ov.querySelector("#tl-uit");
+    const herlaad=async()=>{try{L=(await R.api("/taken/team")).team||[];ov.querySelector("#tl-lijst").innerHTML=rijen(L);bindLijst()}catch(x){}};
+    const toon=r=>{uit.innerHTML=linkBlok(r);
+      const tx=uit.querySelector("#tl-tekst"),wa=uit.querySelector("#tl-wa");tx.oninput=()=>wa.href=R.wa(tx.value);
+      uit.querySelector("#tl-kop").onclick=ev=>kopieer(tx.value,ev.currentTarget);
+      uit.querySelector("[data-app]").onclick=async ev=>{const b=ev.currentTarget;b.disabled=true;
+        try{const a=await R.api("/taken/team/"+encodeURIComponent(b.dataset.app)+"/app","POST",{});const d=uit.querySelector("#tl-app");d.innerHTML=appBlok(a);
+          const at=d.querySelector("#tl-atekst"),aw=d.querySelector(".tl-wa");at.oninput=()=>aw.href=R.wa(at.value);d.querySelector("#tl-akop").onclick=e2=>kopieer(at.value,e2.currentTarget);b.remove();herlaad()}
+        catch(x){b.disabled=false;R.toast2(x.message)}};
+      uit.scrollIntoView({block:"start",behavior:"smooth"});herlaad()};
+    const maak=async()=>{const n=ov.querySelector("#tl-naam").value.trim();if(n.length<2){R.toast2("Vul eerst de naam in.");ov.querySelector("#tl-naam").focus();return}
+      const b=ov.querySelector("#tl-maak");b.disabled=true;b.textContent="Link maken…";
+      try{toon(await R.api("/taken/team","POST",{naam:n}));ov.querySelector("#tl-naam").value=""}catch(x){R.toast2(x.message)}finally{b.disabled=false;b.textContent="Maak link"}};
+    ov.querySelector("#tl-maak").onclick=maak;ov.querySelector("#tl-naam").onkeydown=ev=>{if(ev.key==="Enter")maak()};
+    function bindLijst(){
+      ov.querySelectorAll("[data-nl]").forEach(b=>b.onclick=async()=>{const u=L.find(x=>x.id===b.dataset.nl)||{};
+        if(u.status==="gekoppeld"||u.status==="app"){if(!confirm("Nieuwe link voor "+u.naam+"?\n\nDe oude link en de oude Team-app-link werken dan niet meer (handig bij een nieuwe of kwijtgeraakte telefoon)."))return}
+        try{toon(await R.api("/taken/team/"+encodeURIComponent(b.dataset.nl)+"/link","POST",{}))}catch(x){R.toast2(x.message)}});
+      ov.querySelectorAll("[data-weg]").forEach(b=>b.onclick=async()=>{const u=L.find(x=>x.id===b.dataset.weg)||{};
+        if(!confirm(u.naam+" verwijderen?\n\n"+u.naam+" kan dan niet meer in de Team-app en krijgt geen taken meer via Telegram."))return;
+        try{let r=await R.api("/taken/team/"+encodeURIComponent(b.dataset.weg)+"/weg","POST",{});
+          if(r.wacht_bevestiging){if(!confirm(u.naam+" heeft nog "+r.open_taken+" open taak/taken. Die worden dan voor niemand.\n\nToch verwijderen?"))return;
+            r=await R.api("/taken/team/"+encodeURIComponent(b.dataset.weg)+"/weg","POST",{bevestigd:true})}
+          R.toast2(u.naam+" is verwijderd.");uit.innerHTML="";herlaad()}catch(x){R.toast2(x.message)}})}
+    bindLijst();
+  });
+}
+window.RB_TEAM={open:open_};
+})();

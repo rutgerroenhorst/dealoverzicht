@@ -97,3 +97,16 @@ input::placeholder,textarea::placeholder{color:#7a828e}
 
 /* KLANTKAART_V1 */
 .rb3-knaam{font:inherit;font-weight:700;background:none;border:0;padding:6px 0;color:#1d4ed8;text-align:left;min-height:44px;cursor:pointer}
+/* TEAM_LINK_V1 (t665u) */
+.tl-groot{width:100%;min-height:48px;font-size:17px;margin:4px 0 8px}
+.tl-res{border:2px solid #1a7f37;background:#f1fbf4;border-radius:14px;padding:12px;margin:10px 0;color:#14161a}
+.tl-res textarea,#tl-app textarea{display:block;width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:10px;border-radius:10px;border:1px solid #ccd;background:#fff;color:#14161a;margin-top:4px}
+.tl-kn{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.tl-kn .btn{min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+.tl-wa{background:#1a7f37!important;border-color:#1a7f37!important;color:#fff!important;text-decoration:none;flex:1}
+.tl-zonder{margin-top:8px}.tl-zonder summary{cursor:pointer;font-weight:600;padding:6px 0}
+.tl-kop{margin:16px 0 4px}
+.tl-rij{border-top:1px solid #e3e5ea;padding:10px 0}
+.tl-rij .tl-kn{margin:6px 0 0}
+.tl-st.ok{color:#1a7f37}.tl-st.wacht{color:#9a6700}.tl-st.uit{color:#6b7280}
+.tl-weg{color:#b42318!important}

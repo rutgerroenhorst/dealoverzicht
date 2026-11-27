@@ -296,7 +296,7 @@ function tekenLijst(){
   </div>`;
   const vragenHtml=FILT==="wacht_op_robin"?wachtBlok(openV,false):(openV.length?wachtBlok(openV,true):"");
   const lijst=(FILT==="wacht_op_robin"?"":taken.map(kaart).join(""))|| (FILT==="wacht_op_robin"?"":`<div class="tk-leeg">Niets in dit filter.</div>`);
-  const medBlok=`<div class="tk-med"><b>Medewerkers</b> (zonder chat-id of sitelink, de site is openbaar). Nieuwe collega’s via de BRNS-bot: <code>nieuwe medewerker …</code><br>
+  const medBlok=`<div class="tk-med"><b>Medewerkers</b> <button type="button" class="btn sm" onclick="window.RB_TEAM&&RB_TEAM.open()">👤 Medewerker toevoegen</button><br>
     ${(TAKEN.gebruikers||[]).map(gebruikerLabel).join(" · ")}</div>`;
   cards.innerHTML=`<div class="tk-wrap">
     <div class="tk-warn"><b>Openbare site · live van de server</b>${esc(TAKEN.waarschuwing||"Telefoonnummers van bedrijven zijn zichtbaar op deze site. Alleen zakelijke nummers.")}</div>
@@ -522,7 +522,7 @@ function takenInstel(){
   const d=document.createElement("details");
   d.id="tk-medewerkers-inst";
   d.innerHTML=`<summary>Medewerkers</summary>
-    <p class="ihulp">Robin werkt op de site (geen Telegram). Medewerkers werken via Telegram en een persoonlijke Open-link (geen wachtwoord). Chat-id’s en links staan niet op deze openbare pagina. Toevoegen of verwijderen gaat via de BRNS-bot (<code>nieuwe medewerker …</code>). Een verwijderde medewerker verliest ook die link.</p>
+    <p class="ihulp">Toevoegen: Meer → 👤 Medewerker toevoegen. Vul de naam in en stuur de link zelf via WhatsApp. De medewerker tikt erop, daarna op Start in Telegram, en is gekoppeld. Geen Telegram? Maak daar een link zonder Telegram. Verwijderen kan ook daar; dan werkt de link niet meer. Chat-id’s en links staan nooit op deze pagina.</p>
     <div id="tk-med-lijst">Laden…</div>`;
   const log=box.closest("details");
   if(log&&log.parentElement)log.parentElement.insertBefore(d,log);
