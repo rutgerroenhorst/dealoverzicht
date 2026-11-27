@@ -615,7 +615,7 @@ if(!window.RB)return;
 const R=window.RB,e=R.e;
 async function kopieer(t,knop){let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(x){try{const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();ok=document.execCommand("copy");a.remove()}catch(y){}}
   if(knop){const o=knop.textContent;knop.textContent=ok?"✅ Gekopieerd":"Kopiëren lukte niet";setTimeout(()=>knop.textContent=o,1800)}}
-const ST={gekoppeld:["✅","ok"],app:["📱","ok"],wacht:["⏳","wacht"],verlopen:["⌛","uit"],nieuw:["•","uit"]};
+const ST={extra:["👀","ok"],gekoppeld:["✅","ok"],app:["📱","ok"],wacht:["⏳","wacht"],verlopen:["⌛","uit"],nieuw:["•","uit"]};
 function linkBlok(r){return `<div class="tl-res" id="tl-res"><b>✅ Link voor ${e(r.naam)} is klaar</b>
   <div class="meta">Eén keer te gebruiken · geldig tot ${e(r.geldig_tot_tekst)}</div>
   <label class="rb-f">Bericht voor ${e(r.naam.split(" ")[0])}<textarea id="tl-tekst" rows="7">${e(r.whatsapp_tekst)}</textarea></label>
