@@ -408,6 +408,49 @@ async function prBlok(vers){
 }
 const moK=new MutationObserver(()=>{if(typeof seg!=="undefined"&&seg===26&&!document.getElementById("rb3-pr")){clearTimeout(moK.t);moK.t=setTimeout(()=>prBlok(true),120)}});
 const stK=()=>{const c=document.getElementById("cards");if(c)moK.observe(c,{childList:true,subtree:false})};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",stK);else stK();
+/* ---------- CONCEPTEN_V2 (t661u): WhatsApp-concepten bewerken, op de server bewaard. Het systeem verstuurt nooit zelf. ---------- */
+let CON2=null;
+async function laadCon(){try{CON2=await R.api("/taken/robin/v3/concepten")}catch(x){CON2=null}return CON2}
+function kopieer(t){try{navigator.clipboard.writeText(t).then(()=>R.toast2("Tekst gekopieerd"),()=>prompt("Kopieer:",t))}catch(x){prompt("Kopieer:",t)}}
+async function conBlok(vers){
+  if(typeof seg==="undefined"||seg!==26)return;const kl=document.querySelector("#cards .rb-kl");if(!kl)return;
+  const kaart=kl.querySelector("article.card");if(!kaart)return;
+  if(!CON2||vers)await laadCon();if(!CON2){return}
+  if(seg!==26)return;
+  const L=CON2.concepten||[];
+  kaart.setAttribute("data-con2","1");
+  kaart.innerHTML=`<div class="body"><h2 class="t">💬 WhatsApp-concepten</h2><div class="meta">Tik ✏️ om een tekst aan te passen. Je tekst wordt op de server bewaard en blijft staan (ook op een ander toestel) tot je hem zelf wijzigt. WhatsApp opent met de tekst; jij kiest de klant en verstuurt zelf.</div>
+   ${L.map(c=>`<div class="rb3-con"><div><b>${e(c.label)}</b>${c.aangepast?' <span class="rb3-l oranje">eigen tekst</span>':""}${c.eigen?' <span class="rb3-l">eigen concept</span>':""}<div class="meta rb3-ctekst">${e(c.tekst)}</div></div>
+     <div class="rb3-rij"><a class="btn sm" href="${e(R.wa(c.tekst))}" target="_blank" rel="noopener">WhatsApp</a><button type="button" class="btn sm ghost" data-ckop="${e(c.key)}">Kopieer</button><button type="button" class="btn sm ghost" data-cbew="${e(c.key)}">✏️ Bewerk</button></div></div>`).join("")}
+   <div class="rb3-rij"><button type="button" class="btn sm" data-cnieuw>➕ Eigen concept</button></div></div>`;
+  kaart.querySelectorAll("[data-ckop]").forEach(b=>b.onclick=()=>{const c=L.find(x=>x.key===b.dataset.ckop);if(c)kopieer(c.tekst)});
+  kaart.querySelectorAll("[data-cbew]").forEach(b=>b.onclick=()=>conBewerk(L.find(x=>x.key===b.dataset.cbew)));
+  kaart.querySelector("[data-cnieuw]").onclick=()=>conBewerk(null);
+}
+async function conPost(body){try{const r=await R.api("/taken/robin/v3/concepten","POST",body);CON2=r;try{R.laadV&&R.laadV()}catch(x){}return true}catch(x){R.toast2(x.message);return false}}
+async function conBewerk(c){
+  const nieuw=!c;
+  await R.sheet(`<div class="rb3-rij"><h3>${nieuw?"➕ Eigen concept":"✏️ "+e(c.label)}</h3><button type="button" class="btn sm ghost" data-x>Annuleren</button></div>
+    <div class="rb3-form">${nieuw||c.eigen?`<label>Naam</label><input data-v="label" maxlength="40" value="${nieuw?"":e(c.label)}" placeholder="bijv. Inruil bespreken">`:""}
+    <label>Tekst</label><textarea data-v="tekst" rows="6" maxlength="1000">${nieuw?"":e(c.tekst)}</textarea></div>
+    <div class="meta" id="rb3-cteller"></div>
+    <div class="rb3-rij"><button type="button" class="btn prim" id="rb3-cok">Opslaan</button>
+    ${!nieuw&&!c.eigen&&c.aangepast?'<button type="button" class="btn" id="rb3-cstd">↩︎ Standaardtekst terugzetten</button>':""}
+    ${!nieuw&&c.eigen?'<button type="button" class="btn" id="rb3-cdel">🗑 Verwijderen</button>':""}</div>
+    ${!nieuw&&!c.eigen?`<div class="meta">Standaardtekst: ${e(c.standaard_tekst||"")}</div>`:""}
+    <div class="meta">Er wordt niets verstuurd. De tekst wordt alleen bewaard.</div>`,(ov,af)=>{
+    const ta=ov.querySelector("[data-v=tekst]"),tl=ov.querySelector("#rb3-cteller");const tel=()=>tl.textContent=ta.value.length+" / 1000 tekens";ta.oninput=tel;tel();
+    ov.querySelector("#rb3-cok").onclick=async()=>{const t=ta.value.trim(),lab=ov.querySelector("[data-v=label]");
+      if(!t){R.toast2("De tekst mag niet leeg zijn");return}
+      if((nieuw||c.eigen)&&!(lab&&lab.value.trim())){R.toast2("Geef het concept een naam");return}
+      const ok=await conPost(nieuw?{nieuw:{label:lab.value.trim(),tekst:t}}:{key:c.key,tekst:t,label:lab?lab.value.trim():undefined});
+      if(ok){af(null);R.toast2("Bewaard");conBlok()}};
+    const sd=ov.querySelector("#rb3-cstd");if(sd)sd.onclick=async()=>{if(!confirm("Standaardtekst terugzetten? Je eigen tekst verdwijnt."))return;if(await conPost({key:c.key,standaard:true})){af(null);R.toast2("Standaardtekst terug");conBlok()}};
+    const dl=ov.querySelector("#rb3-cdel");if(dl)dl.onclick=async()=>{if(!confirm("Dit eigen concept verwijderen?"))return;if(await conPost({key:c.key,verwijder:true})){af(null);R.toast2("Verwijderd");conBlok()}};
+  });
+}
+const moC=new MutationObserver(()=>{if(typeof seg!=="undefined"&&seg===26){const k=document.querySelector("#cards .rb-kl article.card");if(k&&!k.hasAttribute("data-con2")){clearTimeout(moC.t);moC.t=setTimeout(()=>conBlok(),60)}}});
+const stC=()=>{const c=document.getElementById("cards");if(c)moC.observe(c,{childList:true,subtree:true})};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",stC);else stC();
 /* ---------- WEEK_V1 (feature 3): weekoverzicht in de app. Onbekend is niet 0. ---------- */
 async function weekSheet(){
   let w;try{w=await R.api("/taken/robin/v3/week")}catch(x){R.toast2(x.message);return}
@@ -431,7 +474,7 @@ async function weekSheet(){
 const AFLPRE=/^\W*Afleveren\b/i;
 async function afleverSheet(id,titel){
   let st;try{st=await R.api("/taken/robin/v3/aflever/"+encodeURIComponent(id))}catch(x){R.toast2(x.message);return}
-  const F=st.fotos||{};const klaar="Hoi, goed nieuws: de auto staat klaar. Wanneer kom je hem ophalen? Groet, Robin – BRNS Exclusief";
+  if(!CON2)await laadCon();const F=st.fotos||{};const klaar=(CON2&&CON2.samen&&CON2.samen.auto_klaar)||"Hoi, goed nieuws: de auto staat klaar. Wanneer kom je hem ophalen? Groet, Robin – BRNS Exclusief";
   await R.sheet(`<div class="rb3-rij"><h3>📋 Afleverrapport</h3><button type="button" class="btn sm ghost" data-x>Sluiten</button></div><div class="meta">${e(titel)}</div>
     <div class="rb3-form"><label>Km-stand bij aflevering</label><input data-v="km" inputmode="numeric" value="${st.km!=null?e(st.km):""}" placeholder="bijv. 80123">
     <label>Schade of bijzonderheden</label><textarea data-v="schade" rows="2" placeholder="bijv. geen schade, of: kras achterbumper">${e(st.schade||"")}</textarea></div>

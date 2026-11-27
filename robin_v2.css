@@ -77,3 +77,8 @@ input::placeholder,textarea::placeholder{color:#7a828e}
 #rb3-pr{margin:12px 0;scroll-margin-top:120px}#rb3-pr h4{margin:10px 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;opacity:.7}
 .rb3-prh{list-style:none;padding-left:0}.rb3-prh li{padding:8px 0;border-bottom:1px solid var(--line,#e3e6ee)}
 .rb3-prlink{margin:2px 0 6px}
+
+/* CONCEPTEN_V2 */
+.rb3-con{display:block;padding:10px 0;border-bottom:1px solid var(--line,#e3e6ee);min-width:0}
+.rb3-con .rb3-ctekst{white-space:pre-wrap;overflow-wrap:anywhere;margin:2px 0 6px}
+.rb3-con .rb3-rij{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start}
