@@ -82,3 +82,7 @@ input::placeholder,textarea::placeholder{color:#7a828e}
 .rb3-con{display:block;padding:10px 0;border-bottom:1px solid var(--line,#e3e6ee);min-width:0}
 .rb3-con .rb3-ctekst{white-space:pre-wrap;overflow-wrap:anywhere;margin:2px 0 6px}
 .rb3-con .rb3-rij{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start}
+
+/* INVULVELDEN_V1 */
+.rb3-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
+.rb3-voor{margin:8px 0 4px;padding:10px;border:1px solid var(--line,#e3e6ee);border-radius:12px}

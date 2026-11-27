@@ -24,11 +24,20 @@ const apple=a=>"https://maps.apple.com/?saddr="+encodeURIComponent(VAN)+"&daddr=
 const google=a=>"https://www.google.com/maps/dir/?api=1&origin="+encodeURIComponent(VAN)+"&destination="+encodeURIComponent(a)+"&travelmode=driving";
 const wa=t=>"https://wa.me/?text="+encodeURIComponent(t);
 window.ROBIN_V2={apple,google,wa};
-const CONCEPTEN_STD={terugbellen:"Hoi, je had gebeld over een auto. Wanneer komt het je uit dat ik even terugbel? Groet, Robin – BRNS Exclusief",
-  afspraak:"Hoi, hierbij de bevestiging van onze afspraak bij BRNS Exclusief, De Giessen 1 in Dronten. Tot dan! Groet, Robin",
-  auto_klaar:"Hoi, goed nieuws: de auto staat klaar. Wanneer kom je hem ophalen? Groet, Robin – BRNS Exclusief",
-  opvolging:"Hoi, hoe bevalt de auto? Als er iets is hoor ik het graag. Groet, Robin – BRNS Exclusief"};
-const CLAB={terugbellen:"Terugbellen",afspraak:"Afspraak bevestigen",auto_klaar:"Auto staat klaar",opvolging:"Opvolging na verkoop"};
+const CONCEPTEN_STD={terugbellen:"Hoi {naam}, je had gebeld over {auto}. Wanneer komt het je uit dat ik even terugbel? Groet, Robin – BRNS Exclusief",
+  afspraak:"Hoi {naam}, hierbij de bevestiging van onze afspraak bij BRNS Exclusief, De Giessen 1 in Dronten. Tot dan! Groet, Robin",
+  auto_klaar:"Hoi {naam}, goed nieuws: {auto} staat klaar. Wanneer kom je hem ophalen? Groet, Robin – BRNS Exclusief",
+  opvolging:"Hoi {naam}, hoe bevalt {auto}? Als er iets is hoor ik het graag. Groet, Robin – BRNS Exclusief",
+  proefrit:"Hoi {naam}, hoe beviel de proefrit in {auto}? Heb je nog vragen, of zal ik een voorstel maken? Groet, Robin – BRNS Exclusief"};
+/* INVULVELDEN_V1 (t662u): {naam} {auto} {prijs} invullen; onbekend = netjes weg (nooit "{naam}" naar een klant) */
+function vul(t,c){c=c||{};const au=String(c.auto||"").split("|")[0].trim();const pr=typeof c.prijs==="number"&&c.prijs>0?"€ "+c.prijs.toLocaleString("nl-NL"):(c.prijs||"");
+  return String(t||"").split("{naam}").join(String(c.naam||"").trim()).split("{auto}").join(au?"de "+au:"de auto").split("{prijs}").join(pr).replace(/[ \t]+([,.!?])/g,"$1").replace(/[ \t]{2,}/g," ").trim()}
+const telNaamKey=n=>"rb3_tn_"+String(n||"").toLowerCase().replace(/\s+/g," ").trim();
+function telVanNaam(n){try{return n?(localStorage[telNaamKey(n)]||""):""}catch(x){return ""}}
+function bewaarTelNaam(n,t){try{if(n&&t)localStorage[telNaamKey(n)]=t}catch(x){}}
+function bekendeNamen(){const L=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith("rb3_tn_"))L.push(k.slice(7))}}catch(x){}return L}
+
+const CLAB={terugbellen:"Terugbellen",afspraak:"Afspraak bevestigen",auto_klaar:"Auto staat klaar",opvolging:"Opvolging na verkoop",proefrit:"Na de proefrit"};
 let V=null,TK=null;
 async function laadV(){try{V=await api("/taken/robin/vandaag")}catch(x){V=V||null}return V}
 async function laadT(){try{TK=await api("/taken")}catch(x){}return TK}
@@ -73,7 +82,7 @@ function klanten(){
   const opv=open.filter(t=>/^Opvolging/i.test(t.titel||""));
   const kaart=t=>{const b=t.bedrijf_info||{};
     return `<article class="card"><div class="body"><b>${e(t.titel)}</b><div class="meta">${t.auto?e(t.auto)+" · ":""}${t.deadline?"uiterlijk "+e(String(t.deadline).slice(0,10)):""}</div>
-    <div class="row">${b.nummer?`<a class="btn sm" href="tel:${e(b.nummer)}">📞 Bel ${e(b.nummer)}</a>`:""}<a class="btn sm" href="${e(wa(/^Opvolging/i.test(t.titel)?C.opvolging:C.terugbellen))}" target="_blank" rel="noopener">💬 WhatsApp-concept</a>${t.adres?routeKn(t.adres):""}</div></div></article>`};
+    <div class="row">${b.nummer?`<a class="btn sm" href="tel:${e(b.nummer)}">📞 Bel ${e(b.nummer)}</a>`:""}<a class="btn sm" href="${e(wa(vul(/^Opvolging/i.test(t.titel)?C.opvolging:C.terugbellen,{auto:t.auto})))}" target="_blank" rel="noopener">💬 WhatsApp-concept</a>${t.adres?routeKn(t.adres):""}</div></div></article>`};
   c.innerHTML=`<div class="rb-kl">
    <article class="card"><div class="body"><h2 class="t">💬 WhatsApp-concepten</h2><div class="meta">Eén tik: WhatsApp opent met de tekst. Jij kiest de klant en verstuurt zelf; het systeem verstuurt nooit iets.</div>
    ${Object.keys(CLAB).map(k=>`<div class="rb-con"><div><b>${CLAB[k]}</b><div class="meta">${e(C[k])}</div></div><div class="row"><a class="btn sm" href="${e(wa(C[k]))}" target="_blank" rel="noopener">WhatsApp</a><button type="button" class="btn sm ghost" data-kop="${k}">Kopieer</button></div></div>`).join("")}</div></article>
@@ -235,7 +244,7 @@ render=function(){
 };
 /* verse voorraad live van de server (elk uur bijgewerkt), i.p.v. de laatst gepubliceerde kopie */
 if(LIVE)api("/taken/robin/voorraad").then(j=>{if(j&&j.autos){try{VR=j}catch(x){}if(seg===VR_SEG)render()}}).catch(()=>{});
-window.RB={api,e,sheet,toast2,kentekenCheck,kentekenVraag,kiesFoto,laadV,laadT,routeKn,wa,LIVE}; /* ROBIN_V3 gebruikt deze hulpjes */
+window.RB={api,e,sheet,toast2,kentekenCheck,kentekenVraag,kiesFoto,laadV,laadT,routeKn,wa,LIVE,vul,telVanNaam,bewaarTelNaam,bekendeNamen}; /* ROBIN_V3 gebruikt deze hulpjes */
 })();
 
 /* ROBIN_V3 (t657u/t658u/t659u): tijdwinst voor Robin, alles in één scherm. Niets wordt verstuurd; Robin opent WhatsApp/RDW zelf. */
@@ -349,17 +358,30 @@ async function klantvraag(auto){
   if(!v)return;
   let r;try{r=await R.api("/taken/robin/v3/terugbellen","POST",v)}catch(x){R.toast2(x.message);return}
   if(v.tel)try{localStorage[telKey(r.taak_id)]=v.tel}catch(x){}
+  R.bewaarTelNaam(v.naam,v.tel);
   R.toast2("Terugbel-taak gemaakt"+(r.wanneer?" voor "+r.wanneer.replace("T"," "):"")+(r.dossier_fout?" (dossier: "+r.dossier_fout+")":""));
-  await belSheet({id:r.taak_id,auto_id:v.auto_id,titel:"Terugbellen: "+v.naam});vdBlok3();
+  await belSheet({id:r.taak_id,auto_id:v.auto_id,titel:"Terugbellen: "+v.naam,naam:v.naam,auto:v.auto,concept:"terugbellen"});vdBlok3();
 }
 async function belSheet(t){
-  const tel=(()=>{try{return localStorage[telKey(t.id)]||""}catch(x){return ""}})();let tekst="Hoi, je had gevraagd naar een auto bij BRNS Exclusief. Wanneer komt het je uit dat ik even bel? Groet, Robin";
-  if(t.auto_id){try{const d=await R.api("/taken/robin/v3/deel/"+encodeURIComponent(t.auto_id),"POST",{});tekst=d.tekst}catch(x){}}
-  const n=waNr(tel),wa=n?`https://wa.me/${n}?text=${encodeURIComponent(tekst)}`:R.wa(tekst);
+  /* INVULVELDEN_V1: concept kiezen, ingevuld met naam/auto/prijs; WhatsApp opent bij het nummer dat op dit toestel staat */
+  if(!CON2)await laadCon();await zorgVR();
+  const tel=(()=>{try{return localStorage[telKey(t.id)]||R.telVanNaam(t.naam)||""}catch(x){return ""}})();
+  const A=((typeof VR!=="undefined"&&VR&&VR.autos)||[]).find(a=>t.auto_id&&String(a.id)===String(t.auto_id));
+  const ctx={naam:t.naam||"",auto:(A&&A.titel)||t.auto||"",prijs:A&&A.prijs};
+  const C=(CON2&&CON2.concepten)||[];let deel=null;
+  if(t.auto_id){try{deel=(await R.api("/taken/robin/v3/deel/"+encodeURIComponent(t.auto_id),"POST",{})).tekst}catch(x){}}
+  const keus=[...C.map(c=>[c.key,c.label,c.tekst]),...(deel?[["__deel","Prijs + foto's",deel]]:[])];
+  let k0=t.concept||"terugbellen";if(!keus.find(x=>x[0]===k0))k0=keus.length?keus[0][0]:"";
+  const n=waNr(tel),link=tx=>n?`https://wa.me/${n}?text=${encodeURIComponent(tx)}`:R.wa(tx);
+  const start=R.vul((keus.find(x=>x[0]===k0)||[,,""])[2],ctx);
   await R.sheet(`<div class="rb3-rij"><h3>📞 ${e(t.titel||"Terugbellen")}</h3><button type="button" class="btn sm ghost" data-x>Sluiten</button></div>
-    ${tel?"":`<div class="meta">Het nummer staat alleen in het klantdossier (Telegram) en op de telefoon waarop het is ingevoerd, niet op deze openbare site.</div>`}
-    <div class="rb3-rij">${tel?`<a class="btn prim" href="tel:${e(tel.replace(/[^\d+]/g,""))}">📞 Bel ${e(tel)}</a>`:""}<a class="btn" href="${e(wa)}" target="_blank" rel="noopener">💬 WhatsApp-concept</a>
-    <button type="button" class="btn ghost" id="rb3-gebeld">✅ Gebeld</button></div><textarea rows="5" style="width:100%" readonly>${e(tekst)}</textarea>`,(ov,af)=>{
+    ${tel?"":`<div class="meta">Nummer staat niet op deze telefoon. WhatsApp opent zonder nummer; kies daar de klant.</div>`}
+    <div class="rb3-rij">${tel?`<a class="btn prim" href="tel:${e(tel.replace(/[^\d+]/g,""))}">📞 Bel ${e(tel)}</a>`:""}<a class="btn" id="rb3-wa" href="${e(link(start))}" target="_blank" rel="noopener">💬 WhatsApp${n?" naar "+e(tel):""}</a>
+    <button type="button" class="btn ghost" id="rb3-gebeld">✅ Gebeld</button></div>
+    <div class="rb3-chips">${keus.map(([k,l])=>`<button type="button" class="btn sm ${k===k0?"prim":"ghost"}" data-ck="${e(k)}">${e(l)}</button>`).join("")}</div>
+    <textarea id="rb3-btekst" rows="5" style="width:100%">${e(start)}</textarea><div class="meta">Je kunt de tekst hier nog aanpassen. Er wordt niets vanzelf verstuurd.</div>`,(ov,af)=>{
+    const ta=ov.querySelector("#rb3-btekst"),wl=ov.querySelector("#rb3-wa");const upd=()=>{wl.href=link(ta.value)};ta.oninput=upd;
+    ov.querySelectorAll("[data-ck]").forEach(b=>b.onclick=()=>{const x=keus.find(y=>y[0]===b.dataset.ck);ta.value=R.vul(x[2],ctx);upd();ov.querySelectorAll("[data-ck]").forEach(y=>{y.classList.toggle("prim",y===b);y.classList.toggle("ghost",y!==b)})});
     ov.querySelector("#rb3-gebeld").onclick=async()=>{try{await R.api("/taken/"+encodeURIComponent(t.id)+"/klaar","POST",{notitie:"Gebeld"});try{delete localStorage[telKey(t.id)]}catch(x){}R.toast2("Afgevinkt: gebeld");af(true);vdBlok3()}catch(x){R.toast2(x.message)}}});
 }
 async function proefrit(auto){
@@ -373,11 +395,12 @@ async function proefrit(auto){
     ov.querySelector("#rb3-ok").onclick=()=>{const o={};ov.querySelectorAll("[data-v]").forEach(i=>o[i.dataset.v]=i.value.trim());if(o.naam.length<2){R.toast2("Vul de naam in.");return}if(o.auto_id==="__anders")o.auto_id="";if(!o.auto_id&&!o.auto){R.toast2("Kies de auto.");return}
       if(!foto&&!confirm("Zonder foto van het rijbewijs starten?"))return;if(o.eind&&o.start&&o.eind<o.start){R.toast2("Terug-tijd ligt vóór de start.");return}af(o)}});
   if(!v)return;
-  try{const r=await R.api("/taken/robin/v3/proefrit","POST",{...v,rijbewijs:foto||undefined});if(v.tel)try{localStorage[telKey(r.proefrit.id)]=v.tel}catch(x){}
+  try{const r=await R.api("/taken/robin/v3/proefrit","POST",{...v,rijbewijs:foto||undefined});if(v.tel)try{localStorage[telKey(r.proefrit.id)]=v.tel}catch(x){}R.bewaarTelNaam(v.naam,v.tel);
     R.toast2("Proefrit gestart: "+r.proefrit.auto+", terug om "+String(r.proefrit.eind).slice(11,16));vdBlok3()}catch(x){R.toast2(x.message)}
 }
 async function terug(id){const km=prompt("Proefrit terug. Km-stand nu? (optioneel, leeg laten mag)","");if(km===null)return;
-  try{await R.api("/taken/robin/v3/proefrit/"+encodeURIComponent(id)+"/terug","POST",{km});try{delete localStorage[telKey(id)]}catch(x){}R.toast2("Proefrit afgerond");vdBlok3()}catch(x){R.toast2(x.message)}}
+  try{const r=await R.api("/taken/robin/v3/proefrit/"+encodeURIComponent(id)+"/terug","POST",{km});try{delete localStorage[telKey(id)]}catch(x){}
+    R.toast2(r.proefrit&&r.proefrit.opvolg_taak?"Proefrit afgerond. Opvolgtaak staat klaar voor morgen 10:00.":"Proefrit afgerond");vdBlok3()}catch(x){R.toast2(x.message)}}
 let V3=null;
 async function vdBlok3(){
   if(typeof seg==="undefined"||seg!==20)return;try{V3=await R.api("/taken/robin/v3/vandaag")}catch(x){return}
@@ -412,19 +435,32 @@ const stK=()=>{const c=document.getElementById("cards");if(c)moK.observe(c,{chil
 let CON2=null;
 async function laadCon(){try{CON2=await R.api("/taken/robin/v3/concepten")}catch(x){CON2=null}return CON2}
 function kopieer(t){try{navigator.clipboard.writeText(t).then(()=>R.toast2("Tekst gekopieerd"),()=>prompt("Kopieer:",t))}catch(x){prompt("Kopieer:",t)}}
+let CVX={naam:"",auto:"",prijs:null};
+function conRijen(kaart){
+  const L=(CON2&&CON2.concepten)||[];const tel=R.telVanNaam(CVX.naam),n=waNr(tel);
+  const link=tx=>n?`https://wa.me/${n}?text=${encodeURIComponent(tx)}`:R.wa(tx);
+  const box=kaart.querySelector("#rb3-conrijen");if(!box)return;
+  box.innerHTML=(CVX.naam?`<div class="meta">${tel?"📱 WhatsApp opent bij "+e(tel)+" (nummer staat op deze telefoon).":"Geen nummer van "+e(CVX.naam)+" op deze telefoon: WhatsApp opent zonder nummer."}</div>`:"")+
+   L.map(c=>{const tx=R.vul(c.tekst,CVX);return `<div class="rb3-con"><div><b>${e(c.label)}</b>${c.aangepast?' <span class="rb3-l oranje">eigen tekst</span>':""}${c.eigen?' <span class="rb3-l">eigen concept</span>':""}<div class="meta rb3-ctekst">${e(tx)}</div></div>
+     <div class="rb3-rij"><a class="btn sm" href="${e(link(tx))}" target="_blank" rel="noopener">WhatsApp</a><button type="button" class="btn sm ghost" data-ckop="${e(c.key)}">Kopieer</button><button type="button" class="btn sm ghost" data-cbew="${e(c.key)}">✏️ Bewerk</button></div></div>`}).join("");
+  box.querySelectorAll("[data-ckop]").forEach(b=>b.onclick=()=>{const c=L.find(x=>x.key===b.dataset.ckop);if(c)kopieer(R.vul(c.tekst,CVX))});
+  box.querySelectorAll("[data-cbew]").forEach(b=>b.onclick=()=>conBewerk(L.find(x=>x.key===b.dataset.cbew)));
+}
 async function conBlok(vers){
   if(typeof seg==="undefined"||seg!==26)return;const kl=document.querySelector("#cards .rb-kl");if(!kl)return;
   const kaart=kl.querySelector("article.card");if(!kaart)return;
   if(!CON2||vers)await laadCon();if(!CON2){return}
-  if(seg!==26)return;
-  const L=CON2.concepten||[];
+  if(seg!==26)return;await zorgVR();
+  const A=((typeof VR!=="undefined"&&VR&&VR.autos)||[]);
   kaart.setAttribute("data-con2","1");
-  kaart.innerHTML=`<div class="body"><h2 class="t">💬 WhatsApp-concepten</h2><div class="meta">Tik ✏️ om een tekst aan te passen. Je tekst wordt op de server bewaard en blijft staan (ook op een ander toestel) tot je hem zelf wijzigt. WhatsApp opent met de tekst; jij kiest de klant en verstuurt zelf.</div>
-   ${L.map(c=>`<div class="rb3-con"><div><b>${e(c.label)}</b>${c.aangepast?' <span class="rb3-l oranje">eigen tekst</span>':""}${c.eigen?' <span class="rb3-l">eigen concept</span>':""}<div class="meta rb3-ctekst">${e(c.tekst)}</div></div>
-     <div class="rb3-rij"><a class="btn sm" href="${e(R.wa(c.tekst))}" target="_blank" rel="noopener">WhatsApp</a><button type="button" class="btn sm ghost" data-ckop="${e(c.key)}">Kopieer</button><button type="button" class="btn sm ghost" data-cbew="${e(c.key)}">✏️ Bewerk</button></div></div>`).join("")}
+  kaart.innerHTML=`<div class="body"><h2 class="t">💬 WhatsApp-concepten</h2><div class="meta">Kies hieronder voor wie en welke auto: de tekst vult zich vanzelf in. ✏️ past een tekst blijvend aan. Jij verstuurt zelf.</div>
+   <div class="rb3-form rb3-voor"><label>Voor wie?</label><input data-cv="naam" list="rb3-namen" autocomplete="off" placeholder="Naam klant (mag leeg)" value="${e(CVX.naam)}"><datalist id="rb3-namen">${R.bekendeNamen().map(x=>`<option value="${e(x)}">`).join("")}</datalist>
+   <label>Welke auto?</label><select data-cv="auto"><option value="">Geen / algemeen</option>${A.map(a=>`<option value="${e(a.id)}" ${CVX.auto_id===String(a.id)?"selected":""}>${e(String(a.titel||"").split("|")[0].trim().slice(0,60))}</option>`).join("")}</select></div>
+   <div id="rb3-conrijen"></div>
    <div class="rb3-rij"><button type="button" class="btn sm" data-cnieuw>➕ Eigen concept</button></div></div>`;
-  kaart.querySelectorAll("[data-ckop]").forEach(b=>b.onclick=()=>{const c=L.find(x=>x.key===b.dataset.ckop);if(c)kopieer(c.tekst)});
-  kaart.querySelectorAll("[data-cbew]").forEach(b=>b.onclick=()=>conBewerk(L.find(x=>x.key===b.dataset.cbew)));
+  const ni=kaart.querySelector("[data-cv=naam]"),as=kaart.querySelector("[data-cv=auto]");
+  const zet=()=>{CVX.naam=ni.value.trim();const a=A.find(x=>String(x.id)===as.value);CVX.auto_id=as.value;CVX.auto=a?a.titel:"";CVX.prijs=a?a.prijs:null;conRijen(kaart)};
+  ni.oninput=zet;as.onchange=zet;zet();
   kaart.querySelector("[data-cnieuw]").onclick=()=>conBewerk(null);
 }
 async function conPost(body){try{const r=await R.api("/taken/robin/v3/concepten","POST",body);CON2=r;try{R.laadV&&R.laadV()}catch(x){}return true}catch(x){R.toast2(x.message);return false}}
@@ -432,7 +468,9 @@ async function conBewerk(c){
   const nieuw=!c;
   await R.sheet(`<div class="rb3-rij"><h3>${nieuw?"➕ Eigen concept":"✏️ "+e(c.label)}</h3><button type="button" class="btn sm ghost" data-x>Annuleren</button></div>
     <div class="rb3-form">${nieuw||c.eigen?`<label>Naam</label><input data-v="label" maxlength="40" value="${nieuw?"":e(c.label)}" placeholder="bijv. Inruil bespreken">`:""}
-    <label>Tekst</label><textarea data-v="tekst" rows="6" maxlength="1000">${nieuw?"":e(c.tekst)}</textarea></div>
+    <label>Tekst</label><textarea data-v="tekst" rows="6" maxlength="1000">${nieuw?"":e(c.tekst)}</textarea>
+    <div class="rb3-chips"><span class="meta">Invoegen:</span><button type="button" class="btn sm ghost" data-ins="{naam}">{naam}</button><button type="button" class="btn sm ghost" data-ins="{auto}">{auto}</button><button type="button" class="btn sm ghost" data-ins="{prijs}">{prijs}</button></div>
+    <div class="meta">{naam}, {auto} en {prijs} worden ingevuld als je ze kiest. Onbekend? Dan laten we het netjes weg.</div></div>
     <div class="meta" id="rb3-cteller"></div>
     <div class="rb3-rij"><button type="button" class="btn prim" id="rb3-cok">Opslaan</button>
     ${!nieuw&&!c.eigen&&c.aangepast?'<button type="button" class="btn" id="rb3-cstd">↩︎ Standaardtekst terugzetten</button>':""}
@@ -440,6 +478,7 @@ async function conBewerk(c){
     ${!nieuw&&!c.eigen?`<div class="meta">Standaardtekst: ${e(c.standaard_tekst||"")}</div>`:""}
     <div class="meta">Er wordt niets verstuurd. De tekst wordt alleen bewaard.</div>`,(ov,af)=>{
     const ta=ov.querySelector("[data-v=tekst]"),tl=ov.querySelector("#rb3-cteller");const tel=()=>tl.textContent=ta.value.length+" / 1000 tekens";ta.oninput=tel;tel();
+    ov.querySelectorAll("[data-ins]").forEach(b=>b.onclick=()=>{const s=ta.selectionStart??ta.value.length,x=ta.selectionEnd??s;ta.value=ta.value.slice(0,s)+b.dataset.ins+ta.value.slice(x);ta.focus();ta.selectionStart=ta.selectionEnd=s+b.dataset.ins.length;tel()});
     ov.querySelector("#rb3-cok").onclick=async()=>{const t=ta.value.trim(),lab=ov.querySelector("[data-v=label]");
       if(!t){R.toast2("De tekst mag niet leeg zijn");return}
       if((nieuw||c.eigen)&&!(lab&&lab.value.trim())){R.toast2("Geef het concept een naam");return}
@@ -474,7 +513,7 @@ async function weekSheet(){
 const AFLPRE=/^\W*Afleveren\b/i;
 async function afleverSheet(id,titel){
   let st;try{st=await R.api("/taken/robin/v3/aflever/"+encodeURIComponent(id))}catch(x){R.toast2(x.message);return}
-  if(!CON2)await laadCon();const F=st.fotos||{};const klaar=(CON2&&CON2.samen&&CON2.samen.auto_klaar)||"Hoi, goed nieuws: de auto staat klaar. Wanneer kom je hem ophalen? Groet, Robin – BRNS Exclusief";
+  if(!CON2)await laadCon();const F=st.fotos||{};const klaar=R.vul((CON2&&CON2.samen&&CON2.samen.auto_klaar)||"Hoi {naam}, goed nieuws: {auto} staat klaar. Wanneer kom je hem ophalen? Groet, Robin – BRNS Exclusief",{auto:String(titel).replace(AFLPRE,"").replace(/^[:\s]+/,"")});
   await R.sheet(`<div class="rb3-rij"><h3>📋 Afleverrapport</h3><button type="button" class="btn sm ghost" data-x>Sluiten</button></div><div class="meta">${e(titel)}</div>
     <div class="rb3-form"><label>Km-stand bij aflevering</label><input data-v="km" inputmode="numeric" value="${st.km!=null?e(st.km):""}" placeholder="bijv. 80123">
     <label>Schade of bijzonderheden</label><textarea data-v="schade" rows="2" placeholder="bijv. geen schade, of: kras achterbumper">${e(st.schade||"")}</textarea></div>
