@@ -18,6 +18,11 @@ async function api(p,method,body){
   return j;
 }
 let TAKEN=null, FILT="open", MED="", AUTO="", DEEL="inkoop", poll=null;
+/* TAKEN_WEEK_V1 (t671u): taken_week.js (weekbord, geschiedenis, prullenbak, spoor, concepten) gebruikt deze ingangen */
+window.TK_API=api;window.TK_DATA=()=>TAKEN;
+window.TK_HERLAAD=async()=>{TAKEN=await api("/taken");if(seg===TAKEN_SEG||seg===WACHT_SEG)tekenLijst();if(seg===VD)takenVandaagBlok();if(typeof window.navWacht==="function")navWacht(wachtAantal());return TAKEN};
+function wachtAantal(){return ((TAKEN&&TAKEN.vragen)||[]).filter(v=>v.status==="open").length+((TAKEN&&TAKEN.concepten)||[]).length}
+function vandaagSet(data){const v=data&&data.vandaag;return v&&v.vandaag?new Set([...(v.vandaag||[]),...(v.te_laat||[])]):null}
 const CK="tk_concept_v1",BEZIG_MET={}; /* AZ_FIX1/2 */
 
 function gebruikerLabel(u){
@@ -122,7 +127,7 @@ function filterItems(data){
   if(FILT==="wacht_op_robin"||seg===WACHT_SEG)return {taken:[],vragen};
   let L=(data.taken||[]).filter(t=>t.status==="open"||t.status==="bezig");
   const v=new Date().toLocaleDateString("sv-SE",{timeZone:"Europe/Amsterdam"});
-  if(FILT==="vandaag")L=L.filter(t=>(t.deadline||"").slice(0,10)===v);
+  if(FILT==="vandaag"){const S=vandaagSet(data);L=S?L.filter(t=>S.has(t.id)):L.filter(t=>(t.deadline||"").slice(0,10)===v)}
   if(FILT==="te_laat")L=L.filter(isTeLaat);
   if(FILT==="klaar")L=(data.taken||[]).filter(t=>t.status==="klaar");
   if(MED)L=L.filter(t=>(t.voor||"")===MED);
@@ -208,6 +213,7 @@ function kaart(t){
   if(t.checklist&&t.checklist.length){const k=t.checklist.filter(c=>c.klaar).length;extra+=`<div class="tk-meta">☑️ Checklist ${k}/${t.checklist.length}</div><div class="tk-cl">${t.checklist.map((c,i)=>`<button type="button" class="tk-btn sec" style="display:block;width:100%;text-align:left;margin:3px 0" data-clv="${esc(t.id)}" data-i="${i}">${c.klaar?"✅":"⬜"} ${esc(c.tekst)}</button>`).join("")}</div>`}
   if(t.terugkerend_id)extra+=`<div class="tk-meta">🔁 Terugkerende taak</div>`;
   act+=`<button class="tk-btn sec" data-cl="${esc(t.id)}">☑️ Checklist</button>`;
+  act+=`<button class="tk-btn sec" data-spoor="${esc(t.id)}">🕘 Spoor</button><button class="tk-btn sec" data-weg="${esc(t.id)}">🗑 Weg</button>`; /* TAKEN_WEEK_V1 */
   /* DOSSIER_V1 punt 4: agenda, route, bellen en WhatsApp direct vanuit de taak (verstuurt niets; Robin tikt zelf) */
   act+=snelActies(t,!!r);
   if(t.notities&&t.notities.length)extra+=t.notities.slice(-3).map(n=>`<div class="tk-meta">🗒 ${esc(n.tekst)}${n.door?" ("+esc(n.door)+")":""}</div>`).join("");
@@ -268,7 +274,7 @@ function takenRender(){
 async function laadEnTeken(stil){
   try{
     TAKEN=await api("/taken");
-    if(typeof window.navWacht==="function")navWacht((TAKEN.vragen||[]).filter(v=>v.status==="open").length);
+    if(typeof window.navWacht==="function")navWacht(wachtAantal());
   }catch(e){
     const cards=$("#cards");
     if(cards&&!stil)cards.innerHTML=`<div class="tk-wrap"><div class="tk-warn"><b>Taken niet geladen.</b>${esc(e.message)}</div></div>`;
@@ -299,7 +305,7 @@ function tekenLijst(){
   const autos=[...new Set((TAKEN.taken||[]).map(t=>t.auto).filter(Boolean))];
   const openV=(TAKEN.vragen||[]).filter(v=>v.status==="open");
   if(seg===WACHT_SEG){
-    cards.innerHTML=`<div class="tk-wrap"><div class="tk-warn"><b>Wacht op jou (Robin)</b> Antwoorden gaan via Telegram naar de medewerker die de vraag stelde. Geen bundel in de ochtendmail.</div>${wachtBlok(openV,false)}</div>`;
+    cards.innerHTML=`<div class="tk-wrap"><div class="tk-warn"><b>Wacht op jou (Robin)</b> Antwoorden gaan via Telegram naar de medewerker die de vraag stelde. Geen bundel in de ochtendmail.</div>${window.TK_WEEK?TK_WEEK.conceptBlok(TAKEN,false):""}${wachtBlok(openV,false)}</div>`;
     bind();return;
   }
   const {taken,vragen}=filterItems(TAKEN);
@@ -309,13 +315,13 @@ function tekenLijst(){
     <select id="tk-med"><option value="">Alle medewerkers</option>${meds.map(n=>`<option ${MED===n?"selected":""}>${esc(n)}</option>`).join("")}</select>
     <select id="tk-auto"><option value="">Alle auto’s</option>${autos.map(n=>`<option ${AUTO===n?"selected":""}>${esc(n)}</option>`).join("")}</select>
   </div>`;
-  const vragenHtml=FILT==="wacht_op_robin"?wachtBlok(openV,false):(openV.length?wachtBlok(openV,true):"");
+  const vragenHtml=FILT==="wacht_op_robin"?((window.TK_WEEK?TK_WEEK.conceptBlok(TAKEN,false):"")+wachtBlok(openV,false)):(openV.length?wachtBlok(openV,true):"");
   const lijst=(FILT==="wacht_op_robin"?"":taken.map(kaart).join(""))|| (FILT==="wacht_op_robin"?"":`<div class="tk-leeg">Niets in dit filter.</div>`);
   const medBlok=`<div class="tk-med"><b>Medewerkers</b> <button type="button" class="btn sm" onclick="window.RB_TEAM&&RB_TEAM.open()">👤 Medewerker toevoegen</button><br>
     ${(TAKEN.gebruikers||[]).map(gebruikerLabel).join(" · ")}</div>`;
   cards.innerHTML=`<div class="tk-wrap">
     <div class="tk-warn"><b>Openbare site · live van de server</b>${esc(TAKEN.waarschuwing||"Telefoonnummers van bedrijven zijn zichtbaar op deze site. Alleen zakelijke nummers.")}</div>
-    ${seintjeBlok()}${restBlok()}${nieuwBlok(meds)}<div class="tk-filters">${filters}</div>${sub}${vragenHtml}${lijst}${tkrBlok()}${medBlok}</div>`;
+    ${seintjeBlok()}${restBlok()}${window.TK_WEEK?TK_WEEK.balk(TAKEN):""}${nieuwBlok(meds)}<div class="tk-filters">${filters}</div>${sub}${vragenHtml}${lijst}${tkrBlok()}${medBlok}</div>`;
   bind();conceptTerug();
 }
 
@@ -503,7 +509,8 @@ async function tkNieuw(){
   const voor=(document.getElementById("tkn-voor")||{}).value||"",deadline=(document.getElementById("tkn-dl")||{}).value||"";
   BEZIG_MET.nieuw=1;const b=document.getElementById("tkn-ok");if(b){b.disabled=true;b.textContent="Opslaan…"}
   try{const it={titel,soort:"taak"};if(voor)it.voor=voor;if(deadline)it.deadline=deadline;
-    const r=await api("/taken","POST",{items:[it],bron:"robin-site"});
+    let r=await api("/taken","POST",{items:[it],bron:"robin-site",check_dubbel:true});
+    if(r.dubbel&&r.dubbel.length){if(!confirm(r.dubbel.join("\n")+"\n\nToch toevoegen?"))return;r=await api("/taken","POST",{items:[it],bron:"robin-site"})}
     if(!(r.opgeslagen||[]).length)throw new Error("De taak is niet opgeslagen. Probeer het opnieuw.");
     ["tkn-titel","tkn-voor","tkn-dl"].forEach(k=>conceptZet(k,""));delete BEZIG_MET.nieuw;
     TAKEN=await api("/taken");tekenLijst();if(typeof toast==="function")try{toast("Taak toegevoegd")}catch(e){}
@@ -566,10 +573,12 @@ function takenVandaagBlok(){
     TAKEN=j||TAKEN;
     const v=new Date().toLocaleDateString("sv-SE",{timeZone:"Europe/Amsterdam"});
     const open=(TAKEN.taken||[]).filter(t=>t.status==="open"||t.status==="bezig");
-    const vandaagT=open.filter(t=>(t.deadline||"").slice(0,10)===v);
-    const laat=open.filter(t=>{const d=(t.deadline||"").slice(0,10);return d&&d<v});
+    const VS=TAKEN.vandaag&&TAKEN.vandaag.vandaag?TAKEN.vandaag:null; /* TAKEN_SPOOR_V1: zelfde Vandaag als Telegram en Team-app */
+    const vandaagT=VS?open.filter(t=>VS.vandaag.includes(t.id)):open.filter(t=>(t.deadline||"").slice(0,10)===v);
+    const laat=VS?open.filter(t=>(VS.te_laat||[]).includes(t.id)):open.filter(t=>{const d=(t.deadline||"").slice(0,10);return d&&d<v});
+    const zdN=VS?(VS.zonder_dag||[]).length:open.filter(t=>!t.deadline).length;
     const vr=(TAKEN.vragen||[]).filter(x=>x.status==="open");
-    if(typeof window.navWacht==="function")navWacht(vr.length);
+    if(typeof window.navWacht==="function")navWacht(wachtAantal());
     /* NAV_V1 (t615u): "Wacht op jou" als eerste blok bovenaan Vandaag, daarna "Te doen vandaag" */
     let w=document.getElementById("tk-wacht-vd");
     if(!w){w=document.createElement("section");w.id="tk-wacht-vd";w.className="vb";host.insertBefore(w,host.firstChild)}
@@ -580,8 +589,10 @@ function takenVandaagBlok(){
     const vg=TAKEN.voortgang&&TAKEN.voortgang.totaal,vgTxt=vg?`<div class="meta tk-vg">Vandaag: ${vg.klaar_vandaag} klaar · ${vg.bezig} bezig · ${vg.open} open${vg.te_laat?" · "+vg.te_laat+" te laat":""}${Object.keys(TAKEN.voortgang.personen||{}).length>1?`<br>${Object.entries(TAKEN.voortgang.personen).map(([w,p])=>esc(w)+": "+p.klaar_vandaag+" klaar, "+p.bezig+" bezig, "+p.open+" open").join("<br>")}`:""}</div>`:"";
     el.innerHTML=`<h3>Te doen vandaag <span class="cnt">${vandaagT.length+laat.length}</span></h3>${vgTxt}
       ${lijst?`<ul class="vl">${lijst}</ul>`:`<div class="meta">Niets met deadline vandaag.</div>`}
+      ${zdN?`<div class="meta">Zonder dag: ${zdN} open taak/taken (staan op het weekbord).</div>`:""}
       <div class="meta"><button type="button" class="btn sm ghost" data-gotab="19" data-ga-route="taken">Open Taken</button></div>`;
-    w.innerHTML=vr.length?`<h3>Wacht op jou (Robin) <span class="cnt">${vr.length}</span></h3>${vr.map(vraagKaart).join("")}`:`<h3>Wacht op jou (Robin)</h3><div class="meta">Geen vragen voor jou.</div>`;
+    const CN=(TAKEN.concepten||[]).length,cnTxt=CN?(window.TK_WEEK?TK_WEEK.conceptBlok(TAKEN,true):`<div class="meta">📝 ${CN} concept(en) wachten op je Klopt.</div>`):"";
+    w.innerHTML=(vr.length||CN)?`<h3>Wacht op jou (Robin) <span class="cnt">${vr.length+CN}</span></h3>${cnTxt}${vr.map(vraagKaart).join("")}`:`<h3>Wacht op jou (Robin)</h3><div class="meta">Geen vragen voor jou.</div>`;
     w.querySelectorAll("[data-ant]").forEach(b=>b.onclick=()=>antwoord(b.dataset.ant,b.dataset.soort));
   };
   if(TAKEN)teken(TAKEN);
