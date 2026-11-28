@@ -110,3 +110,9 @@ input::placeholder,textarea::placeholder{color:#7a828e}
 .tl-rij .tl-kn{margin:6px 0 0}
 .tl-st.ok{color:#1a7f37}.tl-st.wacht{color:#9a6700}.tl-st.uit{color:#6b7280}
 .tl-weg{color:#b42318!important}
+
+/* TAAK_SNEL_V1 (t670u) */
+.ts-zinrij{display:flex;gap:8px;align-items:center}.ts-zinrij input{flex:1}.ts-zinrij .btn{min-width:48px;min-height:44px;font-size:20px}
+.ts-sj{flex-wrap:wrap}.ts-sj .rb-k{min-height:44px;font-size:14px;flex:1 1 30%;padding:4px 6px}
+.ts-dag{display:flex;gap:8px}.ts-dag .rb-f{flex:1;margin:4px 0}.ts-snel{display:flex;gap:6px;margin:2px 0 6px}
+.ts-chk{display:flex;gap:8px;align-items:center}.ts-chk input{width:auto;margin:0}

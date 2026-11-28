@@ -163,7 +163,7 @@ function tkIcs(t){const T=tkTijd(t),z=s=>String(s||"").replace(/([,;\\])/g,"\\$1
   const u=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));const a=document.createElement("a");a.href=u;a.download="taak.ics";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},1500)}
 function kaart(t){
   const late=isTeLaat(t)?" tk-late":"";
-  const meta=[t.auto?`Auto: ${esc(t.auto)}`:"",t.voor?`Voor: ${esc(t.voor)}`:"",t.deadline?`Uiterlijk ${esc(dag(t.deadline))}`:"",t.plaats?esc(t.plaats):""].filter(Boolean).join(" · ");
+  const meta=[t.auto?`Auto: ${esc(t.auto)}`:"",t.voor?`Voor: ${esc(t.voor)}`:"",t.deadline?`Uiterlijk ${esc(dag(t.deadline))}${t.tijd?" "+esc(t.tijd):""}`:"",t.plaats?esc(t.plaats):""].filter(Boolean).join(" · ");
   let act="",extra="";
   const b=t.bedrijf_info,r=t.route,rdw=t.rdw;
   if(t.soort_actie==="bel"){
@@ -575,7 +575,7 @@ function takenVandaagBlok(){
     if(!w){w=document.createElement("section");w.id="tk-wacht-vd";w.className="vb";host.insertBefore(w,host.firstChild)}
     let el=document.getElementById("tk-vandaag");
     if(!el){el=document.createElement("section");el.id="tk-vandaag";el.className="vb";w.insertAdjacentElement("afterend",el)}
-    const rij=t=>`<li class="vr"><div class="vr-m"><div class="vr-t">${esc(t.titel)}${t.auto?" · "+esc(t.auto):""}</div><div class="vr-s">${t.deadline?"uiterlijk "+esc(dag(t.deadline)):""}${t.voor?" · "+esc(t.voor):""}${isTeLaat(t)?" · te laat":""}</div></div></li>`;
+    const rij=t=>`<li class="vr"><div class="vr-m"><div class="vr-t">${esc(t.titel)}${t.auto?" · "+esc(t.auto):""}</div><div class="vr-s">${t.deadline?"uiterlijk "+esc(dag(t.deadline))+(t.tijd?" "+esc(t.tijd):""):""}${t.voor?" · "+esc(t.voor):""}${isTeLaat(t)?" · te laat":""}</div></div></li>`;
     const lijst=[...laat.map(rij),...vandaagT.map(rij)].join("")||"";
     const vg=TAKEN.voortgang&&TAKEN.voortgang.totaal,vgTxt=vg?`<div class="meta tk-vg">Vandaag: ${vg.klaar_vandaag} klaar · ${vg.bezig} bezig · ${vg.open} open${vg.te_laat?" · "+vg.te_laat+" te laat":""}${Object.keys(TAKEN.voortgang.personen||{}).length>1?`<br>${Object.entries(TAKEN.voortgang.personen).map(([w,p])=>esc(w)+": "+p.klaar_vandaag+" klaar, "+p.bezig+" bezig, "+p.open+" open").join("<br>")}`:""}</div>`:"";
     el.innerHTML=`<h3>Te doen vandaag <span class="cnt">${vandaagT.length+laat.length}</span></h3>${vgTxt}

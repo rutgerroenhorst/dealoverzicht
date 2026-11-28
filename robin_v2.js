@@ -113,9 +113,10 @@ function dosBlok(){
      ${(k.autos||[]).map(a=>`<div class="meta">🚗 ${e(a.kenteken)} ${e(a.omschr||"")}${a.apk_tot?" · APK tot "+e(a.apk_tot):""}</div>`).join("")}
      ${(k.notities||[]).slice(-2).map(n=>`<div class="meta">• ${e(n)}</div>`).join("")}
      <div class="row">${DOS.prive?telKn(k,C.terugbellen):(k.heeft_tel?'<span class="meta">📞 nummer bekend (log in om te bellen)</span>':"")}
-     <button type="button" class="btn sm ghost" data-tl="klant/${e(k.id)}">🕘 Tijdlijn</button><button type="button" class="btn sm ghost" data-not="${e(k.id)}">✏️ Notitie</button><button type="button" class="btn sm ghost" data-rdw="${e(k.id)}">🔖 Kenteken (RDW)</button></div></div></article>`).join("")||'<div class="meta">Nog geen klanten. Voeg er een toe, of zeg in Telegram: “klant Jan 06… zoekt een Golf”.</div>'}`;
+     <button type="button" class="btn sm ghost" data-tl="klant/${e(k.id)}">🕘 Tijdlijn</button><button type="button" class="btn sm ghost" data-not="${e(k.id)}">✏️ Notitie</button><button type="button" class="btn sm ghost" data-ktaak="${e(k.id)}">📝 Taak</button><button type="button" class="btn sm ghost" data-rdw="${e(k.id)}">🔖 Kenteken (RDW)</button></div></div></article>`).join("")||'<div class="meta">Nog geen klanten. Voeg er een toe, of zeg in Telegram: “klant Jan 06… zoekt een Golf”.</div>'}`;
   const qi=document.getElementById("rb-dosq");if(qi)qi.oninput=()=>{DOSQ=qi.value;const p=qi.selectionStart;dosBlok();const n=document.getElementById("rb-dosq");if(n){n.focus();try{n.setSelectionRange(p,p)}catch(x){}}};
   el.querySelectorAll("[data-tl]").forEach(b=>b.onclick=()=>tijdlijn(b.dataset.tl));
+  el.querySelectorAll("[data-ktaak]").forEach(b=>b.onclick=()=>{const k=(DOS.klanten||[]).find(x=>String(x.id)===b.dataset.ktaak)||{};const a0=(k.autos||[])[0]||{};if(window.RB&&window.RB.taakSheet)window.RB.taakSheet({klant:k.naam,auto:a0.omschr||a0.kenteken||"",kenteken:a0.kenteken||k.kenteken||""})});  /* TAAK_SNEL_V1 */
   el.querySelectorAll("[data-kk]").forEach(b=>b.onclick=()=>window.RB3&&window.RB3.klantKaart&&window.RB3.klantKaart(b.dataset.kk));
   el.querySelectorAll("[data-rdw]").forEach(b=>b.onclick=async()=>{const r=await kentekenRdw(true,b.dataset.rdw);if(r&&r.ok){await laadDos();dosBlok()}});
   el.querySelectorAll("[data-not]").forEach(b=>b.onclick=async()=>{const t=prompt("Notitie bij deze klant");if(!t)return;try{await api("/taken/robin/klant/"+b.dataset.not+"/notitie","POST",{tekst:t});await laadDos();dosBlok();toast2("Notitie opgeslagen (ook in Telegram)")}catch(x){toast2(x.message)}});
@@ -199,7 +200,7 @@ function verkochtSheet(A){const nm=x=>String(x.titel||"").split("|")[0].trim(),p
 /* ---------- acties ---------- */
 async function actie(a){
   try{
-    if(a==="taak"){if(window.NAV)NAV.ga("taken");return}
+    if(a==="taak"){if(window.RB&&window.RB.taakSheet){window.RB.taakSheet();return}if(window.NAV)NAV.ga("taken");return}  /* TAAK_SNEL_V1 */
     if(a==="taxatie"){if(window.NAV)NAV.ga("taxatie");return}
     if(a==="voorraad"){if(window.NAV)NAV.ga("voorraad");return}
     if(a==="bellen"||a==="whatsapp"){if(window.NAV)NAV.ga("klanten");return}
@@ -273,7 +274,7 @@ function deco(){
     const pv=PV&&PV.per_auto&&PV.per_auto[String(a.id)],lang=L.some(x=>x.code==="lang");
     const h=`<div class="rb3-sig">${L.map(x=>`<span class="rb3-l ${e(x.niveau)}">${x.code==="lang"?"⏳":x.code==="foto"?"📷":x.code==="prijs"?"€":"🔢"} ${e(x.label)}</span>`).join("")}</div>${pvRegel(pv)}
       ${lang?`<div class="rb3-kn"><button type="button" class="btn sm prim" data-r3="opfris" data-id="${e(a.id)}">🔄 Taak voor team: opfrissen</button></div>`:""}
-      <div class="rb3-kn"><button type="button" class="btn sm" data-r3="deel" data-id="${e(a.id)}">💬 Prijs delen</button><button type="button" class="btn sm ghost" data-r3="proefrit" data-id="${e(a.id)}">🔑 Proefrit</button><button type="button" class="btn sm ghost" data-r3="klantvraag" data-id="${e(a.id)}">📞 Klantvraag</button><button type="button" class="btn sm ghost" data-r3="papier" data-id="${e(a.id)}">🧾 Papierwerk</button></div>`;
+      <div class="rb3-kn"><button type="button" class="btn sm" data-r3="deel" data-id="${e(a.id)}">💬 Prijs delen</button><button type="button" class="btn sm ghost" data-r3="proefrit" data-id="${e(a.id)}">🔑 Proefrit</button><button type="button" class="btn sm ghost" data-r3="klantvraag" data-id="${e(a.id)}">📞 Klantvraag</button><button type="button" class="btn sm ghost" data-r3="papier" data-id="${e(a.id)}">🧾 Papierwerk</button><button type="button" class="btn sm ghost" data-r3="taak" data-id="${e(a.id)}">📝 Taak</button></div>`;
     if(b.dataset.h!==h){b.innerHTML=h;b.dataset.h=h;b.querySelectorAll("[data-r3]").forEach(x=>x.onclick=()=>actie3(x.dataset.r3,x.dataset.id))}
     k.style.display=ALLEEN&&!L.length?"none":"";});
   let t=document.getElementById("rb3-sigtop");const vr=document.getElementById("rb-vr");
@@ -298,6 +299,7 @@ async function actie3(a,id){
   if(a==="proefrit")return proefrit(id?autoVan(id):null);
   if(a==="klantvraag")return klantvraag(id?autoVan(id):null);
   if(a==="week")return weekSheet();
+  if(a==="taak"){const x=autoVan(id);return window.RB.taakSheet({auto:x?String(x.titel||"").split("|")[0].trim():"",autoId:x&&x.id})}  /* TAAK_SNEL_V1 */
   if(a==="opfris")return opfrisSheet(id);
   R.toast2("Deze knop komt in de volgende stap.");
 }
@@ -430,7 +432,7 @@ async function klantKaart(kid){
     ${r.volgende?`<div class="rb3-ne top"><div><b>👉 ${e(r.volgende)}</b></div></div>`:""}
     <div class="meta">${k.wens?"Zoekt: "+e(k.wens):"Nog geen wens genoteerd."}${k.sinds?" · klant sinds "+e(k.sinds):""}</div>
     ${(k.autos||[]).map((a,i)=>`<div class="rb3-rij"><span class="meta">🚗 ${e(a.kenteken)} ${e(a.omschr||"")}${a.apk_tot?" · APK tot "+e(a.apk_tot):""}</span><button type="button" class="btn sm ghost" data-kapk="${i}">🛠️ APK-afspraak</button></div>`).join("")}
-    <div class="rb3-rij">${tel?`<a class="btn prim" href="tel:${e(tel.replace(/[^\d+]/g,""))}">📞 Bel</a>`:""}<button type="button" class="btn ${tel?"":"prim"}" data-kka="wa">💬 WhatsApp-concept</button><button type="button" class="btn ghost" data-kka="not">✏️ Notitie</button></div>
+    <div class="rb3-rij">${tel?`<a class="btn prim" href="tel:${e(tel.replace(/[^\d+]/g,""))}">📞 Bel</a>`:""}<button type="button" class="btn ${tel?"":"prim"}" data-kka="wa">💬 WhatsApp-concept</button><button type="button" class="btn ghost" data-kka="not">✏️ Notitie</button><button type="button" class="btn ghost" data-kka="taak">📝 Taak</button></div>
     ${tel?"":`<div class="meta">${k.heeft_tel?"Nummer staat in het dossier, maar niet op deze telefoon.":"Geen nummer bekend."}</div>`}
     <h3>Open <span class="cnt">${O.length}</span></h3>${O.length?O.map(t=>`<div class="rb-rit"><b>${e(t.titel)}</b><div class="meta">${t.wanneer?"🕒 "+tm(t.wanneer):t.deadline?"📅 "+e(t.deadline):""}${t.te_laat?' · <b style="color:#991b1b">te laat</b>':""}</div>${t.terugbel?`<button type="button" class="btn sm" data-kkb="${e(t.id)}">📞 Terugbellen</button>`:""}</div>`).join(""):`<div class="meta">Niets open.</div>`}
     ${P.length?`<h3>Proefritten</h3>`+P.map(p=>`<div class="meta">🔑 ${e(p.auto)} · ${tm(p.start)} ${p.terug?"· terug":"· loopt"}</div>`).join(""):""}
@@ -439,6 +441,7 @@ async function klantKaart(kid){
     ov.querySelector("[data-kka=wa]").onclick=()=>{af(null);const t=O.find(x=>x.terugbel);belSheet({id:"kk_"+kid,geen_taak:true,titel:"WhatsApp aan "+k.naam,naam:vn,klant_id:kid,concept:t?t.concept:"opvolging",auto_id:t&&t.auto_id,auto:t&&t.auto})};
     ov.querySelectorAll("[data-kapk]").forEach(b=>b.onclick=async()=>{const a=(k.autos||[])[+b.dataset.kapk];const o=String(a.omschr||"").split(" ");const v={kenteken:a.kenteken||"",merk:o[0]||"",model:o.slice(1).join(" "),apk_tot:a.apk_tot||"",klant:vn};
       af(null);try{toonKlaarzet(await R.api("/taken/robin/v3/klaarzet","POST",{soort:"apk",velden:v}),{soort:"apk",velden:v})}catch(x){R.toast2(x.message)}});
+    ov.querySelector("[data-kka=taak]").onclick=()=>{af(null);const a0=(k.autos||[])[0]||{};window.RB.taakSheet({klant:k.naam,auto:a0.omschr||a0.kenteken||"",kenteken:a0.kenteken||""})};  /* TAAK_SNEL_V1 */
     ov.querySelector("[data-kka=not]").onclick=async()=>{const n=prompt("Notitie bij "+k.naam);if(!n)return;try{await R.api("/taken/robin/klant/"+encodeURIComponent(kid)+"/notitie","POST",{tekst:n});R.toast2("Notitie opgeslagen");af(null);klantKaart(kid)}catch(x){R.toast2(x.message)}}});
 }
 /* ---------- OPFRIS_V1 (t662u A5): lang staand -> taak voor het team, zonder bedragen ---------- */
@@ -474,13 +477,14 @@ async function vdBlok3(){vdEerst();
   const P=V3.proefritten||[],TB=V3.terugbellen||[];const tm=s=>String(s||"").slice(11,16),dg=s=>{const d=String(s||"").slice(0,10);const v=new Date().toISOString().slice(0,10);return d===v?"vandaag":d.slice(8,10)+"-"+d.slice(5,7)};
   const TM=V3.team||[],RS=V3.rest||[];  /* TAKEN_MW_V3 (t668u): wat het team meldt + restlijst */
   b.className=P.length||TB.length||TM.length||RS.length?"vb rb":"";
-  b.innerHTML=(P.length?`<h3>🔑 Proefrit loopt <span class="cnt">${P.length}</span></h3>`+P.map(p=>`<div class="rb-rit"><b>${e(p.auto)}</b> · ${e(p.klant||"")}<div class="meta">${tm(p.start)}–${tm(p.eind)}${p.te_laat?' · <b style="color:#991b1b">te laat terug</b>':""} · ${p.rijbewijs_gezien?"rijbewijs ✓":"geen rijbewijsfoto"}</div><button type="button" class="btn sm" data-terug="${e(p.id)}">✅ Terug</button></div>`).join(""):"")+
+  b.innerHTML=(P.length?`<h3>🔑 Proefrit loopt <span class="cnt">${P.length}</span></h3>`+P.map(p=>`<div class="rb-rit"><b>${e(p.auto)}</b> · ${e(p.klant||"")}<div class="meta">${tm(p.start)}–${tm(p.eind)}${p.te_laat?' · <b style="color:#991b1b">te laat terug</b>':""} · ${p.rijbewijs_gezien?"rijbewijs ✓":"geen rijbewijsfoto"}</div><button type="button" class="btn sm" data-terug="${e(p.id)}">✅ Terug</button> <button type="button" class="btn sm ghost" data-ptaak="${e(p.id)}">📝 Taak</button></div>`).join(""):"")+
     (TB.length?`<h3>📞 Terugbellen <span class="cnt">${TB.length}</span></h3>`+TB.map(t=>`<div class="rb-rit"><b>${e(t.titel)}</b><div class="meta">🕒 ${dg(t.wanneer)} ${tm(t.wanneer)}${t.te_laat?' · <b style="color:#991b1b">te laat</b>':""}${t.vraag?" · "+e(t.vraag):""}</div><button type="button" class="btn sm" data-bel="${e(t.id)}">📞 Bellen / WhatsApp</button></div>`).join(""):"")+
     (TM.length?`<h3>👷 Bij het team <span class="cnt">${TM.length}</span></h3>`+TM.map(x=>`<div class="rb-rit"><b>${e(x.titel)}</b>${x.voor?" · "+e(x.voor):""}<div class="meta">${e(x.label)}${x.door?" · "+e(x.door):""}${x.tijd?" · "+e(x.tijd):""}</div></div>`).join(""):"")+
     (RS.length?`<h3>🌙 Bleef liggen <span class="cnt">${RS.length}</span></h3>`+RS.map(x=>`<div class="rb-rit"><b>${e(x.titel)}</b>${x.voor?" · "+e(x.voor):""}<div class="meta">${e(x.label)} ${e(x.dag_tekst)}${x.door?" · "+e(x.door):""}</div></div>`).join(""):"");
   if(P.length)b.querySelector("h3").insertAdjacentHTML("afterend",'<button type="button" class="btn sm ghost rb3-prlink" data-prlijst>🔑 Alle proefritten (ook afgerond) →</button>');
   b.querySelectorAll("[data-prlijst]").forEach(x=>x.onclick=naarProefritten);
   b.querySelectorAll("[data-terug]").forEach(x=>x.onclick=()=>terug(x.dataset.terug));
+  b.querySelectorAll("[data-ptaak]").forEach(x=>x.onclick=()=>{const q=P.find(y=>y.id===x.dataset.ptaak)||{};window.RB.taakSheet({auto:q.auto,klant:q.klant})});  /* TAAK_SNEL_V1 */
   b.querySelectorAll("[data-bel]").forEach(x=>x.onclick=()=>{const t=TB.find(y=>y.id===x.dataset.bel);belSheet(t)});
 }
 /* ---------- PROEFRIT_LIJST_V1 (t661u): alle proefritten terugvinden onder Klanten. Geen nummers of foto's. ---------- */
@@ -493,10 +497,11 @@ async function prBlok(vers){
   const tm=s=>String(s||"").slice(11,16),dg=s=>{const d=String(s||"").slice(0,10);return d?d.slice(8,10)+"-"+d.slice(5,7):"?"};
   const L=PRL.lopend||[],K=PRL.klaar||[];
   b.innerHTML=`<h3>🔑 Proefritten <span class="cnt">${L.length+K.length}</span></h3>
-   ${L.length?`<h4>Loopt nu</h4>`+L.map(p=>`<div class="rb-rit"><b>${e(p.auto)}</b> · ${e(p.klant||"")}<div class="meta">${dg(p.start)} ${tm(p.start)}–${tm(p.eind)}${p.te_laat?' · <b style="color:#991b1b">te laat terug</b>':""} · ${p.rijbewijs_gezien?"rijbewijs ✓":"geen rijbewijsfoto"}</div><button type="button" class="btn sm" data-prterug="${e(p.id)}">✅ Terug</button></div>`).join(""):'<div class="meta">Er loopt nu geen proefrit.</div>'}
-   <h4>Geschiedenis</h4>${K.length?`<ul class="rb3-wk rb3-prh">`+K.map(p=>`<li><b>${e(p.auto)}</b> · ${e(p.klant||"")}<div class="meta">${dg(p.start)} ${tm(p.start)}–${tm(p.terug)}${p.km_na!=null?" · km na rit "+e(String(p.km_na).replace(/\B(?=(\d{3})+(?!\d))/g,".")):""}${p.op_tijd===false?" · later terug dan gepland":""}</div></li>`).join("")+`</ul>`:'<div class="meta">Nog geen afgeronde proefritten.</div>'}
+   ${L.length?`<h4>Loopt nu</h4>`+L.map(p=>`<div class="rb-rit"><b>${e(p.auto)}</b> · ${e(p.klant||"")}<div class="meta">${dg(p.start)} ${tm(p.start)}–${tm(p.eind)}${p.te_laat?' · <b style="color:#991b1b">te laat terug</b>':""} · ${p.rijbewijs_gezien?"rijbewijs ✓":"geen rijbewijsfoto"}</div><button type="button" class="btn sm" data-prterug="${e(p.id)}">✅ Terug</button> <button type="button" class="btn sm ghost" data-prtaak="${e(p.id)}">📝 Taak</button></div>`).join(""):'<div class="meta">Er loopt nu geen proefrit.</div>'}
+   <h4>Geschiedenis</h4>${K.length?`<ul class="rb3-wk rb3-prh">`+K.map(p=>`<li><b>${e(p.auto)}</b> · ${e(p.klant||"")}<div class="meta">${dg(p.start)} ${tm(p.start)}–${tm(p.terug)}${p.km_na!=null?" · km na rit "+e(String(p.km_na).replace(/\B(?=(\d{3})+(?!\d))/g,".")):""}${p.op_tijd===false?" · later terug dan gepland":""}</div><button type="button" class="btn sm ghost" data-prtaak="${e(p.id)}">📝 Taak</button></li>`).join("")+`</ul>`:'<div class="meta">Nog geen afgeronde proefritten.</div>'}
    <div class="meta">🔒 Telefoonnummers en rijbewijsfoto's staan niet op de site. Het rijbewijs wordt na 30 dagen gewist.</div>`;
   b.querySelectorAll("[data-prterug]").forEach(x=>x.onclick=async()=>{await terug(x.dataset.prterug);prBlok(true)});
+  b.querySelectorAll("[data-prtaak]").forEach(x=>x.onclick=()=>{const q=L.concat(K).find(y=>y.id===x.dataset.prtaak)||{};window.RB.taakSheet({auto:q.auto,klant:q.klant})});  /* TAAK_SNEL_V1 */
 }
 const moK=new MutationObserver(()=>{if(typeof seg!=="undefined"&&seg===26&&!document.getElementById("rb3-pr")){clearTimeout(moK.t);moK.t=setTimeout(()=>prBlok(true),120)}});
 const stK=()=>{const c=document.getElementById("cards");if(c)moK.observe(c,{childList:true,subtree:false})};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",stK);else stK();
@@ -668,4 +673,65 @@ async function open_(){
   });
 }
 window.RB_TEAM={open:open_};
+})();
+
+/* TAAK_SNEL_V1 (t670u): ➕ Taak als sheet. Eén zin typen of dicteren (zelfde parser als Telegram), auto uit de voorraad, medewerker, dag en tijd,
+   sjablonen met checklist (punten aanpasbaar). Er wordt niets naar klanten of medewerkers gestuurd; de taak staat op het bord. */
+(function(){
+"use strict";
+if(typeof KL!=="undefined"&&KL.slug&&KL.slug!=="brns")return;
+if(!window.RB)return;
+const R=window.RB,e=R.e;
+let OPT=null;
+const dagIso=n=>new Date(Date.now()+n*864e5).toLocaleDateString("sv-SE",{timeZone:"Europe/Amsterdam"});
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+async function opties(){if(OPT)return OPT;try{OPT=await R.api("/taken/robin/v3/taak-opties")}catch(x){OPT={medewerkers:[],voorraad:[],sjablonen:[]}}return OPT}
+async function taakSheet(v){
+  v=v||{};const O=await opties();
+  const sj=O.sjablonen||[];
+  return R.sheet(`<div class="row"><b>📝 Nieuwe taak</b><button type="button" class="btn sm ghost" data-x>Annuleren</button></div>
+   <label class="rb-f">Typ of zeg één zin<span class="ts-zinrij"><input id="ts-zin" autocomplete="off" placeholder="bijv. Kees Golf wassen morgen">${SR?'<button type="button" class="btn" id="ts-mic" aria-label="Dicteer de taak">🎤</button>':""}</span></label>
+   <div class="meta" id="ts-tip">${SR?"Tik op 🎤 en praat, of typ. Daarna vul ik de velden in.":"Tip: tik op de microfoon van je toetsenbord om te dicteren."} <button type="button" class="btn sm ghost" id="ts-lees">✨ Invullen</button></div>
+   <div class="rb-keus ts-sj" role="group" aria-label="Sjabloon">${sj.map(s=>`<button type="button" class="rb-k" data-sj="${e(s.id)}" aria-pressed="false">${e(s.naam)}</button>`).join("")}</div>
+   <label class="rb-f">Wat moet er gebeuren<input id="ts-titel" autocomplete="off" value="${e(v.titel||"")}" placeholder="bijv. Wassen en poetsen"></label>
+   <label class="rb-f">Auto<select id="ts-vr"><option value="">Kies uit de voorraad…</option>${(O.voorraad||[]).map(a=>`<option value="${e(a.naam)}">${e(a.naam)}${a.jaar?" ("+e(a.jaar)+")":""}</option>`).join("")}</select>
+     <input id="ts-auto" autocomplete="off" placeholder="of typ een auto of kenteken" value="${e(v.auto||"")}"></label>
+   <label class="rb-f">Voor wie<select id="ts-voor"><option value="">Niet toegewezen</option>${(O.medewerkers||[]).map(n=>`<option${n===v.voor?" selected":""}>${e(n)}</option>`).join("")}</select></label>
+   <div class="ts-dag"><label class="rb-f">Dag<input type="date" id="ts-dl" value="${e(v.deadline||"")}"></label><label class="rb-f">Tijd<input type="time" id="ts-tijd" value="${e(v.tijd||"")}"></label></div>
+   <div class="ts-snel"><button type="button" class="btn sm ghost" data-d="0">Vandaag</button><button type="button" class="btn sm ghost" data-d="1">Morgen</button><button type="button" class="btn sm ghost" data-d="">Geen dag</button></div>
+   ${v.klant?`<label class="rb-f">Klant<input id="ts-klant" autocomplete="off" value="${e(v.klant)}"></label>`:""}
+   <label class="rb-f" id="ts-clrij" hidden>Checklist (één punt per regel)<textarea id="ts-cl" rows="4"></textarea></label>
+   <label class="rb-f ts-chk" id="ts-bewaarrij" hidden><input type="checkbox" id="ts-bewaar"> <span>Bewaar deze punten als standaard voor <b id="ts-bnaam"></b></span></label>
+   <div class="rb-fout" id="ts-fout" role="alert"></div>
+   <div class="row rb-knoppen"><button type="button" class="btn ghost" data-x>Annuleren</button><button type="button" class="btn" id="ts-ok">Taak opslaan</button></div>`,(ov,af)=>{
+    const q=s=>ov.querySelector(s),fout=q("#ts-fout"),tip=q("#ts-tip");let aan=null,eigenTitel=!!v.titel;
+    const titelVoor=()=>{if(!aan||eigenTitel)return;const a=q("#ts-auto").value.trim();q("#ts-titel").value=aan.titel+(a?": "+a:"")};
+    ov.querySelectorAll("[data-sj]").forEach(b=>b.onclick=()=>{const s=sj.find(x=>x.id===b.dataset.sj);const was=aan&&aan.id===s.id;aan=was?null:s;
+      ov.querySelectorAll("[data-sj]").forEach(x=>{const on=aan&&x.dataset.sj===aan.id;x.classList.toggle("aan",!!on);x.setAttribute("aria-pressed",String(!!on))});
+      q("#ts-clrij").hidden=!aan;q("#ts-bewaarrij").hidden=!aan;if(aan){q("#ts-cl").value=aan.punten.join("\n");q("#ts-bnaam").textContent=aan.naam;if(!eigenTitel)titelVoor()}else q("#ts-cl").value=""});
+    q("#ts-titel").oninput=()=>{eigenTitel=true};
+    q("#ts-vr").onchange=ev=>{q("#ts-auto").value=ev.target.value;titelVoor()};
+    q("#ts-auto").oninput=titelVoor;
+    ov.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{q("#ts-dl").value=b.dataset.d===""?"":dagIso(+b.dataset.d)});
+    const lees=async()=>{const z=q("#ts-zin").value.trim();if(!z)return;fout.textContent="";tip.textContent="Even lezen…";
+      try{const r=await R.api("/taken/robin/v3/taak-voorstel","POST",{tekst:z});const x=r.voorstel;
+        if(!x){tip.textContent=r.reden||"Hier zie ik geen taak in.";return}
+        if(x.titel){q("#ts-titel").value=x.titel;eigenTitel=true}if(x.auto)q("#ts-auto").value=x.auto;if(x.voor)q("#ts-voor").value=x.voor;if(x.deadline)q("#ts-dl").value=x.deadline;if(x.tijd)q("#ts-tijd").value=x.tijd;
+        tip.textContent="Ingevuld. Controleer even en tik op Taak opslaan."+(x.extra?" ("+x.extra+" andere taak in deze zin: maak die apart.)":"")+(x.vraag?" "+x.vraag:"")}
+      catch(x){tip.textContent="Invullen lukte niet: "+x.message}};
+    q("#ts-lees").onclick=lees;q("#ts-zin").onkeydown=ev=>{if(ev.key==="Enter"){ev.preventDefault();lees()}};
+    const mic=q("#ts-mic");if(mic&&SR){let rec=null;mic.onclick=()=>{if(rec){try{rec.stop()}catch(x){}return}
+      rec=new SR();rec.lang="nl-NL";rec.interimResults=false;rec.maxAlternatives=1;mic.textContent="🎙️";tip.textContent="Ik luister… praat nu.";
+      rec.onresult=ev=>{q("#ts-zin").value=ev.results[0][0].transcript;lees()};
+      rec.onerror=()=>{tip.textContent="Dicteren lukte niet. Typ de zin, of gebruik de microfoon van je toetsenbord."};
+      rec.onend=()=>{rec=null;mic.textContent="🎤"};try{rec.start()}catch(x){rec=null;mic.textContent="🎤"}}}
+    q("#ts-ok").onclick=async()=>{const val=s=>(q(s)||{}).value||"";const titel=val("#ts-titel").trim();if(!titel){fout.textContent="Wat moet er gebeuren?";return}
+      const b=q("#ts-ok");b.disabled=true;b.textContent="Opslaan…";fout.textContent="";
+      try{const r=await R.api("/taken/robin/v3/taak-nieuw","POST",{titel,auto:val("#ts-auto").trim(),kenteken:v.kenteken||"",voor:val("#ts-voor"),deadline:val("#ts-dl"),tijd:val("#ts-tijd"),klant:val("#ts-klant").trim(),
+          sjabloon:aan?aan.id:"",checklist:aan?val("#ts-cl").split("\n"):[],bewaar_standaard:!!(aan&&q("#ts-bewaar").checked)});
+        if(aan&&q("#ts-bewaar").checked)OPT=null;
+        R.toast2("Taak staat klaar"+(r.taak&&r.taak.voor?" voor "+r.taak.voor:"")+".");af(true)}
+      catch(x){fout.textContent=x.message;b.disabled=false;b.textContent="Taak opslaan"}};
+    const z0=q("#ts-zin");if(!v.titel&&!v.auto&&!v.klant)setTimeout(()=>{try{z0.focus()}catch(x){}},50)})}
+window.RB.taakSheet=taakSheet;
 })();
