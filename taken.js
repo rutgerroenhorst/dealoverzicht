@@ -191,7 +191,19 @@ function kaart(t){
   if(t.status==="klaar")act+=`<button class="tk-btn sec" data-heropen="${esc(t.id)}">↩️ Heropenen</button>`; /* HEROPEN_V1 */
   else{if(t.voortgang!=="bezig")act+=`<button class="tk-btn sec" data-bezig="${esc(t.id)}">Bezig</button>`;
   act+=`<button class="tk-btn prim" data-klaar="${esc(t.id)}">Klaar + notitie</button>`;}
-  const chips=(t.voortgang==="bezig"?`<span class="tk-chip bezig">Bezig${t.bezig_door?" · "+esc(t.bezig_door):""}</span>`:"")+(t.prio==="hoog"?`<span class="tk-chip hoog">Hoog</span>`:"");
+  /* TAKEN_MW_V3 (t668u): wat de medewerker via Telegram meldt */
+  const MWS={onderweg:"🚗 Onderweg",ben_er:"📍 Ben er",wacht_onderdelen:"⏳ Wacht op onderdelen"},kd=s=>String(s||"").slice(8,10)+"-"+String(s||"").slice(5,7),kt=s=>String(s||"").slice(11,16);
+  let mw="";
+  if(t.status!=="klaar"){
+    if(t.stand&&MWS[t.stand])mw+=`<span class="tk-chip stand">${MWS[t.stand]}${t.stand_door?" · "+esc(t.stand_door):""}${t.stand_ts?" · "+kt(t.stand_ts):""}</span>`;
+    if(t.kan_niet)mw+=`<span class="tk-chip kan">🚫 Kan ${t.kan_niet.dag===new Date().toLocaleDateString("sv-SE",{timeZone:"Europe/Amsterdam"})?"vandaag":kd(t.kan_niet.dag)} niet${t.kan_niet.door?" · "+esc(t.kan_niet.door):""}</span>`;
+    if(t.verschoven)mw+=`<span class="tk-chip versch">➡️ Verschoven naar ${kd(t.verschoven.naar)}${t.verschoven.door?" · "+esc(t.verschoven.door):""}</span>`;
+    if(t.blijft_liggen)mw+=`<span class="tk-chip kan">🌙 Bleef liggen ${kd(t.blijft_liggen.dag)}</span>`;
+  }
+  const rap=t.aflever||t.overdracht;
+  if(rap&&(rap.km!=null||rap.schade||(rap.fotos&&Object.keys(rap.fotos).length)))extra+=`<div class="tk-meta">📋 Rapport${rap.km!=null?" · km "+esc(String(rap.km).replace(/\B(?=(\d{3})+(?!\d))/g,".")):""}${rap.schade?" · schade: "+esc(rap.schade):""}${rap.fotos?" · 📷 "+Object.values(rap.fotos).reduce((a,b)=>a+(+b||0),0):""}</div>`;
+  if(t.audio&&t.audio.length)extra+=`<div class="tk-meta"><button type="button" class="tk-link" data-audio="${esc(t.id)}">🎤 ${t.audio.length} spraakbericht${t.audio.length>1?"en":""} afspelen</button></div><div class="tk-audio" id="au-${esc(t.id)}"></div>`;
+  const chips=mw+(t.voortgang==="bezig"?`<span class="tk-chip bezig">Bezig${t.bezig_door?" · "+esc(t.bezig_door):""}</span>`:"")+(t.prio==="hoog"?`<span class="tk-chip hoog">Hoog</span>`:"");
   /* TAKEN_EXTRA_V1: checklist per taak (afvinken per punt) + terugkerend-label */
   if(t.checklist&&t.checklist.length){const k=t.checklist.filter(c=>c.klaar).length;extra+=`<div class="tk-meta">☑️ Checklist ${k}/${t.checklist.length}</div><div class="tk-cl">${t.checklist.map((c,i)=>`<button type="button" class="tk-btn sec" style="display:block;width:100%;text-align:left;margin:3px 0" data-clv="${esc(t.id)}" data-i="${i}">${c.klaar?"✅":"⬜"} ${esc(c.tekst)}</button>`).join("")}</div>`}
   if(t.terugkerend_id)extra+=`<div class="tk-meta">🔁 Terugkerende taak</div>`;
@@ -278,6 +290,9 @@ function startPoll(){
   },5000);
 }
 
+/* TAKEN_MW_V3 (t668u): restlijst = wat gisteren (of eerder) bleef liggen of niet kon */
+function restBlok(){const R=(TAKEN&&TAKEN.restlijst)||[];if(!R.length)return"";
+  return `<section class="tk-wacht tk-rest"><h3>🌙 Bleef liggen <span class="cnt">${R.length}</span></h3>${R.map(x=>`<div class="tk-meta"><b>${esc(x.titel)}</b>${x.voor?" — "+esc(x.voor):""} · ${esc(x.label)} ${esc(x.dag_tekst)}</div>`).join("")}</section>`}
 function tekenLijst(){
   const cards=$("#cards");if(!cards||!TAKEN)return;
   const meds=(TAKEN.gebruikers||[]).map(u=>u.naam);
@@ -300,7 +315,7 @@ function tekenLijst(){
     ${(TAKEN.gebruikers||[]).map(gebruikerLabel).join(" · ")}</div>`;
   cards.innerHTML=`<div class="tk-wrap">
     <div class="tk-warn"><b>Openbare site · live van de server</b>${esc(TAKEN.waarschuwing||"Telefoonnummers van bedrijven zijn zichtbaar op deze site. Alleen zakelijke nummers.")}</div>
-    ${seintjeBlok()}${nieuwBlok(meds)}<div class="tk-filters">${filters}</div>${sub}${vragenHtml}${lijst}${tkrBlok()}${medBlok}</div>`;
+    ${seintjeBlok()}${restBlok()}${nieuwBlok(meds)}<div class="tk-filters">${filters}</div>${sub}${vragenHtml}${lijst}${tkrBlok()}${medBlok}</div>`;
   bind();conceptTerug();
 }
 
@@ -361,6 +376,7 @@ function bind(){
   document.querySelectorAll("[data-bezig]").forEach(b=>b.onclick=()=>bezig(b.dataset.bezig));
   document.querySelectorAll("[data-heropen]").forEach(b=>b.onclick=()=>heropen(b.dataset.heropen));
   document.querySelectorAll("[data-fotos]").forEach(b=>b.onclick=()=>fotos(b.dataset.fotos));
+  document.querySelectorAll("[data-audio]").forEach(b=>b.onclick=()=>spraakAf(b.dataset.audio));
   document.querySelectorAll("[data-nr]").forEach(b=>b.onclick=()=>nummerAanpassen(b.dataset.nr));
   document.querySelectorAll("[data-mic]").forEach(b=>b.onclick=()=>inspreken(b.dataset.mic));
   document.querySelectorAll("[data-ant]").forEach(b=>b.onclick=()=>antwoord(b.dataset.ant,b.dataset.soort));
@@ -424,6 +440,8 @@ async function toewijzen(id,voor){
   }catch(e){alert(e.message)}
 }
 
+async function spraakAf(id){const el=document.getElementById("au-"+id);if(!el)return;if(el.innerHTML){el.innerHTML="";return}
+  el.textContent="Laden…";try{const r=await api("/taken/"+id+"/audio");el.innerHTML=(r.audio||[]).map(a=>a.src&&/^data:audio\/(mp4|ogg);base64,[A-Za-z0-9+\/=]+$/.test(a.src)?`<div class="tk-meta">${a.door?esc(a.door)+" · ":""}${esc(String(a.ts||"").slice(11,16))}</div><audio controls preload="none" src="${a.src}"></audio>`:`<span class="tk-meta">(spraakbericht niet meer beschikbaar)</span>`).join("")}catch(e){el.textContent="Afspelen lukte niet: "+e.message}}
 async function fotos(id){const el=document.getElementById("f-"+id);if(!el)return;if(el.innerHTML){el.innerHTML="";return}
   el.textContent="Laden…";try{const r=await api("/taken/"+id+"/fotos");el.innerHTML=(r.fotos||[]).map(f=>f.src&&/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(f.src)?`<img src="${f.src}" alt="foto${f.door?" van "+esc(f.door):""}" loading="lazy">`:`<span class="tk-meta">(foto niet meer beschikbaar)</span>`).join("")}catch(e){el.textContent="Foto's laden lukte niet: "+e.message}}
 async function bezig(id){if(BEZIG_MET["b"+id])return;BEZIG_MET["b"+id]=1;setTimeout(()=>delete BEZIG_MET["b"+id],4000);try{await api("/taken/"+id+"/status","POST",{status:"bezig"});TAKEN=await api("/taken");tekenLijst()}catch(e){alert(e.message)}}

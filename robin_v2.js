@@ -472,9 +472,12 @@ async function vdBlok3(){vdEerst();
   if(typeof seg==="undefined"||seg!==20)return;try{V3=await R.api("/taken/robin/v3/vandaag")}catch(x){return}
   const host=document.getElementById("rb-vd");if(!host)return;let b=document.getElementById("rb3-vd");if(!b){b=document.createElement("div");b.id="rb3-vd";host.insertAdjacentElement("afterend",b)}
   const P=V3.proefritten||[],TB=V3.terugbellen||[];const tm=s=>String(s||"").slice(11,16),dg=s=>{const d=String(s||"").slice(0,10);const v=new Date().toISOString().slice(0,10);return d===v?"vandaag":d.slice(8,10)+"-"+d.slice(5,7)};
-  b.className=P.length||TB.length?"vb rb":"";
+  const TM=V3.team||[],RS=V3.rest||[];  /* TAKEN_MW_V3 (t668u): wat het team meldt + restlijst */
+  b.className=P.length||TB.length||TM.length||RS.length?"vb rb":"";
   b.innerHTML=(P.length?`<h3>🔑 Proefrit loopt <span class="cnt">${P.length}</span></h3>`+P.map(p=>`<div class="rb-rit"><b>${e(p.auto)}</b> · ${e(p.klant||"")}<div class="meta">${tm(p.start)}–${tm(p.eind)}${p.te_laat?' · <b style="color:#991b1b">te laat terug</b>':""} · ${p.rijbewijs_gezien?"rijbewijs ✓":"geen rijbewijsfoto"}</div><button type="button" class="btn sm" data-terug="${e(p.id)}">✅ Terug</button></div>`).join(""):"")+
-    (TB.length?`<h3>📞 Terugbellen <span class="cnt">${TB.length}</span></h3>`+TB.map(t=>`<div class="rb-rit"><b>${e(t.titel)}</b><div class="meta">🕒 ${dg(t.wanneer)} ${tm(t.wanneer)}${t.te_laat?' · <b style="color:#991b1b">te laat</b>':""}${t.vraag?" · "+e(t.vraag):""}</div><button type="button" class="btn sm" data-bel="${e(t.id)}">📞 Bellen / WhatsApp</button></div>`).join(""):"");
+    (TB.length?`<h3>📞 Terugbellen <span class="cnt">${TB.length}</span></h3>`+TB.map(t=>`<div class="rb-rit"><b>${e(t.titel)}</b><div class="meta">🕒 ${dg(t.wanneer)} ${tm(t.wanneer)}${t.te_laat?' · <b style="color:#991b1b">te laat</b>':""}${t.vraag?" · "+e(t.vraag):""}</div><button type="button" class="btn sm" data-bel="${e(t.id)}">📞 Bellen / WhatsApp</button></div>`).join(""):"")+
+    (TM.length?`<h3>👷 Bij het team <span class="cnt">${TM.length}</span></h3>`+TM.map(x=>`<div class="rb-rit"><b>${e(x.titel)}</b>${x.voor?" · "+e(x.voor):""}<div class="meta">${e(x.label)}${x.door?" · "+e(x.door):""}${x.tijd?" · "+e(x.tijd):""}</div></div>`).join(""):"")+
+    (RS.length?`<h3>🌙 Bleef liggen <span class="cnt">${RS.length}</span></h3>`+RS.map(x=>`<div class="rb-rit"><b>${e(x.titel)}</b>${x.voor?" · "+e(x.voor):""}<div class="meta">${e(x.label)} ${e(x.dag_tekst)}${x.door?" · "+e(x.door):""}</div></div>`).join(""):"");
   if(P.length)b.querySelector("h3").insertAdjacentHTML("afterend",'<button type="button" class="btn sm ghost rb3-prlink" data-prlijst>🔑 Alle proefritten (ook afgerond) →</button>');
   b.querySelectorAll("[data-prlijst]").forEach(x=>x.onclick=naarProefritten);
   b.querySelectorAll("[data-terug]").forEach(x=>x.onclick=()=>terug(x.dataset.terug));
